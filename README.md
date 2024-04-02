@@ -1,8 +1,5 @@
 # CS2-4A
 
-Willy PHANG - 
-Hallouoiy Matis - 
-
 ## Members 
 
 1. [BELGUIC Thibault - @Belguic](https://github.com/Beleguic)
