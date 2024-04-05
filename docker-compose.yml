@@ -31,11 +31,11 @@ services:
     image: node:20.0.0-alpine
     user: node
     working_dir: /home/node
-    command: '"cd tropicool && npm install && npm run dev -- --port 5174 --host"'
+    command: '"npm run dev -- --port 5174 --host"'
     ports:
       - "127.0.0.1:8000:5174"
     volumes:
-      - ./frontend:/home/node
+      - ./tropicool:/home/node
     entrypoint: sh -c
  
   postgres:
