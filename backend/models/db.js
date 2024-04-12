@@ -1,9 +1,14 @@
-const { Sequelize } = require("sequelize");
+const { Sequelize } = require('sequelize');
 
-const connection = new Sequelize(process.env.DATABASE_URL);
+// Récupération de l'URL de la base de données à partir des variables d'environnement
+const databaseUrl = process.env.DATABASE_URL;
 
-connection.authenticate().then(() => {
-  console.log("Database connection has been established successfully.");
+const sequelize = new Sequelize(databaseUrl, {
+  dialect: 'postgres', // Spécifiez le dialecte de base de données
 });
 
-module.exports = connection;
+sequelize.authenticate()
+  .then(() => console.log('Connection to the database has been established successfully.'))
+  .catch(err => console.error('Unable to connect to the database:', err));
+
+module.exports = sequelize;

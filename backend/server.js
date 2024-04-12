@@ -1,9 +1,11 @@
+require('dotenv').config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const UserRouter = require("./routes/user");
 const SecurityRouter = require("./routes/security");
 const app = express();
 const cors = require("cors");
+const nodemailer = require('nodemailer');
 
 //function parseBody(req, res, next) {
 //  const data = [];
@@ -23,6 +25,21 @@ const cors = require("cors");
 //  });
 //}
 
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false, // Utilisez true si vous êtes sur le port 465
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD
+  }
+});
+
+app.use((req, res, next) => {
+  req.transporter = transporter;
+  next();
+});
 //app.use(parseBody);
 app.use(express.json());
 app.use(cookieParser(process.env.JWT_SECRET));

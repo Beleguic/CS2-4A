@@ -1,50 +1,51 @@
-const { Model, DataTypes } = require("sequelize");
-const bcrypt = require("bcryptjs");
-
-const connection = require("./db");
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('./db.js'); // Importez l'instance de connexion Sequelize ici.
 
 class User extends Model {}
 
-User.init(
-  {
-    firstname: DataTypes.STRING(50),
-    lastname: DataTypes.STRING(50),
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        notEmpty: true,
-        isEmail: true,
-      },
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        is: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,32}$/,
-        notEmpty: true,
-        min: 8,
-        max: 32,
-      },
-    },
-    role: {
-      type: DataTypes.ENUM("user", "admin"),
-      allowNull: false,
-      defaultValue: "admin",
-    },
+User.init({
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  { sequelize: connection }
-);
-
-User.addHook("beforeCreate", async (user) => {
-  user.password = await bcrypt.hash(user.password, await bcrypt.genSalt(10));
-});
-
-User.addHook("beforeUpdate", async (user, options) => {
-  if (options.fields.includes("password")) {
-    user.password = await bcrypt.hash(user.password, await bcrypt.genSalt(10));
+  email: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'user'
+  },
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    field: 'is_verified'
+  },
+  verificationToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    field: 'verification_token'
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
   }
+}, {
+  sequelize,
+  modelName: 'User',
+  timestamps: false,
+  tableName: 'users'
 });
 
 module.exports = User;

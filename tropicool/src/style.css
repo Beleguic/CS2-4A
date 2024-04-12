@@ -1,5 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=auto'); */
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -11,69 +16,84 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --main-clr: rgb(86, 104, 224);
+  --secondary-clr: rgb(57, 68, 142);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+*,
+::before,
+::after {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.card {
-  padding: 2em;
+  font-family: "Montserrat", sans-serif;
 }
 
 #app {
-  max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+header {
+  padding: 0 1rem;
+}
+
+main {
+  padding: 1rem;
+}
+
+main {
+  flex-grow: 1;
+  /* background-color: white; */
+}
+
+
+.register-container {
+  background-color: #242424; /* Couleur de fond correspondant à votre site */
+}
+
+.register-container form {
+  background: var(--secondary-clr); /* Utiliser votre couleur secondaire pour le formulaire */
+  border-radius: 8px; /* Bords arrondis pour un look moderne */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Ombre portée pour un effet en relief */
+}
+
+label {
+  color: #ffffff; /* Texte clair pour contraster avec le fond sombre */
+}
+
+input[type=email],
+input[type=password] {
+  background-color: #323232; /* Fond plus clair pour les champs de saisie */
+  color: #ffffff; /* Texte clair */
+  border: none; /* Pas de bordure */
+}
+
+input[type=email]::placeholder,
+input[type=password]::placeholder {
+  color: #bbbbbb; /* Couleur du placeholder */
+}
+
+input[type=email]:focus,
+input[type=password]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--main-clr); /* Glow effect avec la couleur principale lors du focus */
+}
+
+button {
+  background: var(--main-clr); /* Couleur principale pour le bouton d'inscription */
+  color: #ffffff;
+  border: none;
+  transition: background-color 0.3s ease; /* Transition fluide pour l'interaction */
+}
+
+button:hover {
+  background: darken(var(--main-clr), 10%); /* Assombrir le bouton au survol */
 }
