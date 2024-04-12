@@ -1,39 +1,36 @@
-const { Router } = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../models/user");
+// Supposons que vous utilisez routes/security.js
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
+const router = express.Router();
 
-const router = new Router();
+router.post('/register', async (req, res, next) => {
+  const { email, password } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 8);
 
-router.post("/login", async (req, res, next) => {
-  const user = await User.findOne({
-    where: {
-      email: req.body.email,
-    },
-  });
-  if (!user) return res.sendStatus(401);
-  if (!(await bcrypt.compare(req.body.password, user.password))) {
-    return res.sendStatus(401);
-  }
+    // Générez un token de vérification unique - par exemple, un JWT ou un UUID
+    const verificationToken = jwt.sign({ email: email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-  const token = jwt.sign(
-    {
-      id: user.id,
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "30 days",
-      algorithm: "HS256",
+    // Insérez l'utilisateur dans la base de données avec le token
+    const user = await User.create({
+      email: email,
+      password: hashedPassword,
+      verification_Token: verificationToken, // Assurez-vous que votre modèle User a cette colonne
+      // autres champs si nécessaire
+    });
+
+    // Ici, vous intégreriez le processus d'envoi de l'e-mail
+
+    res.status(201).json({ message: 'Utilisateur créé', userId: user.id, token: verificationToken });
+  } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ message: "L'email est déjà utilisé." });
     }
-  );
-
-  res.cookie("JWT", token, {
-    httpOnly: true,
-    signed: true,
-  });
-
-  res.json(user);
+    console.error('Error during user registration:', error);
+    res.status(500).json({ message: 'Erreur lors de la création de l’utilisateur.' });
+  }
 });
 
 module.exports = router;
