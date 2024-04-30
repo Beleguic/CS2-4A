@@ -27,39 +27,39 @@
 
 <script setup>
 import { ref } from 'vue';
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL; // assurez-vous que cette URL est correctement configurée dans votre fichier .env
 const email = ref('');
 const password = ref('');
 
 const register = async () => {
-    try {
-        // Préparez le corps de la requête
-        const requestBody = {
-            email: email.value,
-            password: password.value
-        };
+  const requestBody = {
+    email: email.value,
+    password: password.value,
+    emailContent: "<div>Bienvenue sur notre site. Merci de vous être inscrit.</div>" // Assurez-vous que ce contenu est ce que vous souhaitez envoyer.
+  };
 
-        // Effectuez la requête POST au backend
-        const response = await fetch(`${apiUrl}/users/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
-        // Récupérez la réponse JSON
-        const responseData = await response.json();
+  try {
+    const response = await fetch(`${apiUrl}/register`, { // Assurez-vous que cette URL est correcte et complète
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
 
-        if (response.ok) {
-            console.log('Inscription réussie:', responseData);
-            // Vous pouvez rediriger l'utilisateur ou faire d'autres actions ici
-        } else {
-            console.error('Erreur lors de l\'inscription:', responseData);
-            // Gérez les erreurs ici, comme montrer un message à l'utilisateur
-        }
-    } catch (error) {
-        console.error('Erreur lors de l\'envoi des données:', error);
+    const responseData = await response.json();
+
+    if (response.ok) {
+      console.log('Inscription reussi:', responseData);
+      // Actions en cas de succès (redirection, affichage de message, etc.)
+    } else {
+      console.error('Inscription réussie, mais problème lors de l\'envoi d\'email:', responseData);
+      // Gérez les échecs ici
     }
+  } catch (error) {
+    console.error('Erreur lors de la communication avec l\'API:', error);
+    // Gérez les erreurs de réseau ou de serveur ici
+  }
 };
 </script>
 

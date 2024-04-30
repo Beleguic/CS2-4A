@@ -12,7 +12,7 @@
 // Importez les outils nécessaires depuis Vue si nécessaire
 import { ref, computed , defineProps} from 'vue';
 
-const userName = ref('John Doe');
+const userName = ref('Matiss HAILLOUY');
 const userId = ref('12345');
 const verificationToken = ref('abcd1234');
 
