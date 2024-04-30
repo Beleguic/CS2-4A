@@ -50,28 +50,27 @@ router.get('/:userId', checkAuth, async (req, res, next) => {
   }
 });
 
-// Route pour la vérification du token d'un utilisateur
 router.get('/verify/:token', async (req, res) => {
-  try {
-    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
-    const user = await User.findOne({ where: { verificationToken: req.params.token } });
+    try {
+        const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+        const user = await User.findOne({ where: { verificationToken: req.params.token } });
 
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur non trouvé ou token invalide.' });
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé ou token invalide.' });
+        }
+
+        user.isVerified = true;
+        user.verificationToken = null;
+        await user.save();
+
+        res.status(200).json({ message: 'Compte vérifié avec succès!' });
+    } catch (error) {
+        if (error instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({ message: 'Token de vérification invalide.' });
+        }
+        console.error('Error during account verification:', error);
+        res.status(500).json({ message: 'Erreur lors de la vérification du compte.' });
     }
-
-    user.isVerified = true;
-    user.verificationToken = null;
-    await user.save();
-
-    res.status(200).json({ message: 'Compte vérifié avec succès!' });
-  } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({ message: 'Token de vérification invalide.' });
-    }
-    console.error('Error during account verification:', error);
-    res.status(500).json({ message: 'Erreur lors de la vérification du compte.' });
-  }
 });
 
 module.exports = router;

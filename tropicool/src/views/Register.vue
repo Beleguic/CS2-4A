@@ -27,19 +27,18 @@
 
 <script setup>
 import { ref } from 'vue';
-const apiUrl = import.meta.env.VITE_API_URL; // assurez-vous que cette URL est correctement configurée dans votre fichier .env
+const apiUrl = import.meta.env.VITE_API_URL;
 const email = ref('');
 const password = ref('');
 
 const register = async () => {
-  const requestBody = {
-    email: email.value,
-    password: password.value,
-    emailContent: "<div>Bienvenue sur notre site. Merci de vous être inscrit.</div>" // Assurez-vous que ce contenu est ce que vous souhaitez envoyer.
-  };
-
   try {
-    const response = await fetch(`${apiUrl}/register`, { // Assurez-vous que cette URL est correcte et complète
+    const requestBody = {
+      email: email.value,
+      password: password.value
+    };
+
+    const response = await fetch(`${apiUrl}/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -50,15 +49,13 @@ const register = async () => {
     const responseData = await response.json();
 
     if (response.ok) {
-      console.log('Inscription reussi:', responseData);
-      // Actions en cas de succès (redirection, affichage de message, etc.)
+      console.log('Inscription réussie:', responseData);
+      // Redirection ou gestion de session ici
     } else {
-      console.error('Inscription réussie, mais problème lors de l\'envoi d\'email:', responseData);
-      // Gérez les échecs ici
+      console.error('Échec de l\'inscription:', responseData);
     }
   } catch (error) {
     console.error('Erreur lors de la communication avec l\'API:', error);
-    // Gérez les erreurs de réseau ou de serveur ici
   }
 };
 </script>
