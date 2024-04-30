@@ -13,8 +13,6 @@
 import { ref, computed , defineProps} from 'vue';
 
 const userName = ref('Matiss HAILLOUY');
-const userId = ref('12345');
-const verificationToken = ref('abcd1234');
 
 defineProps({
   userName: String,
