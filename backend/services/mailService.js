@@ -1,20 +1,33 @@
 const nodemailer = require('nodemailer');
+
 const transporter = nodemailer.createTransport({
-  // Votre configuration SMTP ici
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD
+  }
 });
 
-exports.sendEmail = async (to, subject, htmlContent) => {
+const sendEmail = async (to, subject, htmlContent) => {
   const mailOptions = {
     from: process.env.SMTP_USER,
-    to,
-    subject,
+    to: to,
+    subject: subject,
     html: htmlContent
   };
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully');
+ try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully:', info);
+    return info; // Retourner l'info peut aider à diagnostiquer le comportement du serveur SMTP
   } catch (error) {
-    console.error('Failed to send email', error);
+    console.error('Failed to send email:', error);
+    throw error;
   }
+};
+
+module.exports = {
+  sendEmail
 };
