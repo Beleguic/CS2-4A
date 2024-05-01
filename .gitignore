@@ -1,4 +1,10 @@
-node_modules/
-frontend/tropicool/node_modules/
+backend/.env.production/
+backend/.env/
 backend/node_modules/
-frontend/.npm/
+backend/package-lock.json/
+node_modules/
+tropicool/tropicool/node_modules/
+tropicool/.npm/
+tropicool/package-lock.json/
+tropicool/.npm/_logs
+tropicool/.env
