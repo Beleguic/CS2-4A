@@ -19,7 +19,7 @@
 import { ref } from 'vue';
 import router from '../router'; // Assurez-vous que le chemin d'importation est correct
 
-const apiUrl = 'http://localhost:3000'; // Remplacez par l'URL de votre API si différente
+const apiUrl = import.meta.env.VITE_API_URL; // Remplacez par l'URL de votre API si différente
 const email = ref('');
 const password = ref('');
 
