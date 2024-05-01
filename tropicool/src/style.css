@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=auto'); */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=auto');
 
 :root {
   line-height: 1.5;
@@ -52,48 +52,4 @@ main {
 main {
   flex-grow: 1;
   /* background-color: white; */
-}
-
-
-.register-container {
-  background-color: #242424; /* Couleur de fond correspondant à votre site */
-}
-
-.register-container form {
-  background: var(--secondary-clr); /* Utiliser votre couleur secondaire pour le formulaire */
-  border-radius: 8px; /* Bords arrondis pour un look moderne */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Ombre portée pour un effet en relief */
-}
-
-label {
-  color: #ffffff; /* Texte clair pour contraster avec le fond sombre */
-}
-
-input[type=email],
-input[type=password] {
-  background-color: #323232; /* Fond plus clair pour les champs de saisie */
-  color: #ffffff; /* Texte clair */
-  border: none; /* Pas de bordure */
-}
-
-input[type=email]::placeholder,
-input[type=password]::placeholder {
-  color: #bbbbbb; /* Couleur du placeholder */
-}
-
-input[type=email]:focus,
-input[type=password]:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--main-clr); /* Glow effect avec la couleur principale lors du focus */
-}
-
-button {
-  background: var(--main-clr); /* Couleur principale pour le bouton d'inscription */
-  color: #ffffff;
-  border: none;
-  transition: background-color 0.3s ease; /* Transition fluide pour l'interaction */
-}
-
-button:hover {
-  background: darken(var(--main-clr), 10%); /* Assombrir le bouton au survol */
 }

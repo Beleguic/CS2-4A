@@ -32,36 +32,31 @@ const email = ref('');
 const password = ref('');
 
 const register = async () => {
-    try {
-        const requestBody = {
-            email: email.value,
-            password: password.value
-            // Pas besoin d'envoyer emailContent ou verificationToken
-        };
+  try {
+    const requestBody = {
+      email: email.value,
+      password: password.value
+    };
 
-        // Effectuez la requête POST au backend
-        const response = await fetch(`${apiUrl}/users/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
+    const response = await fetch(`${apiUrl}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
 
-        // Récupérez la réponse JSON
-        const responseData = await response.json();
+    const responseData = await response.json();
 
-        if (response.ok) {
-            console.log('Inscription réussie:', responseData);
-            // Vous pouvez rediriger l'utilisateur ou faire d'autres actions ici
-            // Par exemple, affichez un message ou redirigez l'utilisateur vers la page de connexion
-        } else {
-            console.error('Erreur lors de l\'inscription:', responseData);
-            // Gérez les erreurs ici, comme montrer un message à l'utilisateur
-        }
-    } catch (error) {
-        console.error('Erreur lors de l\'envoi des données:', error);
+    if (response.ok) {
+      console.log('Inscription réussie:', responseData);
+      // Redirection ou gestion de session ici
+    } else {
+      console.error('Échec de l\'inscription:', responseData);
     }
+  } catch (error) {
+    console.error('Erreur lors de la communication avec l\'API:', error);
+  }
 };
 </script>
 
