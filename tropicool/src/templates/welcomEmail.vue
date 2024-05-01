@@ -9,15 +9,17 @@
 </template>
 
 <script setup>
-import { ref, computed, defineProps } from 'vue';
+// Importez les outils nécessaires depuis Vue si nécessaire
+import { ref, computed , defineProps} from 'vue';
 
-defineProps(['userName', 'verificationToken']);
+const userName = ref('Matiss HAILLOUY');
 
-const apiUrl = import.meta.env.VITE_API_URL;
-const userId = ref('12345'); // Cela doit être remplacé par une valeur dynamique en fonction de l'utilisateur
-
-// Calculez le lien de vérification en fonction du token de vérification
+defineProps({
+  userName: String,
+  verificationLink: String
+});
+// Calculez le lien de vérification
 const verificationLink = computed(() => {
-  return `${apiUrl}/verify-account?token=${verificationToken.value}&id=${userId.value}`;
+  return `${import.meta.env.VITE_API_URL}/verify-account?token=${verificationToken.value}&id=${userId.value}`;
 });
 </script>
