@@ -1,88 +1,77 @@
-const { Router } = require("express");
-const User = require("../models/user");
-const checkAuth = require("../middlewares/checkAuth");
-const router = new Router();
+const express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const router = express.Router();
+const User = require('../models/user');
+const checkAuth = require('../middlewares/checkAuth');
 
-router.get("/", checkAuth, async (req, res, next) => {
-  const users = await User.findAll({
-    where: req.query,
-  });
-  res.json(users);
-});
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
 
-router.post("/", async (req, res, next) => {
   try {
-    const user = await User.create(req.body);
-    res.status(201).json(user);
-  } catch (e) {
-    next(e);
-  }
-});
+    const user = await User.findOne({ where: { email: email } });
 
-router.get("/:id", async (req, res, next) => {
-  try {
-    const user = await User.findByPk(parseInt(req.params.id));
-    if (user) {
-      res.json(user);
-    } else {
-      res.sendStatus(404);
+    if (!user) {
+      return res.status(401).json({ message: 'Authentification échouée' });
     }
-  } catch (e) {
-    next(e);
-  }
-});
 
-router.patch("/:id", async (req, res, next) => {
-  try {
-    const [nbUpdated, users] = await User.update(req.body, {
-      where: {
-        id: parseInt(req.params.id),
-      },
-      returning: true,
-      individualHooks: true,
-    });
-    if (users[0]) {
-      res.json(users[0]);
-    } else {
-      res.sendStatus(404);
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Authentification échouée' });
     }
-  } catch (e) {
-    next(e);
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.json({
+      message: 'Connexion réussie',
+      token: token,
+      userId: user.id
+    });
+  } catch (error) {
+    console.error('Erreur lors de la connexion:', error);
+    res.status(500).json({ message: 'Erreur lors de la connexion de l’utilisateur.' });
   }
 });
 
-router.delete("/:id", async (req, res, next) => {
+
+router.get('/:userId', checkAuth, async (req, res, next) => {
   try {
-    const nbDeleted = await User.destroy({
-      where: {
-        id: parseInt(req.params.id),
-      },
-    });
-    if (nbDeleted === 1) {
-      res.sendStatus(204);
-    } else {
-      res.sendStatus(404);
+    const user = await User.findByPk(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
-  } catch (e) {
-    next(e);
+    res.status(200).json({ email: user.email, id: user.id });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors de la récupération de l\'utilisateur' });
   }
 });
 
-router.put("/:id", async (req, res, next) => {
-  try {
-    const nbDeleted = await User.destroy({
-      where: {
-        id: parseInt(req.params.id),
-      },
-    });
-    const user = await User.create({
-      ...req.body,
-      id: parseInt(req.params.id),
-    });
-    res.status(nbDeleted ? 200 : 201).json(user);
-  } catch (e) {
-    next(e);
-  }
+router.get('/verify/:token', async (req, res) => {
+    try {
+        const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+        const user = await User.findOne({ where: { verificationToken: req.params.token } });
+
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé ou token invalide.' });
+        }
+
+        user.isVerified = true;
+        user.verificationToken = null;
+        await user.save();
+
+        res.status(200).json({ message: 'Compte vérifié avec succès!' });
+    } catch (error) {
+        if (error instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({ message: 'Token de vérification invalide.' });
+        }
+        console.error('Error during account verification:', error);
+        res.status(500).json({ message: 'Erreur lors de la vérification du compte.' });
+    }
 });
 
 module.exports = router;

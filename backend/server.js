@@ -1,29 +1,27 @@
+require('dotenv').config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const UserRouter = require("./routes/user");
 const SecurityRouter = require("./routes/security");
 const app = express();
 const cors = require("cors");
+const nodemailer = require('nodemailer');
 
-//function parseBody(req, res, next) {
-//  const data = [];
-//  req.on("data", (chunk) => {
-//    data.push(chunk);
-//  });
-//  req.on("end", () => {
-//    const buffer = Buffer.concat(data);
-//    const body = buffer.toString();
-//    try {
-//      const bodyParsed = JSON.parse(body);
-//      req.body = bodyParsed;
-//      next();
-//    } catch (e) {
-//      return res.sendStatus(400);
-//    }
-//  });
-//}
 
-//app.use(parseBody);
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD
+  }
+});
+
+app.use((req, res, next) => {
+  req.transporter = transporter;
+  next();
+});
 app.use(express.json());
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(cors());
