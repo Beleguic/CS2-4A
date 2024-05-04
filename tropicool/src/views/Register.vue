@@ -13,32 +13,39 @@
             Mot de passe:
           </label>
           <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" type="password" id="password" v-model="password" required>
+          <p v-if="passwordError" class="text-red-500 text-xs italic">{{ passwordError }}</p>
         </div>
         <div class="flex items-center justify-between">
           <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
             S'inscrire
           </button>
         </div>
-        </form>
-      </div>
+      </form>
+    </div>
   </div>
 </template>
 
-
 <script setup>
 import { ref } from 'vue';
+
 const apiUrl = import.meta.env.VITE_API_URL;
 const email = ref('');
 const password = ref('');
+const passwordError = ref('');
 
 const register = async () => {
+  if (!validatePassword(password.value)) {
+    passwordError.value = 'Le mot de passe doit contenir au moins 12 caractères, incluant des majuscules, des minuscules, des chiffres et des symboles.';
+    return;
+  }
+
   try {
     const requestBody = {
       email: email.value,
       password: password.value
     };
 
-    const response = await fetch(`${apiUrl}/register`, {
+    const response = await fetch(`${apiUrl}/users/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -50,7 +57,7 @@ const register = async () => {
 
     if (response.ok) {
       console.log('Inscription réussie:', responseData);
-      // Redirection ou gestion de session ici
+      router.push('/');
     } else {
       console.error('Échec de l\'inscription:', responseData);
     }
@@ -58,11 +65,12 @@ const register = async () => {
     console.error('Erreur lors de la communication avec l\'API:', error);
   }
 };
+
+function validatePassword(password) {
+  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+  return regex.test(password);
+}
 </script>
 
-
 <style scoped>
-
-
 </style>
-    

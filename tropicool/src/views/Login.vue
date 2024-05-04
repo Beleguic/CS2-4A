@@ -15,39 +15,20 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
-import router from '../router'; // Assurez-vous que le chemin d'importation est correct
+import { useAuthStore } from '../stores/authStore';
 
-const apiUrl = import.meta.env.VITE_API_URL; // Remplacez par l'URL de votre API si différente
 const email = ref('');
 const password = ref('');
+const auth = useAuthStore();
 
 const login = async () => {
   try {
-    const response = await fetch(`${apiUrl}/users/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email: email.value, password: password.value })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Une erreur est survenue lors de la connexion.');
-    }
-
-    // Stockez le token dans le stockage local ou une autre méthode de stockage de votre choix
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('userId', data.userId);
-
-    // Redirigez l'utilisateur ou effectuez d'autres actions de connexion
-    router.push('/'); // Redirigez vers la page d'accueil ou le tableau de bord
-  } catch (error) {
-    console.error('Erreur lors de la connexion:', error);
-    alert(error.message);
+    await auth.login(email.value, password.value);
+  } catch (error: unknown) {
+    console.error('Erreur lors de la connexion:', (error as Error).message);
+    alert((error as Error).message);
   }
 };
 </script>

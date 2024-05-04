@@ -1,41 +1,48 @@
 require('dotenv').config();
 const express = require("express");
+const session = require('express-session');
 const cookieParser = require("cookie-parser");
 const UserRouter = require("./routes/user");
-const SecurityRouter = require("./routes/security");
-const app = express();
+const AuthRouter = require("./routes/auth");
 const cors = require("cors");
 const nodemailer = require('nodemailer');
+const app = express();
 
-
+// Configuration de Nodemailer
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
-  secure: false,
+  secure: false,  // true for 465, false for other ports
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASSWORD
   }
 });
 
+// Middleware pour rendre le transporter disponible dans les requêtes
 app.use((req, res, next) => {
   req.transporter = transporter;
   next();
 });
-app.use(express.json());
+
+// Configuration de la session
+app.use(session({
+  secret: 'challenge4IWS2', // Changez ceci pour une valeur secrète forte en production
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: process.env.NODE_ENV === 'production' } // Assurez-vous que les cookies sont sécurisés en production
+}));
+
+// Middlewares standards pour le parsing des cookies et des JSON bodies
 app.use(cookieParser(process.env.JWT_SECRET));
+app.use(express.json());
 app.use(cors());
 
-app.get("/", (req, res, next) => {
-  res.send("Coucou " + JSON.stringify(req.query));
-});
-
-app.post("/", (req, res, next) => {
-  res.send("Coucou FROM POST " + JSON.stringify(req.body));
-});
-
+// Utilisation du router pour les utilisateurs
 app.use("/users", UserRouter);
-app.use(SecurityRouter);
+app.use("/auth", AuthRouter);
+
+// Démarrage du serveur
 app.listen(process.env.PORT, () => {
   console.log("Server running on port " + process.env.PORT);
 });

@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('./db.js'); // Importez l'instance de connexion Sequelize ici.
+const sequelize = require('./db.js');
 
 class User extends Model {}
 
@@ -33,6 +33,27 @@ User.init({
     allowNull: true,
     field: 'verification_token'
   },
+  loginAttempts: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    field: 'login_attempts'
+  },
+  lockUntil: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'lock_until'
+  },
+  resetPasswordToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    field: 'reset_password_token'
+  },
+  resetPasswordExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'reset_password_expires'
+  },
+
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
