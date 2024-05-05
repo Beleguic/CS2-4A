@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, RouteRecordRaw, RouteLocationNormalized, NavigationGuardNext } from 'vue-router';
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
@@ -7,6 +7,7 @@ import VerifyAccount from '../views/VerifyAccount.vue';
 import Dashboard from '../views/Dashboard.vue';
 import ForgotPassword from '../views/ForgotPassword.vue';
 import ResetPassword from '../views/ResetPassword.vue';
+import axios from 'axios';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -33,7 +34,30 @@ const routes: Array<RouteRecordRaw> = [
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
-    meta: { requiresAdmin: true }
+    meta: { requiresAdmin: true },
+    beforeEnter: async (to, from, next) => {
+      try {
+        const auth = useAuthStore();
+        if (auth.isLoggedIn) {
+          const response = await axios.get(`${import.meta.env.VITE_API_URL}/auth/check-role`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+
+          if (response.data.role === 'admin') {
+            next();
+          } else {
+            next({ name: 'Home' });
+          }
+        } else {
+          next({ name: 'Login' });
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification du rôle:', error);
+        next({ name: 'Login' });
+      }
+    }
   },
   {
     path: '/forgot-password',
@@ -62,17 +86,5 @@ const router = createRouter({
   routes,
 });
 
-
-// Navigation guard pour protéger les routes nécessitant une authentification
-router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const isAuthenticated = localStorage.getItem('token');
-
-  if (requiresAuth && !isAuthenticated) {
-    next('/login');
-  } else {
-    next();
-  }
-});
 
 export default router;

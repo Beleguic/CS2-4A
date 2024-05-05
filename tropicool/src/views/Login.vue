@@ -12,6 +12,9 @@
       </div>
       <button type="submit">Se connecter</button>
     </form>
+    <div>
+      <RouterLink to="/forgot-password">Mot de passe oublié ?</RouterLink>
+    </div>
   </div>
 </template>
 

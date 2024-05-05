@@ -20,64 +20,64 @@ const transporter = nodemailer.createTransport({
 });
 
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-        const user = await User.findOne({ where: { email } });
+  try {
+      const user = await User.findOne({ where: { email } });
 
-        if (!user) {
-            return res.status(401).json({ message: 'Authentification échouée', loginAttempts: 0 });
+      if (!user) {
+          return res.status(401).json({ message: 'Authentification échouée', loginAttempts: 0 });
+      }
+
+      // Vérifier si le compte est verrouillé
+      if (user.lockUntil && user.lockUntil > new Date()) {
+        const daysSinceLastChange = (new Date() - user.passwordLastChanged) / (1000 * 60 * 60 * 24);
+
+        // Si le mot de passe doit être changé
+        if (daysSinceLastChange > 60) {
+            user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // Verrouillage pour 24 heures
+            console.log('Mot de passe doit être changé, envoi du mail de réinitialisation');
+            await sendPasswordResetEmail(user);
+            return res.status(403).json({
+                message: 'Vous devez renouveler votre mot de passe. Un mail vous a été envoyé.',
+                forcePasswordChange: true
+            });
         }
+        console.log('Compte verrouillé, tentative de connexion refusée');
+        return res.status(401).json({ message: 'Compte temporairement verrouillé. Réessayez plus tard.', loginAttempts: user.loginAttempts });
+      }
 
-        // Vérifier si le compte est verrouillé
-        if (user.lockUntil && user.lockUntil > new Date()) {
-          const daysSinceLastChange = (new Date() - user.passwordLastChanged) / (1000 * 60 * 60 * 24);
+      const isMatch = await bcrypt.compare(password, user.password);
 
-          // Si le mot de passe doit être changé
-          if (daysSinceLastChange > 60) {
-              user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // Verrouillage pour 24 heures
-              console.log('Mot de passe doit être changé, envoi du mail de réinitialisation');
-              await sendPasswordResetEmail(user);
-              return res.status(403).json({
-                  message: 'Vous devez renouveler votre mot de passe. Un mail vous a été envoyé.',
-                  forcePasswordChange: true
-              });
+      if (!isMatch) {
+          user.loginAttempts = (user.loginAttempts || 0) + 1;
+          if (user.loginAttempts >= 3) {
+              user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
+              user.loginAttempts = 0;
+              await user.save();
+
+              console.log('Compte verrouillé après trop de tentatives de connexion infructueuses');
+              await sendEmail(user.email, "Sécurité du Compte", "Votre compte a été verrouillé après 3 tentatives de connexion infructueuses.");
+              return res.status(401).json({ message: 'Compte temporairement verrouillé. Réessayez plus tard.', loginAttempts: user.loginAttempts });
           }
-          console.log('Compte verrouillé, tentative de connexion refusée');
-          return res.status(401).json({ message: 'Compte temporairement verrouillé. Réessayez plus tard.', loginAttempts: user.loginAttempts });
-        }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+          await user.save();
+          console.log('Tentative de connexion échouée, nombre de tentatives:', user.loginAttempts);
+          return res.status(401).json({ message: 'Authentification échouée', loginAttempts: user.loginAttempts });
+      }
 
-        if (!isMatch) {
-            user.loginAttempts = (user.loginAttempts || 0) + 1;
-            if (user.loginAttempts >= 3) {
-                user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
-                user.loginAttempts = 0;
-                await user.save();
+      // Réinitialiser les tentatives de connexion en cas de réussite
+      user.loginAttempts = 0;
+      user.lockUntil = null;
+      await user.save();
 
-                console.log('Compte verrouillé après trop de tentatives de connexion infructueuses');
-                await sendEmail(user.email, "Sécurité du Compte", "Votre compte a été verrouillé après 3 tentatives de connexion infructueuses.");
-                return res.status(401).json({ message: 'Compte temporairement verrouillé. Réessayez plus tard.', loginAttempts: user.loginAttempts });
-            }
+      const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-            await user.save();
-            console.log('Tentative de connexion échouée, nombre de tentatives:', user.loginAttempts);
-            return res.status(401).json({ message: 'Authentification échouée', loginAttempts: user.loginAttempts });
-        }
-
-        // Réinitialiser les tentatives de connexion en cas de réussite
-        user.loginAttempts = 0;
-        user.lockUntil = null;
-        await user.save();
-
-        const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        res.json({ message: 'Connexion réussie', token, userId: user.id, loginAttempts: user.loginAttempts });
-    } catch (error) {
-        console.error('Erreur lors de la connexion:', error);
-        res.status(500).json({ message: 'Erreur lors de la connexion de l’utilisateur.' });
-    }
+      res.json({ message: 'Connexion réussie', token, userId: user.id, role: user.role });
+  } catch (error) {
+      console.error('Erreur lors de la connexion:', error);
+      res.status(500).json({ message: 'Erreur lors de la connexion de l’utilisateur.' });
+  }
 });
 
 async function sendPasswordResetEmail(user) {
@@ -243,5 +243,23 @@ router.post('/logout', (req, res) => {
     res.status(200).send({ message: 'Déconnexion réussie' });
   });
 });
+
+router.get('/check-role', async (req, res) => {
+  try {
+      const token = req.headers['authorization'].split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findByPk(decoded.userId);
+
+      if (!user) {
+          return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+      }
+
+      res.status(200).json({ role: user.role });
+  } catch (error) {
+      console.error('Erreur lors de la vérification du rôle:', error);
+      res.status(500).json({ message: 'Erreur lors de la vérification du rôle.' });
+  }
+});
+
 module.exports = router;
       
