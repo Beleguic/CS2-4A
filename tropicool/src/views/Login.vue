@@ -28,9 +28,14 @@ const login = async () => {
     await auth.login(email.value, password.value);
   } catch (error: unknown) {
     console.error('Erreur lors de la connexion:', (error as Error).message);
-    alert((error as Error).message);
+    if ((error as Error).message.includes("expiré")) {
+      alert("Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser.");
+    } else {
+      alert((error as Error).message);
+    }
   }
 };
+
 </script>
 
 <style scoped>
