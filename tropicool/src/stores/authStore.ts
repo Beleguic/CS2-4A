@@ -5,6 +5,7 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     isLoggedIn: !!localStorage.getItem('token'),
     userId: localStorage.getItem('userId') || null,
+    userRole: localStorage.getItem('userRole') || null,
   }),
   actions: {
     async login(email: string, password: string) {
@@ -13,8 +14,10 @@ export const useAuthStore = defineStore('auth', {
         if (response.data.token) {
           localStorage.setItem('token', response.data.token);
           localStorage.setItem('userId', response.data.userId);
+          localStorage.setItem('userRole', response.data.role);
           this.isLoggedIn = true;
           this.userId = response.data.userId;
+          this.userRole = response.data.role;
           console.log("Connexion réussie");
         }
       } catch (error: unknown) {
@@ -36,8 +39,10 @@ export const useAuthStore = defineStore('auth', {
     logout() {
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
+      localStorage.removeItem('userRole');
       this.isLoggedIn = false;
       this.userId = null;
+      this.userRole = null;
       console.log("Déconnexion réussie");
     }
   }
