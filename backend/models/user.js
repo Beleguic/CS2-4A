@@ -53,7 +53,11 @@ User.init({
     allowNull: true,
     field: 'reset_password_expires'
   },
-
+  passwordLastChanged: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'password_last_changed'
+  },
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

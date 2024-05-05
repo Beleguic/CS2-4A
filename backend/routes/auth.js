@@ -9,11 +9,6 @@ const { Op } = require('sequelize');
 const { sendEmail } = require('../services/mailService');
 require('dotenv').config();
 
-
-
-
-
-
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
@@ -26,47 +21,77 @@ const transporter = nodemailer.createTransport({
 
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
+
     try {
-      const user = await User.findOne({ where: { email } });
-      if (!user) {
-        return res.status(401).json({ message: 'Authentification échouée', loginAttempts: 0 });
-      }
-  
-      // Vérifier si le compte est verrouillé
-      if (user.lockUntil && user.lockUntil > new Date()) {
-        return res.status(401).json({ message: 'Compte temporairement verrouillé. Réessayez plus tard.', loginAttempts: user.loginAttempts });
-      }
-  
-      const isMatch = await bcrypt.compare(password, user.password);
-  
-      if (!isMatch) {
-        user.loginAttempts = (user.loginAttempts || 0) + 1;
-        if (user.loginAttempts >= 3) {
-          user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
-          user.loginAttempts = 0;
-          await user.save();
-  
-          await sendEmail(user.email, "Sécurité du Compte", "Votre compte a été verrouillé après 3 tentatives de connexion infructueuses.");
+        const user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            return res.status(401).json({ message: 'Authentification échouée', loginAttempts: 0 });
+        }
+
+        // Vérifier si le compte est verrouillé
+        if (user.lockUntil && user.lockUntil > new Date()) {
+          const daysSinceLastChange = (new Date() - user.passwordLastChanged) / (1000 * 60 * 60 * 24);
+
+          // Si le mot de passe doit être changé
+          if (daysSinceLastChange > 60) {
+              user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // Verrouillage pour 24 heures
+              console.log('Mot de passe doit être changé, envoi du mail de réinitialisation');
+              await sendPasswordResetEmail(user);
+              return res.status(403).json({
+                  message: 'Vous devez renouveler votre mot de passe. Un mail vous a été envoyé.',
+                  forcePasswordChange: true
+              });
+          }
+          console.log('Compte verrouillé, tentative de connexion refusée');
           return res.status(401).json({ message: 'Compte temporairement verrouillé. Réessayez plus tard.', loginAttempts: user.loginAttempts });
         }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            user.loginAttempts = (user.loginAttempts || 0) + 1;
+            if (user.loginAttempts >= 3) {
+                user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
+                user.loginAttempts = 0;
+                await user.save();
+
+                console.log('Compte verrouillé après trop de tentatives de connexion infructueuses');
+                await sendEmail(user.email, "Sécurité du Compte", "Votre compte a été verrouillé après 3 tentatives de connexion infructueuses.");
+                return res.status(401).json({ message: 'Compte temporairement verrouillé. Réessayez plus tard.', loginAttempts: user.loginAttempts });
+            }
+
+            await user.save();
+            console.log('Tentative de connexion échouée, nombre de tentatives:', user.loginAttempts);
+            return res.status(401).json({ message: 'Authentification échouée', loginAttempts: user.loginAttempts });
+        }
+
+        // Réinitialiser les tentatives de connexion en cas de réussite
+        user.loginAttempts = 0;
+        user.lockUntil = null;
         await user.save();
-        return res.status(401).json({ message: 'Authentification échouée', loginAttempts: user.loginAttempts });
-      }
-  
-      // Réinitialiser les tentatives de connexion en cas de réussite
-      user.loginAttempts = 0;
-      user.lockUntil = null;
-      await user.save();
-  
-      const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  
-      res.json({ message: 'Connexion réussie', token, userId: user.id, loginAttempts: user.loginAttempts });
+
+        const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.json({ message: 'Connexion réussie', token, userId: user.id, loginAttempts: user.loginAttempts });
     } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
-      res.status(500).json({ message: 'Erreur lors de la connexion de l’utilisateur.' });
+        console.error('Erreur lors de la connexion:', error);
+        res.status(500).json({ message: 'Erreur lors de la connexion de l’utilisateur.' });
     }
-  });
-  
+});
+
+async function sendPasswordResetEmail(user) {
+    const token = crypto.randomBytes(20).toString('hex');
+    const expires = Date.now() + 3600000; // 1 heure
+
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = expires;
+    await user.save();
+
+    const resetLink = `${process.env.FRONT_END_URL}/reset-password?token=${token}`;
+
+    await sendEmail(user.email, 'Réinitialisation du mot de passe', `Vous devez renouveler votre mot de passe. Cliquez sur le lien suivant pour le réinitialiser : ${resetLink}`);
+}
 
 router.post('/forgot-password', async (req, res) => {
     try {
@@ -99,7 +124,6 @@ router.post('/forgot-password', async (req, res) => {
     }
   });
   
-
   router.post('/reset-password', async (req, res) => {
     try {
         const { token, password } = req.body;
@@ -117,6 +141,8 @@ router.post('/forgot-password', async (req, res) => {
         user.password = await bcrypt.hash(password, 10);
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
+        user.lockUntil = null;
+        user.passwordLastChanged = new Date();
         await user.save();
 
         res.status(200).json({ message: 'Mot de passe réinitialisé avec succès.' });
@@ -145,9 +171,9 @@ router.post('/register', async (req, res) => {
       email,
       password: hashedPassword,
       verificationToken,
-      passwordLastChanged: new Date()
+      passwordLastChanged: new Date(),
+      lockUntil: new Date('9999-12-31') // Verrouillage indéfini
     });
-
     // Préparation de l'email de bienvenue
     const emailContent = `
       <div>
@@ -162,7 +188,10 @@ router.post('/register', async (req, res) => {
     // Envoi de l'email de bienvenue
     try {
       await sendEmail(email, 'Bienvenue sur Troupicool!', emailContent);
-      res.status(201).json({ message: "Utilisateur enregistré avec succès et e-mail envoyé !", user: newUser });
+      res.status(201).json({ 
+        message: "Votre compte a été créé avec succès. Veuillez vérifier votre e-mail pour activer votre compte. Tant que vous n'aurez pas confirmé, votre compte restera bloqué.", 
+        user: newUser 
+      });
     } catch (error) {
       console.error('Erreur lors de l\'envoi de l\'e-mail:', error);
       res.status(500).json({
@@ -189,6 +218,8 @@ router.get('/verify/:token', async (req, res) => {
 
       user.isVerified = true;
       user.verificationToken = null;
+      user.lockUntil = null;
+
       await user.save();
 
       res.status(200).json({ message: 'Compte vérifié avec succès!' });

@@ -15,12 +15,18 @@ export const useAuthStore = defineStore('auth', {
           localStorage.setItem('userId', response.data.userId);
           this.isLoggedIn = true;
           this.userId = response.data.userId;
+          console.log("Connexion réussie");
         }
       } catch (error: unknown) {
         if (error instanceof AxiosError && error.response) {
           const serverError = error.response.data.message || 'Une erreur de réseau est survenue';
           const loginAttempts = error.response.data.loginAttempts || 0;
           console.log(`Tentatives de connexion échouées: ${loginAttempts}`);
+
+          if (error.response.data.forcePasswordChange) {
+            alert("Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser.");
+          }
+
           throw new Error('Login failed: ' + serverError);
         } else {
           throw new Error('Login failed: An unexpected error occurred');
@@ -32,6 +38,7 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('userId');
       this.isLoggedIn = false;
       this.userId = null;
+      console.log("Déconnexion réussie");
     }
   }
 });

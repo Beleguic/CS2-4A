@@ -10,27 +10,27 @@ const app = express();
 
 // Configuration de Nodemailer
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false,  // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD
-  }
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: false,  // true for 465, false for other ports
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD
+    }
 });
 
 // Middleware pour rendre le transporter disponible dans les requêtes
 app.use((req, res, next) => {
-  req.transporter = transporter;
-  next();
+    req.transporter = transporter;
+    next();
 });
 
 // Configuration de la session
 app.use(session({
-  secret: 'challenge4IWS2', // Changez ceci pour une valeur secrète forte en production
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'production' } // Assurez-vous que les cookies sont sécurisés en production
+    secret: 'challenge4IWS2',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
 // Middlewares standards pour le parsing des cookies et des JSON bodies
@@ -44,5 +44,5 @@ app.use("/auth", AuthRouter);
 
 // Démarrage du serveur
 app.listen(process.env.PORT, () => {
-  console.log("Server running on port " + process.env.PORT);
+    console.log("Server running on port " + process.env.PORT);
 });
