@@ -28,8 +28,10 @@ const submit = async () => {
       body: JSON.stringify({ token: route.query.token, password: password.value }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error('Une erreur est survenue. Veuillez réessayer.');
+      throw new Error(data.message || 'Une erreur est survenue. Veuillez réessayer.');
     }
 
     alert('Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.');
@@ -38,6 +40,7 @@ const submit = async () => {
     alert(error.message);
   }
 };
+
 </script>
 
 <style scoped>
