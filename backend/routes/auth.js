@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const PasswordHistory = require('../models/passwordhistory');
 const router = express.Router();
 const { Op } = require('sequelize');
 const { sendEmail } = require('../services/mailService');
@@ -51,16 +52,20 @@ router.post('/login', async (req, res) => {
 
       if (!isMatch) {
           user.loginAttempts = (user.loginAttempts || 0) + 1;
-          if (user.loginAttempts >= 3) {
-              user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
-              user.loginAttempts = 0;
-              await user.save();
-
-              console.log('Compte verrouillé après trop de tentatives de connexion infructueuses');
-              await sendEmail(user.email, "Sécurité du Compte", "Votre compte a été verrouillé après 3 tentatives de connexion infructueuses.");
-              return res.status(401).json({ message: 'Compte temporairement verrouillé. Réessayez plus tard.', loginAttempts: user.loginAttempts });
-          }
-
+        if (user.loginAttempts >= 3) {
+            user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000); // Verrouillage pour 2 heures
+            user.loginAttempts = 0;
+            await user.save();
+        
+            console.log('Compte verrouillé après trop de tentatives de connexion infructueuses');
+            await sendAccountLockedEmail(user);
+            return res.status(401).json({
+                message: 'Compte temporairement verrouillé. Réessayez plus tard.',
+                loginAttempts: user.loginAttempts,
+                lockUntil: user.lockUntil
+            });
+        }
+        
           await user.save();
           console.log('Tentative de connexion échouée, nombre de tentatives:', user.loginAttempts);
           return res.status(401).json({ message: 'Authentification échouée', loginAttempts: user.loginAttempts });
@@ -79,6 +84,16 @@ router.post('/login', async (req, res) => {
       res.status(500).json({ message: 'Erreur lors de la connexion de l’utilisateur.' });
   }
 });
+
+async function sendAccountLockedEmail(user) {
+    const lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000); // Calcul de la date de déblocage (2 heures plus tard)
+    const formattedLockUntil = lockUntil.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
+
+    const emailContent = `Votre compte a été verrouillé suite à plusieurs tentatives de connexion infructueuses. Vous pourrez réessayer de vous connecter le ${formattedLockUntil}.`;
+
+    await sendEmail(user.email, "Sécurité du Compte", emailContent);
+}
+
 
 async function sendPasswordResetEmail(user) {
     const token = crypto.randomBytes(20).toString('hex');
@@ -124,34 +139,56 @@ router.post('/forgot-password', async (req, res) => {
     }
   });
   
-  router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', async (req, res) => {
     try {
-        const { token, password } = req.body;
-        const user = await User.findOne({
-            where: {
-                resetPasswordToken: token,
-                resetPasswordExpires: { [Op.gt]: Date.now() }
-            }
-        });
-
-        if (!user) {
-            return res.status(400).json({ message: 'Token invalide ou expiré.' });
+      const { token, password } = req.body;
+      const user = await User.findOne({
+        where: {
+          resetPasswordToken: token,
+          resetPasswordExpires: { [Op.gt]: Date.now() }
         }
+      });
+  
+      if (!user) {
+        return res.status(400).json({ message: 'Token invalide ou expiré.' });
+      }
+  
+      // Vérifier l'historique des mots de passe
+      const previousPasswords = await PasswordHistory.findAll({
+        where: { userId: user.id }
+      });
+  
+      const newPasswordHash = await bcrypt.hash(password, 10);
+      for (let entry of previousPasswords) {
+        if (await bcrypt.compare(password, entry.hashedPassword)) {
+          const error = new Error('Vous ne pouvez pas réutiliser un ancien mot de passe.');
+          error.code = 400;
+          throw error;
+        }
+      }
+  
+      user.password = newPasswordHash;
+      user.resetPasswordToken = null;
+      user.resetPasswordExpires = null;
+      user.passwordLastChanged = new Date();
+      user.lockUntil = null;
 
-        user.password = await bcrypt.hash(password, 10);
-        user.resetPasswordToken = null;
-        user.resetPasswordExpires = null;
-        user.lockUntil = null;
-        user.passwordLastChanged = new Date();
-        await user.save();
-
-        res.status(200).json({ message: 'Mot de passe réinitialisé avec succès.' });
+      await user.save();
+  
+      // Enregistrer le nouveau mot de passe dans l'historique
+      await PasswordHistory.create({
+        userId: user.id,
+        hashedPassword: newPasswordHash
+      });
+  
+      res.status(200).json({ message: 'Mot de passe réinitialisé avec succès.' });
     } catch (error) {
         console.error('Erreur lors de la réinitialisation du mot de passe:', error);
-        res.status(500).json({ message: 'Erreur lors de la réinitialisation du mot de passe.' });
+        const statusCode = error.code || 500;
+        res.status(statusCode).json({ message: error.message || 'Erreur lors de la réinitialisation du mot de passe.' });
     }
-});
-
+  });
+  
 if (!process.env.SMTP_HOST || !process.env.JWT_SECRET) {
   console.error("Missing required environment variables");
   process.exit(1);
@@ -174,6 +211,11 @@ router.post('/register', async (req, res) => {
       passwordLastChanged: new Date(),
       lockUntil: new Date('9999-12-31') // Verrouillage indéfini
     });
+    await PasswordHistory.create({
+        userId: newUser.id,
+        hashedPassword
+      });
+  
     // Préparation de l'email de bienvenue
     const emailContent = `
       <div>
