@@ -1,17 +1,11 @@
 <template>
   <div class="login-container">
     <h1>Connexion</h1>
-    <form @submit.prevent="login">
-      <div>
-        <label for="email">Email:</label>
-        <input type="email" id="email" v-model="email" required>
-      </div>
-      <div>
-        <label for="password">Mot de passe:</label>
-        <input type="password" id="password" v-model="password" required>
-      </div>
-      <button type="submit">Se connecter</button>
-    </form>
+    <FormComponent
+      :fields="fields"
+      submitButtonText="Se connecter"
+      @submit="login"
+    />
     <div>
       <RouterLink to="/forgot-password">Mot de passe oublié ?</RouterLink>
     </div>
@@ -20,15 +14,22 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
+import FormComponent from '../components/FormComponent.vue';
 
-const email = ref('');
-const password = ref('');
+const router = useRouter();
 const auth = useAuthStore();
 
-const login = async () => {
+const fields = [
+  { name: 'email', label: 'Email', type: 'email', required: true },
+  { name: 'password', label: 'Mot de passe', type: 'password', required: true },
+];
+
+const login = async (formData: { email: string, password: string }) => {
   try {
-    await auth.login(email.value, password.value);
+    await auth.login(formData.email, formData.password);
+    router.push('/');
   } catch (error: unknown) {
     console.error('Erreur lors de la connexion:', (error as Error).message);
     if ((error as Error).message.includes("expiré")) {
@@ -38,7 +39,6 @@ const login = async () => {
     }
   }
 };
-
 </script>
 
 <style scoped>

@@ -7,6 +7,7 @@ import VerifyAccount from '../views/VerifyAccount.vue';
 import Dashboard from '../views/Dashboard.vue';
 import ForgotPassword from '../views/ForgotPassword.vue';
 import ResetPassword from '../views/ResetPassword.vue';
+import Profile from '../views/Profile.vue';
 import axios from 'axios';
 
 const routes: Array<RouteRecordRaw> = [
@@ -78,7 +79,13 @@ const routes: Array<RouteRecordRaw> = [
       await auth.logout();
       next('/login');
     }
-  }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
+  },
+
 ];
 
 const router = createRouter({
