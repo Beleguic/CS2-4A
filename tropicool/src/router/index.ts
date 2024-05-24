@@ -1,10 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+import { useAuthStore } from '../stores/authStore';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Register from '../views/Register.vue';
-import VerifyAccount from '../views/VerifyAccount.vue'
+import VerifyAccount from '../views/VerifyAccount.vue';
+import Dashboard from '../views/Dashboard.vue';
+import ForgotPassword from '../views/ForgotPassword.vue';
+import ResetPassword from '../views/ResetPassword.vue';
+import Profile from '../views/Profile.vue';
+import axios from 'axios';
 
-const routes = [
+const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'Home',
@@ -23,14 +29,69 @@ const routes = [
   {
     path: '/verify-account',
     name: 'VerifyAccount',
-    component: VerifyAccount
+    component: VerifyAccount,
   },
-  // Ajoutez d'autres routes ici
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: Dashboard,
+    meta: { requiresAdmin: true },
+    beforeEnter: async (to, from, next) => {
+      try {
+        const auth = useAuthStore();
+        if (auth.isLoggedIn) {
+          const response = await axios.get(`${import.meta.env.VITE_API_URL}/auth/check-role`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+
+          if (response.data.role === 'admin') {
+            next();
+          } else {
+            next({ name: 'Home' });
+          }
+        } else {
+          next({ name: 'Login' });
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification du rôle:', error);
+        next({ name: 'Login' });
+      }
+    }
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: ForgotPassword,
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: ResetPassword,
+  },
+  {
+    path: '/logout',
+    name: 'Logout',
+    redirect: '/login',
+    beforeEnter: async (to, from, next) => {
+      const auth = useAuthStore();
+      await auth.logout();
+      next('/login');
+    }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
+  },
+
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+
 
 export default router;

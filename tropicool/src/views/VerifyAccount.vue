@@ -18,7 +18,7 @@ onMounted(async () => {
 
     if (token) {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/verify/${token}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/verify/${token}`, {
                 method: 'GET',
             });
             if (response.ok) {

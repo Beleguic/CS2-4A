@@ -1,53 +1,42 @@
 <template>
   <div class="login-container">
     <h1>Connexion</h1>
-    <form @submit.prevent="login">
-      <div>
-        <label for="email">Email:</label>
-        <input type="email" id="email" v-model="email" required>
-      </div>
-      <div>
-        <label for="password">Mot de passe:</label>
-        <input type="password" id="password" v-model="password" required>
-      </div>
-      <button type="submit">Se connecter</button>
-    </form>
+    <FormComponent
+      :fields="fields"
+      submitButtonText="Se connecter"
+      @submit="login"
+    />
+    <div>
+      <RouterLink to="/forgot-password">Mot de passe oublié ?</RouterLink>
+    </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
-import router from '../router'; // Assurez-vous que le chemin d'importation est correct
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/authStore';
+import FormComponent from '../components/FormComponent.vue';
 
-const apiUrl = import.meta.env.VITE_API_URL; // Remplacez par l'URL de votre API si différente
-const email = ref('');
-const password = ref('');
+const router = useRouter();
+const auth = useAuthStore();
 
-const login = async () => {
+const fields = [
+  { name: 'email', label: 'Email', type: 'email', required: true },
+  { name: 'password', label: 'Mot de passe', type: 'password', required: true },
+];
+
+const login = async (formData: { email: string, password: string }) => {
   try {
-    const response = await fetch(`${apiUrl}/users/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email: email.value, password: password.value })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Une erreur est survenue lors de la connexion.');
+    await auth.login(formData.email, formData.password);
+    router.push('/');
+  } catch (error: unknown) {
+    console.error('Erreur lors de la connexion:', (error as Error).message);
+    if ((error as Error).message.includes("expiré")) {
+      alert("Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser.");
+    } else {
+      alert((error as Error).message);
     }
-
-    // Stockez le token dans le stockage local ou une autre méthode de stockage de votre choix
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('userId', data.userId);
-
-    // Redirigez l'utilisateur ou effectuez d'autres actions de connexion
-    router.push('/'); // Redirigez vers la page d'accueil ou le tableau de bord
-  } catch (error) {
-    console.error('Erreur lors de la connexion:', error);
-    alert(error.message);
   }
 };
 </script>

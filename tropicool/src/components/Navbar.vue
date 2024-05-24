@@ -1,39 +1,41 @@
 <template>
-        <nav class="navbar">
-        <!-- Icône ou logo de l'application -->
-        <img src="../assets/logo.webp" alt="Logo" class="navbar-logo">
-    
-        <!-- Liens de navigation -->
-        <div class="navbar-links">
-        <router-link to="/login">Connexion</router-link>
-        <router-link to="/register">Inscription</router-link>
-        </div>
+    <nav class="navbar">
+      <img src="../assets/logo.webp" alt="Logo" class="navbar-logo">
+      <div class="navbar-links">
+        <router-link v-if="!auth.isLoggedIn" to="/login">Connexion</router-link>
+        <router-link v-if="!auth.isLoggedIn" to="/register">Inscription</router-link>
+        <button v-if="auth.isLoggedIn" @click="logout">Déconnexion</button>
+      </div>
     </nav>
-</template>
-    
-<script setup>
-    // Si vous avez besoin de logique pour la barre de navigation, elle ira ici.
-</script>
-    
-<style scoped>
+  </template>
+  
+  <script setup>
+  import { useAuthStore } from '../stores/authStore';
+  
+  const auth = useAuthStore();
+  
+  function logout() {
+    auth.logout();
+  }
+  </script>
+  <style scoped>
     .navbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        background-color: #333;
-        color: #fff;
-        width: 100%;
-    }
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background-color: #333;
+      color: #fff;
+      width: 100%;
+  }
     
-    .navbar-logo {
-        width: 50px; /* Ajustez la taille de votre logo */
-    }
+  .navbar-logo {
+      width: 50px;
+  }
     
-    .navbar-links a {
-        color: #fff;
-        text-decoration: none;
-        margin-left: 1rem;
-    }
-    /* Ajoutez d'autres styles selon vos besoins */
-</style>
+  .navbar-links a, .navbar-links button {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 1rem;
+  }
+  </style>
