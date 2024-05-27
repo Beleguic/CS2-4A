@@ -46,7 +46,55 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: app
 
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    depends_on:
+      - node
+      - vue
+      - postgres
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ./nginx/conf.d:/etc/nginx/conf.d
+
+  adminer:
+    image: adminer
+    restart: always
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - 8080:8080
+
+
+  samba:
+    image: dperson/samba
+    restart: always
+    ports:
+      - 137:137/udp
+      - 138:138/udp
+      - 139:139/tcp
+      - 445:445/tcp
+    volumes:
+      - ./shared:/mount
+    environment:
+      USERID: 1000
+      GROUPID: 1000
+    command: '-s "public;/mount;yes;no;no;allusers"'
+
 volumes:
   mongo-data: {}
   postgres-data: {}
-
+  certbot-etc: {}
+  certbot-var: {}
