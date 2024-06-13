@@ -1,7 +1,7 @@
 <template>
   <div class="relative w-full bg-custom">
     <div class="flex flex-col items-center gap-4 min-h-screen">
-      <img src="/logo-troupicool.png" class="w-40">
+      <img src="/images/logo-troupicool.png" class="w-40">
       <div class="w-full max-w-md bg-main p-8 rounded-3xl shadow-lg mb-16 grid gap-8">
         <h2 class="text-2xl font-bold mb-1 text-center text-white">Connexion</h2>
         <FormComponent
@@ -60,7 +60,7 @@ body {
 }
 
 .bg-custom {
-  background: url('image-background.jpg') repeat center center;
+  background: url('/images/image-background.svg') repeat center center;
   background-size: cover;
 }
 

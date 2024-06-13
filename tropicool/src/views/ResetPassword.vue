@@ -1,7 +1,7 @@
 <template>
   <div class="relative w-full bg-custom">
     <div class="flex flex-col items-center gap-4">
-      <img src="/logo-troupicool.png" class="w-40">
+      <img src="/images/logo-troupicool.png" class="w-40">
       <div class="w-full max-w-2xl bg-[rgb(105,107,226)] p-8 rounded-3xl shadow-lg mb-16">
         <h2 class="text-2xl font-bold mb-1 text-center text-white">Réinitialiser le mot de passe</h2>
         <FormComponent
@@ -48,7 +48,7 @@ const submit = async () => {
   }
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/reset-password`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}auth/reset-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

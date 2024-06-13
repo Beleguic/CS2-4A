@@ -1,0 +1,530 @@
+2024/06/25 09:03:55 [notice] 1#1: using the "epoll" event method
+2024/06/25 09:03:55 [notice] 1#1: nginx/1.27.0
+2024/06/25 09:03:55 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/06/25 09:03:55 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/06/25 09:03:55 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/06/25 09:03:55 [notice] 1#1: start worker processes
+2024/06/25 09:03:55 [notice] 1#1: start worker process 28
+2024/06/25 10:54:43 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/06/25 10:54:43 [notice] 28#28: gracefully shutting down
+2024/06/25 10:54:43 [notice] 28#28: exiting
+2024/06/25 10:54:43 [notice] 28#28: exit
+2024/06/25 10:54:43 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/06/25 10:54:43 [notice] 1#1: worker process 28 exited with code 0
+2024/06/25 10:54:43 [notice] 1#1: exit
+2024/06/25 10:55:40 [notice] 1#1: using the "epoll" event method
+2024/06/25 10:55:40 [notice] 1#1: nginx/1.27.0
+2024/06/25 10:55:40 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/06/25 10:55:40 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/06/25 10:55:40 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/06/25 10:55:40 [notice] 1#1: start worker processes
+2024/06/25 10:55:40 [notice] 1#1: start worker process 28
+2024/06/25 11:01:09 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/06/25 11:01:09 [notice] 28#28: gracefully shutting down
+2024/06/25 11:01:09 [notice] 28#28: exiting
+2024/06/25 11:01:09 [notice] 28#28: exit
+2024/06/25 11:01:09 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/06/25 11:01:09 [notice] 1#1: worker process 28 exited with code 0
+2024/06/25 11:01:09 [notice] 1#1: exit
+2024/06/25 11:01:37 [notice] 1#1: using the "epoll" event method
+2024/06/25 11:01:37 [notice] 1#1: nginx/1.27.0
+2024/06/25 11:01:37 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/06/25 11:01:37 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/06/25 11:01:37 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/06/25 11:01:37 [notice] 1#1: start worker processes
+2024/06/25 11:01:37 [notice] 1#1: start worker process 28
+2024/07/06 14:59:44 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 14:59:45 [notice] 28#28: gracefully shutting down
+2024/07/06 14:59:45 [notice] 28#28: exiting
+2024/07/06 14:59:45 [notice] 28#28: exit
+2024/07/06 14:59:45 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 14:59:45 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 14:59:45 [notice] 1#1: exit
+2024/07/06 15:03:16 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:03:16 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:03:16 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:03:16 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:03:16 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:03:16 [notice] 1#1: start worker processes
+2024/07/06 15:03:16 [notice] 1#1: start worker process 28
+2024/07/06 15:05:45 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:05:45 [notice] 28#28: gracefully shutting down
+2024/07/06 15:05:45 [notice] 28#28: exiting
+2024/07/06 15:05:45 [notice] 28#28: exit
+2024/07/06 15:05:45 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:05:45 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:05:45 [notice] 1#1: exit
+2024/07/06 15:06:06 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:06:06 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:06:06 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:06:06 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:06:06 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:06:06 [notice] 1#1: start worker processes
+2024/07/06 15:06:06 [notice] 1#1: start worker process 28
+2024/07/06 15:08:20 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:08:20 [notice] 28#28: gracefully shutting down
+2024/07/06 15:08:20 [notice] 28#28: exiting
+2024/07/06 15:08:20 [notice] 28#28: exit
+2024/07/06 15:08:20 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:08:20 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:08:20 [notice] 1#1: exit
+2024/07/06 15:10:13 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:10:13 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:10:13 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:10:13 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:10:13 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:10:13 [notice] 1#1: start worker processes
+2024/07/06 15:10:13 [notice] 1#1: start worker process 28
+2024/07/06 15:15:15 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:15:15 [notice] 28#28: gracefully shutting down
+2024/07/06 15:15:15 [notice] 28#28: exiting
+2024/07/06 15:15:15 [notice] 28#28: exit
+2024/07/06 15:15:15 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:15:15 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:15:15 [notice] 1#1: exit
+2024/07/06 15:16:06 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 15:17:15 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 15:21:18 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:21:18 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:21:18 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:21:18 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:21:18 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:21:18 [notice] 1#1: start worker processes
+2024/07/06 15:21:18 [notice] 1#1: start worker process 28
+2024/07/06 15:24:04 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:24:04 [notice] 28#28: gracefully shutting down
+2024/07/06 15:24:04 [notice] 28#28: exiting
+2024/07/06 15:24:04 [notice] 28#28: exit
+2024/07/06 15:24:04 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:24:04 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:24:04 [notice] 1#1: exit
+2024/07/06 15:24:20 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:24:20 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:24:20 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:24:20 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:24:20 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:24:20 [notice] 1#1: start worker processes
+2024/07/06 15:24:20 [notice] 1#1: start worker process 28
+2024/07/06 15:25:51 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:25:51 [notice] 28#28: gracefully shutting down
+2024/07/06 15:25:51 [notice] 28#28: exiting
+2024/07/06 15:25:51 [notice] 28#28: exit
+2024/07/06 15:25:51 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:25:51 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:25:51 [notice] 1#1: exit
+2024/07/06 15:25:52 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:25:52 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:25:52 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:25:52 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:25:52 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:25:52 [notice] 1#1: start worker processes
+2024/07/06 15:25:52 [notice] 1#1: start worker process 27
+2024/07/06 15:26:54 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:26:54 [notice] 27#27: gracefully shutting down
+2024/07/06 15:26:54 [notice] 27#27: exiting
+2024/07/06 15:26:54 [notice] 27#27: exit
+2024/07/06 15:26:54 [notice] 1#1: signal 17 (SIGCHLD) received from 27
+2024/07/06 15:26:54 [notice] 1#1: worker process 27 exited with code 0
+2024/07/06 15:26:54 [notice] 1#1: exit
+2024/07/06 15:27:16 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:27:16 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:27:16 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:27:16 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:27:16 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:27:16 [notice] 1#1: start worker processes
+2024/07/06 15:27:16 [notice] 1#1: start worker process 28
+2024/07/06 15:28:59 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:28:59 [notice] 28#28: gracefully shutting down
+2024/07/06 15:28:59 [notice] 28#28: exiting
+2024/07/06 15:28:59 [notice] 28#28: exit
+2024/07/06 15:28:59 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:28:59 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:28:59 [notice] 1#1: exit
+2024/07/06 15:28:59 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:28:59 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:28:59 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:28:59 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:28:59 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:28:59 [notice] 1#1: start worker processes
+2024/07/06 15:28:59 [notice] 1#1: start worker process 28
+2024/07/06 15:30:20 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:30:20 [notice] 28#28: gracefully shutting down
+2024/07/06 15:30:20 [notice] 28#28: exiting
+2024/07/06 15:30:20 [notice] 28#28: exit
+2024/07/06 15:30:20 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:30:20 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:30:20 [notice] 1#1: exit
+2024/07/06 15:30:36 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 15:32:42 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:32:42 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:32:42 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:32:42 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:32:42 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:32:42 [notice] 1#1: start worker processes
+2024/07/06 15:32:42 [notice] 1#1: start worker process 28
+2024/07/06 15:36:12 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:36:12 [notice] 28#28: gracefully shutting down
+2024/07/06 15:36:12 [notice] 28#28: exiting
+2024/07/06 15:36:12 [notice] 28#28: exit
+2024/07/06 15:36:12 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:36:12 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:36:12 [notice] 1#1: exit
+2024/07/06 15:36:29 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 15:39:42 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:39:42 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:39:42 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:39:42 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:39:42 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:39:42 [notice] 1#1: start worker processes
+2024/07/06 15:39:42 [notice] 1#1: start worker process 28
+2024/07/06 15:49:59 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:49:59 [notice] 28#28: gracefully shutting down
+2024/07/06 15:49:59 [notice] 28#28: exiting
+2024/07/06 15:49:59 [notice] 28#28: exit
+2024/07/06 15:49:59 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:49:59 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:49:59 [notice] 1#1: exit
+2024/07/06 15:50:13 [notice] 1#1: using the "epoll" event method
+2024/07/06 15:50:13 [notice] 1#1: nginx/1.27.0
+2024/07/06 15:50:13 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 15:50:13 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 15:50:13 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 15:50:13 [notice] 1#1: start worker processes
+2024/07/06 15:50:13 [notice] 1#1: start worker process 28
+2024/07/06 15:53:48 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 15:53:48 [notice] 28#28: gracefully shutting down
+2024/07/06 15:53:48 [notice] 28#28: exiting
+2024/07/06 15:53:48 [notice] 28#28: exit
+2024/07/06 15:53:48 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 15:53:48 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 15:53:48 [notice] 1#1: exit
+2024/07/06 15:53:58 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 15:55:27 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 15:57:19 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 16:01:00 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 16:02:17 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 16:02:57 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 16:04:13 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 16:06:27 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 16:10:01 [emerg] 1#1: cannot load certificate "/etc/letsencrypt/live/troupicool.fr/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/troupicool.fr/fullchain.pem, r) error:10000080:BIO routines::no such file)
+2024/07/06 16:31:52 [notice] 1#1: using the "epoll" event method
+2024/07/06 16:31:52 [notice] 1#1: nginx/1.27.0
+2024/07/06 16:31:52 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 16:31:52 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 16:31:52 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 16:31:52 [notice] 1#1: start worker processes
+2024/07/06 16:31:52 [notice] 1#1: start worker process 28
+2024/07/06 16:44:20 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 16:44:20 [notice] 28#28: gracefully shutting down
+2024/07/06 16:44:20 [notice] 28#28: exiting
+2024/07/06 16:44:20 [notice] 28#28: exit
+2024/07/06 16:44:20 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 16:44:20 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 16:44:20 [notice] 1#1: exit
+2024/07/06 16:44:37 [notice] 1#1: using the "epoll" event method
+2024/07/06 16:44:37 [notice] 1#1: nginx/1.27.0
+2024/07/06 16:44:37 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 16:44:37 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 16:44:37 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 16:44:37 [notice] 1#1: start worker processes
+2024/07/06 16:44:37 [notice] 1#1: start worker process 28
+2024/07/06 16:47:47 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 16:47:47 [notice] 28#28: gracefully shutting down
+2024/07/06 16:47:47 [notice] 28#28: exiting
+2024/07/06 16:47:47 [notice] 28#28: exit
+2024/07/06 16:47:47 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 16:47:47 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 16:47:47 [notice] 1#1: exit
+2024/07/06 16:47:54 [notice] 1#1: using the "epoll" event method
+2024/07/06 16:47:54 [notice] 1#1: nginx/1.27.0
+2024/07/06 16:47:54 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 16:47:54 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 16:47:54 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 16:47:54 [notice] 1#1: start worker processes
+2024/07/06 16:47:54 [notice] 1#1: start worker process 28
+2024/07/06 16:50:43 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/06 16:50:43 [notice] 28#28: gracefully shutting down
+2024/07/06 16:50:43 [notice] 28#28: exiting
+2024/07/06 16:50:43 [notice] 28#28: exit
+2024/07/06 16:50:43 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/06 16:50:43 [notice] 1#1: worker process 28 exited with code 0
+2024/07/06 16:50:43 [notice] 1#1: exit
+2024/07/06 16:50:53 [notice] 1#1: using the "epoll" event method
+2024/07/06 16:50:53 [notice] 1#1: nginx/1.27.0
+2024/07/06 16:50:53 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/06 16:50:53 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/06 16:50:53 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/06 16:50:53 [notice] 1#1: start worker processes
+2024/07/06 16:50:53 [notice] 1#1: start worker process 28
+2024/07/07 13:28:15 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 13:28:15 [notice] 28#28: gracefully shutting down
+2024/07/07 13:28:15 [notice] 28#28: exiting
+2024/07/07 13:28:15 [notice] 28#28: exit
+2024/07/07 13:28:15 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 13:28:15 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 13:28:15 [notice] 1#1: exit
+2024/07/07 13:28:38 [notice] 1#1: using the "epoll" event method
+2024/07/07 13:28:38 [notice] 1#1: nginx/1.27.0
+2024/07/07 13:28:38 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 13:28:38 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 13:28:38 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 13:28:38 [notice] 1#1: start worker processes
+2024/07/07 13:28:38 [notice] 1#1: start worker process 28
+2024/07/07 13:30:45 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 13:30:45 [notice] 28#28: gracefully shutting down
+2024/07/07 13:30:45 [notice] 28#28: exiting
+2024/07/07 13:30:45 [notice] 28#28: exit
+2024/07/07 13:30:45 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 13:30:45 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 13:30:45 [notice] 1#1: exit
+2024/07/07 13:31:45 [notice] 1#1: using the "epoll" event method
+2024/07/07 13:31:45 [notice] 1#1: nginx/1.27.0
+2024/07/07 13:31:45 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 13:31:45 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 13:31:45 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 13:31:45 [notice] 1#1: start worker processes
+2024/07/07 13:31:45 [notice] 1#1: start worker process 28
+2024/07/07 13:34:01 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 13:34:01 [notice] 28#28: gracefully shutting down
+2024/07/07 13:34:01 [notice] 28#28: exiting
+2024/07/07 13:34:01 [notice] 28#28: exit
+2024/07/07 13:34:01 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 13:34:01 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 13:34:01 [notice] 1#1: exit
+2024/07/07 13:34:13 [notice] 1#1: using the "epoll" event method
+2024/07/07 13:34:13 [notice] 1#1: nginx/1.27.0
+2024/07/07 13:34:13 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 13:34:13 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 13:34:13 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 13:34:13 [notice] 1#1: start worker processes
+2024/07/07 13:34:13 [notice] 1#1: start worker process 28
+2024/07/07 13:39:19 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 13:39:19 [notice] 28#28: gracefully shutting down
+2024/07/07 13:39:19 [notice] 28#28: exiting
+2024/07/07 13:39:19 [notice] 28#28: exit
+2024/07/07 13:39:20 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 13:39:20 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 13:39:20 [notice] 1#1: exit
+2024/07/07 13:39:44 [notice] 1#1: using the "epoll" event method
+2024/07/07 13:39:44 [notice] 1#1: nginx/1.27.0
+2024/07/07 13:39:44 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 13:39:44 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 13:39:44 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 13:39:44 [notice] 1#1: start worker processes
+2024/07/07 13:39:44 [notice] 1#1: start worker process 28
+2024/07/07 13:41:08 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 13:41:08 [notice] 28#28: gracefully shutting down
+2024/07/07 13:41:08 [notice] 28#28: exiting
+2024/07/07 13:41:08 [notice] 28#28: exit
+2024/07/07 13:41:08 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 13:41:08 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 13:41:08 [notice] 1#1: exit
+2024/07/07 13:41:18 [notice] 1#1: using the "epoll" event method
+2024/07/07 13:41:18 [notice] 1#1: nginx/1.27.0
+2024/07/07 13:41:18 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 13:41:18 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 13:41:18 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 13:41:18 [notice] 1#1: start worker processes
+2024/07/07 13:41:18 [notice] 1#1: start worker process 28
+2024/07/07 13:47:19 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 13:47:19 [notice] 28#28: gracefully shutting down
+2024/07/07 13:47:19 [notice] 28#28: exiting
+2024/07/07 13:47:19 [notice] 28#28: exit
+2024/07/07 13:47:19 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 13:47:19 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 13:47:19 [notice] 1#1: exit
+2024/07/07 13:47:33 [notice] 1#1: using the "epoll" event method
+2024/07/07 13:47:33 [notice] 1#1: nginx/1.27.0
+2024/07/07 13:47:33 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 13:47:33 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 13:47:33 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 13:47:33 [notice] 1#1: start worker processes
+2024/07/07 13:47:33 [notice] 1#1: start worker process 28
+2024/07/07 13:50:33 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 13:50:33 [notice] 28#28: gracefully shutting down
+2024/07/07 13:50:33 [notice] 28#28: exiting
+2024/07/07 13:50:33 [notice] 28#28: exit
+2024/07/07 13:50:33 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 13:50:33 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 13:50:33 [notice] 1#1: exit
+2024/07/07 13:50:41 [notice] 1#1: using the "epoll" event method
+2024/07/07 13:50:41 [notice] 1#1: nginx/1.27.0
+2024/07/07 13:50:41 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 13:50:41 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 13:50:41 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 13:50:41 [notice] 1#1: start worker processes
+2024/07/07 13:50:41 [notice] 1#1: start worker process 28
+2024/07/07 13:56:25 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 13:56:25 [notice] 28#28: gracefully shutting down
+2024/07/07 13:56:25 [notice] 28#28: exiting
+2024/07/07 13:56:25 [notice] 28#28: exit
+2024/07/07 13:56:25 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 13:56:25 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 13:56:25 [notice] 1#1: exit
+2024/07/07 13:56:41 [notice] 1#1: using the "epoll" event method
+2024/07/07 13:56:41 [notice] 1#1: nginx/1.27.0
+2024/07/07 13:56:41 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 13:56:41 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 13:56:41 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 13:56:41 [notice] 1#1: start worker processes
+2024/07/07 13:56:41 [notice] 1#1: start worker process 28
+2024/07/07 14:00:59 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 14:00:59 [notice] 28#28: gracefully shutting down
+2024/07/07 14:00:59 [notice] 28#28: exiting
+2024/07/07 14:00:59 [notice] 28#28: exit
+2024/07/07 14:00:59 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 14:00:59 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 14:00:59 [notice] 1#1: exit
+2024/07/07 14:01:08 [notice] 1#1: using the "epoll" event method
+2024/07/07 14:01:08 [notice] 1#1: nginx/1.27.0
+2024/07/07 14:01:08 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 14:01:08 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 14:01:08 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 14:01:08 [notice] 1#1: start worker processes
+2024/07/07 14:01:08 [notice] 1#1: start worker process 28
+2024/07/07 14:02:40 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 14:02:40 [notice] 28#28: gracefully shutting down
+2024/07/07 14:02:40 [notice] 28#28: exiting
+2024/07/07 14:02:40 [notice] 28#28: exit
+2024/07/07 14:02:40 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 14:02:40 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 14:02:40 [notice] 1#1: exit
+2024/07/07 14:02:50 [notice] 1#1: using the "epoll" event method
+2024/07/07 14:02:50 [notice] 1#1: nginx/1.27.0
+2024/07/07 14:02:50 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 14:02:50 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 14:02:50 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 14:02:50 [notice] 1#1: start worker processes
+2024/07/07 14:02:50 [notice] 1#1: start worker process 28
+2024/07/07 14:15:42 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 14:15:42 [notice] 28#28: gracefully shutting down
+2024/07/07 14:15:42 [notice] 28#28: exiting
+2024/07/07 14:15:42 [notice] 28#28: exit
+2024/07/07 14:15:42 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 14:15:42 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 14:15:42 [notice] 1#1: exit
+2024/07/07 14:16:12 [notice] 1#1: using the "epoll" event method
+2024/07/07 14:16:12 [notice] 1#1: nginx/1.27.0
+2024/07/07 14:16:12 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 14:16:12 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 14:16:12 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 14:16:12 [notice] 1#1: start worker processes
+2024/07/07 14:16:12 [notice] 1#1: start worker process 28
+2024/07/07 14:22:17 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 14:22:17 [notice] 28#28: gracefully shutting down
+2024/07/07 14:22:17 [notice] 28#28: exiting
+2024/07/07 14:22:17 [notice] 28#28: exit
+2024/07/07 14:22:17 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 14:22:17 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 14:22:17 [notice] 1#1: exit
+2024/07/07 14:22:27 [notice] 1#1: using the "epoll" event method
+2024/07/07 14:22:27 [notice] 1#1: nginx/1.27.0
+2024/07/07 14:22:27 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 14:22:27 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 14:22:27 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 14:22:27 [notice] 1#1: start worker processes
+2024/07/07 14:22:27 [notice] 1#1: start worker process 28
+2024/07/07 14:22:27 [error] 28#28: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 141.101.69.56, server: troupicool.fr, request: "POST /api/auth/register HTTP/1.1", upstream: "http://192.168.0.3:3000//auth/register", host: "troupicool.fr", referrer: "https://troupicool.fr/register"
+2024/07/07 14:22:27 [error] 28#28: *2 connect() failed (111: Connection refused) while connecting to upstream, client: 141.101.69.56, server: troupicool.fr, request: "POST /api/auth/register HTTP/1.1", upstream: "http://192.168.0.3:3000//auth/register", host: "troupicool.fr", referrer: "https://troupicool.fr/register"
+2024/07/07 14:22:27 [error] 28#28: *3 connect() failed (111: Connection refused) while connecting to upstream, client: 141.101.69.55, server: troupicool.fr, request: "POST /api/auth/register HTTP/1.1", upstream: "http://192.168.0.3:3000//auth/register", host: "troupicool.fr", referrer: "https://troupicool.fr/register"
+2024/07/07 14:22:27 [error] 28#28: *4 connect() failed (111: Connection refused) while connecting to upstream, client: 141.101.69.55, server: troupicool.fr, request: "POST /api/auth/register HTTP/1.1", upstream: "http://192.168.0.3:3000//auth/register", host: "troupicool.fr", referrer: "https://troupicool.fr/register"
+2024/07/07 14:22:28 [error] 28#28: *9 connect() failed (111: Connection refused) while connecting to upstream, client: 141.101.69.56, server: troupicool.fr, request: "GET /api/auth/register HTTP/1.1", upstream: "http://192.168.0.3:3000//auth/register", host: "troupicool.fr"
+2024/07/07 14:23:20 [warn] 28#28: *4 an upstream response is buffered to a temporary file /var/cache/nginx/proxy_temp/1/00/0000000001 while reading upstream, client: 141.101.69.55, server: troupicool.fr, request: "GET /adminer?file=jush.js&version=4.8.1 HTTP/1.1", upstream: "http://192.168.0.7:8080/adminer?file=jush.js&version=4.8.1", host: "troupicool.fr", referrer: "https://troupicool.fr/adminer?pgsql=postgres&username=root"
+2024/07/07 14:33:07 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 14:33:07 [notice] 28#28: gracefully shutting down
+2024/07/07 14:33:07 [notice] 28#28: exiting
+2024/07/07 14:33:07 [notice] 28#28: exit
+2024/07/07 14:33:07 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 14:33:07 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 14:33:07 [notice] 1#1: exit
+2024/07/07 14:33:16 [notice] 1#1: using the "epoll" event method
+2024/07/07 14:33:16 [notice] 1#1: nginx/1.27.0
+2024/07/07 14:33:16 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 14:33:16 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 14:33:16 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 14:33:16 [notice] 1#1: start worker processes
+2024/07/07 14:33:16 [notice] 1#1: start worker process 28
+2024/07/07 15:27:21 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 15:27:21 [notice] 28#28: gracefully shutting down
+2024/07/07 15:27:21 [notice] 28#28: exiting
+2024/07/07 15:27:21 [notice] 28#28: exit
+2024/07/07 15:27:21 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 15:27:21 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 15:27:21 [notice] 1#1: exit
+2024/07/07 15:27:31 [emerg] 1#1: open() "/home/matiss/CS2-4A/nginx/logs/access.log" failed (2: No such file or directory)
+2024/07/07 15:29:08 [emerg] 1#1: open() "/home/matiss/CS2-4A/nginx/logs/access.log" failed (2: No such file or directory)
+2024/07/07 15:29:33 [notice] 1#1: using the "epoll" event method
+2024/07/07 15:29:33 [notice] 1#1: nginx/1.27.0
+2024/07/07 15:29:33 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 15:29:33 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 15:29:33 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 15:29:33 [notice] 1#1: start worker processes
+2024/07/07 15:29:33 [notice] 1#1: start worker process 28
+2024/07/07 15:40:23 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/07 15:40:23 [notice] 28#28: gracefully shutting down
+2024/07/07 15:40:23 [notice] 28#28: exiting
+2024/07/07 15:40:23 [notice] 28#28: exit
+2024/07/07 15:40:23 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/07 15:40:23 [notice] 1#1: worker process 28 exited with code 0
+2024/07/07 15:40:23 [notice] 1#1: exit
+2024/07/07 15:40:31 [notice] 1#1: using the "epoll" event method
+2024/07/07 15:40:31 [notice] 1#1: nginx/1.27.0
+2024/07/07 15:40:31 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/07 15:40:31 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/07 15:40:31 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/07 15:40:31 [notice] 1#1: start worker processes
+2024/07/07 15:40:31 [notice] 1#1: start worker process 28
+2024/07/22 20:36:35 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/22 20:36:35 [notice] 28#28: gracefully shutting down
+2024/07/22 20:36:35 [notice] 28#28: exiting
+2024/07/22 20:36:35 [notice] 28#28: exit
+2024/07/22 20:36:36 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/22 20:36:36 [notice] 1#1: worker process 28 exited with code 0
+2024/07/22 20:36:36 [notice] 1#1: exit
+2024/07/23 16:12:28 [emerg] 1#1: host not found in upstream "poste" in /etc/nginx/conf.d/default.conf:42
+2024/07/23 16:18:03 [emerg] 1#1: host not found in upstream "poste" in /etc/nginx/conf.d/default.conf:42
+2024/07/23 16:19:17 [emerg] 1#1: host not found in upstream "poste" in /etc/nginx/conf.d/default.conf:42
+2024/07/23 16:22:47 [emerg] 1#1: host not found in upstream "poste" in /etc/nginx/conf.d/default.conf:42
+2024/07/23 16:26:34 [emerg] 1#1: host not found in upstream "poste" in /etc/nginx/conf.d/default.conf:42
+2024/07/23 16:29:28 [notice] 1#1: using the "epoll" event method
+2024/07/23 16:29:28 [notice] 1#1: nginx/1.27.0
+2024/07/23 16:29:28 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/23 16:29:28 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/23 16:29:28 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/23 16:29:28 [notice] 1#1: start worker processes
+2024/07/23 16:29:28 [notice] 1#1: start worker process 28
+2024/07/23 16:34:18 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/23 16:34:18 [notice] 28#28: gracefully shutting down
+2024/07/23 16:34:18 [notice] 28#28: exiting
+2024/07/23 16:34:18 [notice] 28#28: exit
+2024/07/23 16:34:18 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/23 16:34:18 [notice] 1#1: worker process 28 exited with code 0
+2024/07/23 16:34:18 [notice] 1#1: exit
+2024/07/23 16:34:30 [notice] 1#1: using the "epoll" event method
+2024/07/23 16:34:30 [notice] 1#1: nginx/1.27.0
+2024/07/23 16:34:30 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/23 16:34:30 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/23 16:34:30 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/23 16:34:30 [notice] 1#1: start worker processes
+2024/07/23 16:34:30 [notice] 1#1: start worker process 28
+2024/07/23 16:43:17 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/23 16:43:17 [notice] 28#28: gracefully shutting down
+2024/07/23 16:43:17 [notice] 28#28: exiting
+2024/07/23 16:43:17 [notice] 28#28: exit
+2024/07/23 16:43:17 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/23 16:43:17 [notice] 1#1: worker process 28 exited with code 0
+2024/07/23 16:43:17 [notice] 1#1: exit
+2024/07/23 16:43:36 [notice] 1#1: using the "epoll" event method
+2024/07/23 16:43:36 [notice] 1#1: nginx/1.27.0
+2024/07/23 16:43:36 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2024/07/23 16:43:36 [notice] 1#1: OS: Linux 5.15.0-1037-kvm
+2024/07/23 16:43:36 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/07/23 16:43:36 [notice] 1#1: start worker processes
+2024/07/23 16:43:36 [notice] 1#1: start worker process 28
+2024/07/23 16:45:12 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2024/07/23 16:45:12 [notice] 28#28: gracefully shutting down
+2024/07/23 16:45:12 [notice] 28#28: exiting
+2024/07/23 16:45:12 [notice] 28#28: exit
+2024/07/23 16:45:12 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+2024/07/23 16:45:12 [notice] 1#1: worker process 28 exited with code 0
+2024/07/23 16:45:12 [notice] 1#1: exit

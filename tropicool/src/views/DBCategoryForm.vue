@@ -35,8 +35,6 @@ interface Category {
   description: string;
   image: string;
   is_active: boolean;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 const route = useRoute();
@@ -49,7 +47,10 @@ const category = ref<Category>({
   is_active: true,
 });
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const mode = ref<'new' | 'edit' | 'delete'>(
+  route.name && typeof route.name === 'string' && route.name.includes('New') ? 'new' :
+  route.name && typeof route.name === 'string' && route.name.includes('Edit') ? 'edit' : 'delete'
+);
 
 const fields = [
   {  
@@ -82,7 +83,7 @@ const submitForm = async (formData: Category) => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/category/new` : `${apiUrl}/category/${route.params.id}`;
 
-    const { id, createdAt, updatedAt, created_at, updated_at, ...payload } = formData;
+    const { id, ...payload } = formData;
 
     const response = await fetch(url, {
       method,

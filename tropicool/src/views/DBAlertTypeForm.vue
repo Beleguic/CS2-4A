@@ -39,7 +39,10 @@ const alertType = ref<AlertType>({
   type: '',
 });
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const mode = ref<'new' | 'edit' | 'delete'>(
+  route.name && typeof route.name === 'string' && route.name.includes('New') ? 'new' :
+  route.name && typeof route.name === 'string' && route.name.includes('Edit') ? 'edit' : 'delete'
+);
 
 const fields = [
   {  

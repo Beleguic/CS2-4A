@@ -2,7 +2,7 @@
     <div class="relative w-full bg-custom">
         <!-- Formulaire de reinistialisation de MDP -->
         <div class="flex flex-col items-center gap-4">
-            <img src="/logo-troupicool.png" class="w-40">
+            <img src="/images/logo-troupicool.png" class="w-40">
             <div class="w-full max-w-2xl bg-[rgb(105,107,226)] p-8 rounded-3xl shadow-lg mb-16">
                 <h2 class="text-2xl font-bold mb-1 text-center text-white">Verification du Compte</h2>
                 <p v-if="verified" class="text-white">Votre compte a été vérifié avec succès!</p>
@@ -24,7 +24,7 @@
   
       if (token) {
           try {
-              const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/verify/${token}`, {
+              const response = await fetch(`${import.meta.env.VITE_API_URL}auth/verify/${token}`, {
                   method: 'GET',
               });
               if (response.ok) {

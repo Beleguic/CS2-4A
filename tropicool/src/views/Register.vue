@@ -1,7 +1,7 @@
 <template>
   <div class="relative w-full bg-custom">
     <div class="flex flex-col items-center gap-4">
-      <img src="/logo-troupicool.png" class="w-40">
+      <img src="/images/logo-troupicool.png" alt="Logo Tropicool" class="w-40">
       <div class="w-full max-w-md bg-main p-8 rounded-3xl shadow-lg mb-16 grid gap-8">
         <h2 class="text-2xl font-bold mb-1 text-center text-white">Inscription</h2>
         <FormComponent
@@ -24,7 +24,6 @@ import { useRouter } from 'vue-router';
 import FormComponent from '../components/FormComponent.vue';
 
 const router = useRouter();
-const apiUrl = import.meta.env.VITE_API_URL;
 
 const fields = [
     {  
@@ -39,6 +38,8 @@ const fields = [
     ],
     },
 ];
+
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const register = async (formData) => {
   console.log('register function called with:', formData);
@@ -63,7 +64,7 @@ const register = async (formData) => {
       dateOfBirth: formData.birthday,
     };
 
-    const response = await fetch(`${apiUrl}/auth/register`, {
+    const response = await fetch(`${apiUrl}auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -83,6 +84,7 @@ const register = async (formData) => {
     console.error('Erreur lors de la communication avec l\'API:', error);
   }
 };
+
 </script>
 
 <style scoped>
@@ -93,7 +95,7 @@ body {
 }
 
 .bg-custom {
-  background: url('image-background.jpg') repeat center center;
+  background-image: url('/images/image-background.svg') repeat center center;
   background-size: cover;
 }
 

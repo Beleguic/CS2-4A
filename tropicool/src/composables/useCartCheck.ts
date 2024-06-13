@@ -36,15 +36,24 @@ export default function useCartCheck() {
       const { id, expired_at, cartProductsData } = cart;
       const now = new Date();
 
-      const nowUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+      const nowUtc = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds()
+      );
       const expiredAtUtc = Date.parse(expired_at);
 
       if (nowUtc > expiredAtUtc) {
-        alert("Panier expiré, veuillez recommencer");
+        alert('Panier expiré, veuillez recommencer');
 
         for (const product of cartProductsData) {
           try {
-            const stockResponse = await axios.get<{ quantity: number }>(`${apiUrl}/stock?product_id=${product.product_id}`);
+            const stockResponse = await axios.get<{ quantity: number }>(
+              `${apiUrl}/stock?product_id=${product.product_id}`
+            );
             const currentStock = stockResponse.data.quantity;
             const newQuantity = currentStock + product.quantity;
             const difference = calculateDifference(currentStock, newQuantity);
@@ -69,7 +78,7 @@ export default function useCartCheck() {
 
   onBeforeMount(checkCart);
 
-  router.beforeEach((to, from, next) => {
+  router.beforeEach((_, __, next) => {
     checkCart().then(() => next());
   });
 }

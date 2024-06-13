@@ -6,6 +6,7 @@
       <p>Price: <span>{{ product.price }}€</span></p>
       <AddToCart 
         :item="product.id"
+        :price="product.price"
       />
     </section>
     <section v-else>
@@ -38,7 +39,7 @@ onMounted(async () => {
     }
     const data = await response.json();
     if (data.is_active) {
-      product.value = data
+      product.value = data;
     } else {
       router.push({ name: 'Product' });
     }
