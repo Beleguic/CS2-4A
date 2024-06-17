@@ -63,7 +63,6 @@
         { path: "/logout", text: "Logout",  icon: "<svg width='20' height='19' viewBox='0 0 20 19' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M15 4.5L13.59 5.91L16.17 8.5H6V10.5H16.17L13.59 13.08L15 14.5L20 9.5M2 2.5H10V0.5H2C0.9 0.5 0 1.4 0 2.5V16.5C0 17.6 0.9 18.5 2 18.5H10V16.5H2V2.5Z' fill='currentColor'/></svg>"},
     ];
 
-
     const isMenuVisible = ref(false);
 
     const toggleMenu = () => {
