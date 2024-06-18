@@ -1,41 +1,35 @@
 <template>
-    <nav class="navbar">
-      <img src="../assets/logo.webp" alt="Logo" class="navbar-logo">
-      <div class="navbar-links">
-        <router-link v-if="!auth.isLoggedIn" to="/login">Connexion</router-link>
-        <router-link v-if="!auth.isLoggedIn" to="/register">Inscription</router-link>
-        <button v-if="auth.isLoggedIn" @click="logout">Déconnexion</button>
-      </div>
-    </nav>
-  </template>
-  
-  <script setup>
-  import { useAuthStore } from '../stores/authStore';
-  
-  const auth = useAuthStore();
-  
-  function logout() {
-    auth.logout();
-  }
-  </script>
-  <style scoped>
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background-color: #333;
-      color: #fff;
-      width: 100%;
-  }
-    
-  .navbar-logo {
-      width: 50px;
-  }
-    
-  .navbar-links a, .navbar-links button {
-      color: #fff;
-      text-decoration: none;
-      margin-left: 1rem;
-  }
-  </style>
+  <nav class="bg-[#FEFEF6] text-[#696BE2] flex justify-between items-center px-4" style="height: 10vh;">
+    <div class="flex items-center">
+      <img src="/Tropicool preview.png" alt="Tropicool Logo" class="w-20 h-auto" />
+    </div>
+    <div class="flex space-x-16 text-lg font-medium">
+      <router-link to="/product" class="hover:text-opacity-70">Produit</router-link>
+      <router-link to="/merch" class="hover:text-opacity-70">Merch</router-link>
+      <router-link to="/our-story" class="hover:text-opacity-70">Notre Histoire</router-link>
+    </div>
+    <div class="flex items-center space-x-6 text-lg font-medium">
+      <router-link to="/register" class="hover:text-opacity-70">S'inscrire</router-link>
+      <router-link to="/login" class="hover:text-opacity-70">Connexion</router-link>
+      <img src="/Tropicool search.svg" alt="Search Icon" class="w-6 h-6" />
+      <img src="/Tropicool logo.png" alt="User Icon" class="w-6 h-6" />
+      <img src="/Panier Tropicool.png" alt="Panier Icon" class="w-6 h-6" />
+    </div>
+  </nav>
+</template>
+
+<script setup lang="ts">
+import { useAuthStore } from '../stores/authStore';
+
+const auth = useAuthStore();
+
+function logout() {
+  auth.logout();
+}
+</script>
+
+<style scoped>
+nav {
+  height: 10vh; 
+}
+</style>
