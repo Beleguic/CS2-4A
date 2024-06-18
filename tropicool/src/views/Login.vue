@@ -1,19 +1,23 @@
 <template>
-  <div class="login-container">
-    <h1>Connexion</h1>
-    <FormComponent
-      :fields="fields"
-      submitButtonText="Se connecter"
-      @submit="login"
-    />
-    <div>
-      <RouterLink to="/forgot-password">Mot de passe oublié ?</RouterLink>
+  <div class="relative w-full bg-custom">
+    <!-- Formulaire d'inscription -->
+    <div class="flex flex-col items-center gap-4 min-h-screen">
+      <img src="/logo-troupicool.png" class="w-40">
+      <div class="w-full max-w-md bg-[rgb(105,107,226)] p-8 rounded-3xl shadow-lg mb-16 ">
+        <h2 class="text-2xl font-bold mb-1 text-center text-white">Connexion</h2>
+        <FormComponent
+          :fields="fields"
+          submitButtonText="Se connecter"
+          @submit="login"
+        />
+        <RouterLink to="/forgot-password">Mot de passe oublié ?</RouterLink>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+// import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import FormComponent from '../components/FormComponent.vue';
@@ -42,5 +46,18 @@ const login = async (formData: { email: string, password: string }) => {
 </script>
 
 <style scoped>
-/* Vos styles ici */
+body {
+  background-color: #FFFCE6;
+  margin: 0;
+  overflow: hidden;
+}
+
+.bg-custom {
+  background: url('image-background.svg') repeat center center;
+  background-size: cover;
+}
+
+h2 {
+  color: #FFFFFF;
+}
 </style>
