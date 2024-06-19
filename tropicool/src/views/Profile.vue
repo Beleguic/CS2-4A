@@ -10,7 +10,7 @@
         </div>
         <button type="submit" :disabled="!rgpdChecked">Supprimer mon compte</button>
         </form>
-    </div>
+    </div> 
 </template>
       
 <script setup>
