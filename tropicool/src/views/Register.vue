@@ -1,11 +1,16 @@
 <template>
-  <div class="register-container flex justify-center items-center h-screen bg-gray-800">
-    <div class="w-full max-w-xs">
-      <FormComponent
-        :fields="fields"
-        submitButtonText="S'inscrire"
-        @submit="register"
-      />
+  <div class="relative w-full bg-custom">
+    <!-- Formulaire d'inscription -->
+    <div class="flex flex-col items-center gap-4">
+      <img src="/logo-troupicool.png" class="w-40">
+      <div class="w-full max-w-md bg-[rgb(105,107,226)] p-8 rounded-3xl shadow-lg mb-16">
+        <h2 class="text-2xl font-bold mb-1 text-center text-white">Inscription</h2>
+        <FormComponent
+          :fields="fields"
+          submitButtonText="Envoyer"
+          @submit="register"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -19,8 +24,11 @@ const router = useRouter();
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const fields = [
-  { name: 'email', label: 'Email', type: 'email', required: true },
+  { name: 'lastName', label: 'Nom', type: 'text', required: true },
+  { name: 'firstName', label: 'Prénom', type: 'text', required: true },
+  { name: 'email', label: 'Adresse mail', type: 'email', required: true },
   { name: 'password', label: 'Mot de passe', type: 'password', required: true },
+  { name: 'confirmPassword', label: 'Confirmez le mot de passe', type: 'password', required: true },
 ];
 
 const register = async (formData) => {
@@ -32,6 +40,8 @@ const register = async (formData) => {
 
   try {
     const requestBody = {
+      lastName: formData.lastName,
+      firstName: formData.firstName,
       email: formData.email,
       password: formData.password
     };
@@ -64,4 +74,18 @@ function validatePassword(password) {
 </script>
 
 <style scoped>
+body {
+  background-color: #FFFCE6;
+  margin: 0;
+  overflow: hidden;
+}
+
+.bg-custom {
+  background: url('image-background.svg') repeat center center;
+  background-size: cover;
+}
+
+h2 {
+  color: #FFFFFF;
+}
 </style>
