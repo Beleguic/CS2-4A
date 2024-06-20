@@ -36,7 +36,7 @@ services:
       - "127.0.0.1:8000:5174"
     volumes:
       - ./tropicool:/home/node
- 
+
   postgres:
     image: postgres
     volumes:
@@ -46,7 +46,12 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: app
 
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+
 volumes:
   mongo-data: {}
   postgres-data: {}
-
