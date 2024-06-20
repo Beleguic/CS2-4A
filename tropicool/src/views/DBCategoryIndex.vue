@@ -9,6 +9,7 @@
                 DeleteLink="DBCategoryDelete"
             />
         </div>
+        <router-view></router-view>
     </section>
 </template>
 

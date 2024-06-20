@@ -1,13 +1,13 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('./db.js');  // Assurez-vous que le chemin est correct pour l'importation de votre instance sequelize.
+const sequelize = require('./db.js');
 
-class Category extends Model { }
+class Category extends Model {}
 
 Category.init({
     id: {
         type: DataTypes.UUID,
-        primaryKey: true,
-        autoIncrement: true
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true
     },
     name: {
         type: DataTypes.STRING(255),
