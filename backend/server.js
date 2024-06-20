@@ -4,6 +4,7 @@ const session = require('express-session');
 const cookieParser = require("cookie-parser");
 const UserRouter = require("./routes/user");
 const AuthRouter = require("./routes/auth");
+const CategoryRouter = require("./routes/category");
 const cors = require("cors");
 const nodemailer = require('nodemailer');
 const app = express();
@@ -41,6 +42,7 @@ app.use(cors());
 // Utilisation du router pour les utilisateurs
 app.use("/users", UserRouter);
 app.use("/auth", AuthRouter);
+app.use("/category", CategoryRouter);
 
 // Démarrage du serveur
 app.listen(process.env.PORT, () => {

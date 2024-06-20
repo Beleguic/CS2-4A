@@ -4,7 +4,7 @@
       <DashboardSidebar v-if="isDashboardRoute" />
       <main id="main-dashboard" class="bg-white p-0 flex-1 flex flex-col ml-80 relative">
         <DashboardNavbar />
-        <router-view></router-view>
+        <router-view />
       </main>
     </div>
 
@@ -13,7 +13,6 @@
       <router-view></router-view>
     </main>
     <FooterComponent v-if="!isDashboardRoute" />
-
   </div>
 </template>
 
