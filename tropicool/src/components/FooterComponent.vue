@@ -1,0 +1,37 @@
+<template>
+    <footer class="bg-[#696BE2] text-white p-6 flex flex-col items-center justify-center w-full min-h-[15vh]">
+      <div class="flex flex-col items-center">
+        <img src="/Tropicool preview.png" alt="Tropicool Logo" class="w-20 h-auto mb-4" />
+        <p class="text-center italic font-medium text-lg">
+          © 2024 Tropicool. Tous droits réservés.<br />
+          Contactez-nous : <a href="mailto:info@troupicool.com" class="underline">info@troupicool.com</a> | +1 800-555-1234<br />
+          Suivez-nous sur les réseaux sociaux :
+        </p>
+        <div class="flex space-x-4 mt-2">
+          <a href="https://www.instagram.com" target="_blank">
+            <img src="/instagram-icon.svg" alt="Instagram Icon" class="w-6 h-6" />
+          </a>
+          <a href="https://www.twitter.com" target="_blank">
+            <img src="/twitter-icon.svg" alt="Twitter Icon" class="w-6 h-6" />
+          </a>
+        </div>
+        <p class="text-center italic font-medium text-lg mt-4">
+          Politique de confidentialité | Conditions d'utilisation<br />
+          Dégustez nos boissons avec modération. Ne pas conduire en état d'ébriété.
+        </p>
+      </div>
+    </footer>
+  </template>
+  
+  <script setup lang="ts">
+  </script>
+  
+  <style scoped>
+  footer {
+    min-height: 15vh; 
+  }
+  a {
+    color: #1D1F96;
+  }
+  </style>
+  

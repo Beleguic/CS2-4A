@@ -4,13 +4,13 @@
     <main>
       <router-view></router-view>
     </main>
-    <FooterVue />
+    <FooterComponent />
   </div>
 </template>
 
 <script setup>
-import Navbar from './components/Navbar.vue';
-import FooterVue from './components/Footer.vue';
+import Navbar from './components/NavbarComponent.vue';
+import FooterComponent from './components/FooterComponent.vue';
 </script>
 
 <style>
@@ -24,7 +24,7 @@ main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Centrer le contenu verticalement */
-  align-items: center; /* Centrer le contenu horizontalement */
+  justify-content: center;
+  align-items: center;
 }
 </style>
