@@ -13,10 +13,8 @@ console.log(localStorage.getItem('token')); // Devrait afficher le token
 </script>
 
 <style scoped>
-/* Le style 'scoped' signifie que ces styles s'appliquent uniquement à ce composant */
 .home {
     text-align: center;
 }
 
-/* Vous pouvez également inclure ou importer des styles globaux si nécessaire */
 </style>
