@@ -14,7 +14,7 @@ const verified = ref(false);
 
 onMounted(async () => {
     const route = useRoute();
-    const token = route.query.token; // Assurez-vous que l'URL dans l'email est correctement formatée pour inclure ce query param
+    const token = route.query.token; 
 
     if (token) {
         try {
