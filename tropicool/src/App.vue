@@ -8,11 +8,11 @@
       </main>
     </div>
 
-    <Navbar v-if="!isDashboardRoute"/>
+    <Navbar v-if="!isDashboardRoute" />
     <main v-if="!isDashboardRoute">
-        <router-view></router-view>
-      </main>
-    <FooterVue v-if="!isDashboardRoute"/>
+      <router-view></router-view>
+    </main>
+    <FooterComponent v-if="!isDashboardRoute" />
   </div>
 </template>
 
