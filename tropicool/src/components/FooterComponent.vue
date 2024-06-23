@@ -4,7 +4,7 @@
         <img src="/Tropicool preview.png" alt="Tropicool Logo" class="w-20 h-auto mb-4" />
         <p class="text-center italic font-medium text-lg">
           © 2024 Tropicool. Tous droits réservés.<br />
-          Contactez-nous : <a href="mailto:info@troupicool.com" class="underline">info@troupicool.com</a><br />
+          Contactez-nous : <a href="mailto:info@troupicool.com" class="underline">team.troupicool@outlook.fr</a><br />
           Suivez-nous sur les réseaux sociaux :
         </p>
         <div class="flex space-x-4 mt-2">

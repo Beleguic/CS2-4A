@@ -53,6 +53,17 @@
           </div>
         </div>
       </section>
+      <section class="family-meal-section">
+        <div class="family-meal-wrapper">
+          <img src="/TropicoolFamilyMeal2.svg" alt="Tropicool Family Meal Left" class="family-meal-image" />
+          <div class="center-content">
+            <img src="/Tropicoolverre.svg" alt="Tropicool Verre" class="family-meal-image center" />
+            <button class="product-button center-button">Voir la boutique</button>
+          </div>
+          <img src="/Tropicool-Family-Meal.svg" alt="Tropicool Family Meal Right" class="family-meal-image" />
+        </div>
+      </section>
+      <section class="transition-section"></section> 
     </div>
   </template>
   
@@ -72,7 +83,7 @@
     height: calc(100vh - 10vh); /* 100vh - 10vh de la navbar */
     width: 100vw;
     overflow: hidden;
-    margin-top: -16px;
+    margin-top: -10px;
   }
   
   .landing-image {
@@ -171,14 +182,15 @@
   .product-item.reverse {
     flex-direction: row-reverse;
   }
-    .text-wrapper {
+  
+  .text-wrapper {
     text-align: center;
     margin-bottom: 10px;
     flex: 1;
     text-align: left;
     margin-left: 100px; 
-    }
-    
+  }
+  
   .product-text {
     font-size: 24px;
     font-style: italic;
@@ -197,13 +209,49 @@
     color: #FEFEF6;
     font-family: 'Inter', sans-serif;
     font-style: italic;
-    font-size: 24px;
+    font-size: 18px; 
     font-weight: 500;
-    padding: 10px 20px;
+    padding: 8px 16px; 
     border: none;
     border-radius: 10px;
     cursor: pointer;
     margin-top: 10px;
+  }
+  
+  .family-meal-section {
+    background: linear-gradient(90deg, #1FCDD2 0%, #31D6DC 100%);
+    padding: 40px 20px;
+  }
+  
+  .family-meal-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .family-meal-image {
+    max-width: 33%;
+    height: auto;
+  }
+  
+  .family-meal-image.center {
+    margin: 0 20px;
+    max-width: 60%; 
+  }
+  
+  .center-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .center-button {
+    margin-top: 40px; 
+  }
+  
+  .transition-section {
+    background-color: #FEFEF6;
+    height: 50px;
   }
   </style>
   
