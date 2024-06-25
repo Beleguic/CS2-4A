@@ -8,6 +8,7 @@ import Dashboard from '../views/Dashboard.vue';
 import ForgotPassword from '../views/ForgotPassword.vue';
 import ResetPassword from '../views/ResetPassword.vue';
 import Profile from '../views/Profile.vue';
+import Product from '../views/Product.vue';
 import axios from 'axios';
 
 const routes: Array<RouteRecordRaw> = [
@@ -85,13 +86,16 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Profile',
     component: Profile,
   },
-
+  {
+    path: '/product',  
+    name: 'Product',
+    component: Product,
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
 });
-
 
 export default router;
