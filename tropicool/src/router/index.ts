@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import { useAuthStore } from '../stores/authStore';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Register from '../views/Register.vue';
@@ -9,6 +8,7 @@ import ForgotPassword from '../views/ForgotPassword.vue';
 import ResetPassword from '../views/ResetPassword.vue';
 import Profile from '../views/Profile.vue';
 import Product from '../views/Product.vue';
+import PrivacyPolicy from '../views/PrivacyPolicy.vue'; // Assurez-vous que ce fichier existe
 import axios from 'axios';
 
 const routes: Array<RouteRecordRaw> = [
@@ -87,9 +87,14 @@ const routes: Array<RouteRecordRaw> = [
     component: Profile,
   },
   {
-    path: '/product',  
+    path: '/product',
     name: 'Product',
     component: Product,
+  },
+  {
+    path: '/privacy-policy',
+    name: 'PrivacyPolicy',
+    component: PrivacyPolicy,
   },
 ];
 
