@@ -1,6 +1,6 @@
 <template>
   <div class="max-h-[500px] overflow-auto">
-    <table class="w-full text-left scroll">
+    <table class="w-full text-left">
       <thead>
         <tr>
           <DashboardTableHead v-for="(column, index) in columns" :key="index" :column="column" />

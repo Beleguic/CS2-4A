@@ -24,8 +24,7 @@
             class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
         </div>
         <div class="flex flex-col gap-1 items-start">
-          <label for="is_active" class="text-sm font-medium text-gray-700">Statut - {{ is_active ? 'Activé' :
-            'Désactivé' }}</label>
+          <label for="is_active" class="text-sm font-medium text-gray-700">Statut - {{ is_active ? 'Activé' : 'Désactivé' }}</label>
           <input type="checkbox" id="is_active" class="p-2" v-model="is_active" required />
         </div>
         <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">Ajouter</button>
