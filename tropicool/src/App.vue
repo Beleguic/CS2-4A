@@ -22,8 +22,8 @@ import { useRoute } from 'vue-router';
 
 import Navbar from './components/NavbarComponent.vue';
 import FooterComponent from './components/FooterComponent.vue';
-import DashboardSidebar from './components/dashboard/Sidebar.vue';
-import DashboardNavbar from './components/dashboard/Navbar.vue';
+import DashboardSidebar from './components/DashboardSidebar.vue';
+import DashboardNavbar from './components/DashboardNavbar.vue';
 
 const route = useRoute();
 
