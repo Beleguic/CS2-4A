@@ -13,6 +13,7 @@
       <router-view></router-view>
     </main>
     <FooterComponent v-if="!isDashboardRoute" />
+
   </div>
 </template>
 
