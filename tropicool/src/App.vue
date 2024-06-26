@@ -8,12 +8,11 @@
       </main>
     </div>
 
-    <Navbar v-if="!isDashboardRoute" />
+    <Navbar v-if="!isDashboardRoute"/>
     <main v-if="!isDashboardRoute">
-      <router-view></router-view>
-    </main>
-    <FooterComponent v-if="!isDashboardRoute" />
-
+        <router-view></router-view>
+      </main>
+    <FooterVue v-if="!isDashboardRoute"/>
   </div>
 </template>
 
@@ -21,8 +20,8 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
-import Navbar from './components/NavbarComponent.vue';
-import FooterComponent from './components/FooterComponent.vue';
+import Navbar from './components/Navbar.vue';
+import FooterVue from './components/Footer.vue';
 import DashboardSidebar from './components/DashboardSidebar.vue';
 import DashboardNavbar from './components/DashboardNavbar.vue';
 
@@ -43,10 +42,6 @@ main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
-  margin: 0; 
 }
 
 main:not(#main-dashboard) {
