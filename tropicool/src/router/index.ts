@@ -20,7 +20,6 @@ import DBCategoryEdit from '../components/DBCategoryEdit.vue';
 import DBCategoryDelete from '../components/DBCategoryDelete.vue';
 import DBCategoryNew from '../components/DBCategoryNew.vue';
 
-
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
