@@ -13,6 +13,7 @@
       <router-view></router-view>
     </main>
     <FooterComponent v-if="!isDashboardRoute" />
+
   </div>
 </template>
 
@@ -42,10 +43,13 @@ main {
   flex: 1;
   display: flex;
   flex-direction: column;
+
   justify-content: center;
   align-items: center;
   padding: 0;
   margin: 0; 
+
+
 }
 
 main:not(#main-dashboard) {
