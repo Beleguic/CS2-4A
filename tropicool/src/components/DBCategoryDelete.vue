@@ -1,10 +1,10 @@
 <template>
   <section class="h-full">
-    <div class="py-8 px-6">
+    <div class="py-8 px-6 grid gap-4">
       <p>Êtes-vous sûr de vouloir supprimer cette catégorie ?</p>
       <div class="flex gap-4">
-        <button @click="deleteCategory" class="btn btn-danger">Oui</button>
-        <button @click="goBack" class="btn btn-secondary">Non</button>
+        <button @click="goBack" class="px-6 py-4 bg-blue-500 hover:bg-blue-800 rounded-md text-white">Non</button>
+        <button @click="deleteCategory" class="px-6 py-4 bg-red-500 hover:bg-red-800 rounded-md text-white">Oui</button>
       </div>
     </div>
   </section>

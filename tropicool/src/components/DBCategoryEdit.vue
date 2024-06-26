@@ -1,8 +1,7 @@
 <template>
   <section class="h-full">
     <div class="py-8 px-6">
-      <h1 class="text-4xl font-bold mb-8 text-black">Édition de la catégorie : <span class="capitalize">{{
-        category?.name }}</span></h1>
+      <h1 class="text-4xl font-bold mb-8 text-black">Édition de la catégorie : <span class="capitalize">{{ category?.name }}</span></h1>
       <div v-if="category">
         <form @submit.prevent="updateCategory" class="grid gap-6">
           <div class="grid gap-1">
@@ -26,12 +25,10 @@
               class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
           </div>
           <div class="flex flex-col gap-1 items-start">
-            <label for="is_active" class="block text-sm font-medium text-gray-700">Status - {{ category.is_active ?
-              'Activé' : 'Désactivé' }}</label>
+            <label for="is_active" class="block text-sm font-medium text-gray-700">Status - {{ category.is_active ? 'Activé' : 'Désactivé' }}</label>
             <input type="checkbox" id="is_active" v-model="category.is_active" class="p-2" />
           </div>
-          <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">Mettre à
-            jour</button>
+          <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">Mettre à jour</button>
         </form>
       </div>
       <div v-else>

@@ -2,6 +2,7 @@
     <div class="max-w-5xl w-full py-4">
       <h1 class="text-4xl font-bold mb-8 text-black">Toutes les catégories</h1>
       <section id="categories">
+        <template v-if="categories.length > 0">
         <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 grid-flow-row gap-8 flex-wrap py-4">
           <Cards 
             v-for="category in categories" 
@@ -12,6 +13,10 @@
             path="FrontCategoryDetails"
           />
         </ul>
+        </template>
+        <template v-else>
+            <p class="text-center text-gray-500 w-full">Pas de catégorie trouvée</p>
+          </template>
       </section>
     </div>
 </template>

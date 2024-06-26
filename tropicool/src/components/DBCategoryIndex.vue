@@ -6,7 +6,12 @@
         <router-link :to="{ name: 'DBCategoryNew' }"
           class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
-      <Table :columns="columns" :datas="datas" EditLink="DBCategoryEdit" DeleteLink="DBCategoryDelete" />
+      <template v-if="datas.length > 0">
+        <Table :columns="columns" :datas="datas" EditLink="DBCategoryEdit" DeleteLink="DBCategoryDelete" />
+      </template>
+      <template v-else>
+        <p class="text-center text-gray-500">Pas de catégorie trouvée</p>
+      </template>
     </div>
   </section>
   <router-view v-else></router-view>
