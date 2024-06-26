@@ -1,11 +1,3 @@
 <template>
-    <section class="h-full"></section>
+    <router-view></router-view>
 </template>
-
-<script setup>
-
-</script>
-
-<style scoped>
-
-</style>

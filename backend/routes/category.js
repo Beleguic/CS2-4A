@@ -1,12 +1,31 @@
-const { Router } = require('express');
+const express = require('express');
 const Category = require('../models/category');
-const router = new Router();
+const router = express.Router();
+const { Op } = require('sequelize');
 
-// Route pour obtenir toutes les catégories
+// Filtrer les paramètres de requête pour s'assurer qu'ils sont valides
+const filterQueryParams = (query) => {
+    const validParams = ['name', 'description', 'is_active']; // Ajoutez ici les champs valides pour la recherche
+    return Object.keys(query)
+        .filter(key => validParams.includes(key))
+        .reduce((obj, key) => {
+            obj[key] = query[key];
+            return obj;
+        }, {});
+};
+
+// Toutes les catégories
 router.get('/', async (req, res, next) => {
     try {
+        const isFrontend = req.query.frontend === 'true';
+        const filteredQuery = filterQueryParams(req.query);
+        const whereCondition = isFrontend ? { is_active: true } : {};
+
         const categories = await Category.findAll({
-            where: req.query,
+            where: {
+                ...whereCondition,
+                ...filteredQuery,
+            },
         });
         res.json(categories);
     } catch (e) {
@@ -14,10 +33,19 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-// Route pour obtenir une catégorie spécifique
+// Catégorie spécifique
 router.get('/:id', async (req, res, next) => {
     try {
-        const category = await Category.findByPk(req.params.id);
+        const id = req.params.id;
+        const isFrontend = req.query.frontend === 'true';
+
+        const whereCondition = isFrontend
+            ? { is_active: true, url: id }
+            : { id: id };
+
+        const category = await Category.findOne({
+            where: whereCondition,
+        });
 
         if (category) {
             res.json(category);
@@ -29,7 +57,7 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// Route pour mettre à jour une catégorie spécifique
+// Mise à jour selon l'UUID
 router.patch('/:id', async (req, res, next) => {
     try {
         const category = await Category.findByPk(req.params.id);
@@ -45,9 +73,16 @@ router.patch('/:id', async (req, res, next) => {
     }
 });
 
-// Route pour créer une nouvelle catégorie
-router.post('/', async (req, res, next) => {
+// Nouvelle catégorie
+router.post('/new', async (req, res, next) => {
     try {
+        const { name, url } = req.body;
+
+        // Validation basique des données d'entrée
+        if (!name || !/^[a-zA-Z0-9-]+$/.test(url)) {
+            return res.status(400).json({ error: 'Invalid input data' });
+        }
+
         const category = await Category.create(req.body);
         res.status(201).json(category);
     } catch (e) {
@@ -55,7 +90,7 @@ router.post('/', async (req, res, next) => {
     }
 });
 
-// Route pour supprimer une catégorie spécifique
+// Supprimer selon l'URL
 router.delete('/:id', async (req, res, next) => {
     try {
         const nbDeleted = await Category.destroy({
