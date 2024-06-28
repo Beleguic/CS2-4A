@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 
 // Configuration de la session
 app.use(session({
-    secret: 'challenge4IWS2',
+    secret: process.env.SESSION_SECRET || 'default_secret',
     resave: false,
     saveUninitialized: true,
     cookie: { secure: process.env.NODE_ENV === 'production' }

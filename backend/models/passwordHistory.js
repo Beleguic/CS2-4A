@@ -1,42 +1,49 @@
-const { Model, DataTypes } = require('sequelize');
+const bcrypt = require('bcryptjs');
+const { Model, DataTypes, Sequelize } = require('sequelize');
 
-module.exports = function (connection) {
-
-  class PasswordHistory extends Model { }
+module.exports = function (sequelize) {
+  class PasswordHistory extends Model {
+    static async hashPassword(password) {
+      const salt = await bcrypt.genSalt();
+      return bcrypt.hash(password, salt);
+    }
+  }
 
   PasswordHistory.init({
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true
+      defaultValue: DataTypes.UUIDV4,
     },
-    userId: {
-      type: DataTypes.INTEGER,
+    user_id: {
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id'
+        key: 'id',
       },
-      field: 'user_id'
+      onDelete: 'CASCADE',
     },
-    hashedPassword: {
-      type: DataTypes.STRING(255),
+    hashed_password: {
+      type: DataTypes.STRING,
       allowNull: false,
-      field: 'hashed_password'
     },
-    createdAt: {
+    created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
-      field: 'created_at'
     }
   }, {
-    sequelize: connection,
+    sequelize,
     modelName: 'PasswordHistory',
-    tableName: 'password_history',
+    tableName: 'password_histories',
     timestamps: false,
-    underscored: true
+    underscored: true,
+    hooks: {
+      beforeCreate: async (passwordHistory) => {
+        passwordHistory.hashed_password = await PasswordHistory.hashPassword(passwordHistory.hashed_password);
+      }
+    }
   });
-
 
   return PasswordHistory;
 };

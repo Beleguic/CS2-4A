@@ -1,95 +1,113 @@
 const bcrypt = require('bcryptjs');
-const { Model, DataTypes } = require('sequelize');
+const { Model, DataTypes, Sequelize } = require('sequelize');
 
-module.exports = function (connection) {
-
+module.exports = (sequelize) => {
   class User extends Model {
+    static async hashPassword(password) {
+      const salt = await bcrypt.genSalt();
+      return bcrypt.hash(password, salt);
+    }
 
-    static addHooks(models){
-      User.addHook('beforeCreate', async (user) => {
-        user.password = await bcrypt.hash(
-          user.password,
-          await bcrypt.genSalt()
-        );
+    static associate(models) {
+      User.hasMany(models.PasswordHistory, {
+        foreignKey: 'user_id',
+        as: 'passwordHistories',
+        onDelete: 'CASCADE'
       });
-      User.addHook('beforeUpdate', async (user, { fields }) => {
-        if (fields.includes("password"))
-        user.password = await bcrypt.hash(
-          user.password,
-          await bcrypt.genSalt()
-        );
+      User.hasMany(models.Newsletter, {
+        foreignKey: 'user_id',
+        as: 'newsletters',
+        onDelete: 'CASCADE'
+      });
+      User.hasMany(models.Order, {
+        foreignKey: 'user_id',
+        as: 'orders',
+        onDelete: 'CASCADE'
+      });
+      User.hasMany(models.Cart, {
+        foreignKey: 'user_id',
+        as: 'carts',
+        onDelete: 'CASCADE'
       });
     }
   }
 
   User.init({
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true
+      defaultValue: DataTypes.UUIDV4,
     },
     email: {
       type: DataTypes.STRING,
       unique: true,
-      allowNull: false
+      allowNull: false,
+    },
+    dateOfBirth: {
+      type: DataTypes.DATE,
+      allowNull: false,
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
     },
     role: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 'user'
+      defaultValue: 'user',
     },
-    isVerified: {
+    is_verified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
-      field: 'is_verified'
     },
-    verificationToken: {
+    verification_token: {
       type: DataTypes.STRING,
-      allowNull: true,
-      field: 'verification_token'
     },
-    loginAttempts: {
+    login_attempts: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
-      field: 'login_attempts'
     },
-    lockUntil: {
+    lock_until: {
       type: DataTypes.DATE,
-      allowNull: true,
-      field: 'lock_until'
     },
-    resetPasswordToken: {
+    reset_password_token: {
       type: DataTypes.STRING,
-      allowNull: true,
-      field: 'reset_password_token'
     },
-    resetPasswordExpires: {
+    reset_password_expires: {
       type: DataTypes.DATE,
-      allowNull: true,
-      field: 'reset_password_expires'
     },
-    passwordLastChanged: {
+    password_last_changed: {
       type: DataTypes.DATE,
-      allowNull: true,
-      field: 'password_last_changed'
+    },
+    username: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false,
     },
     created_at: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
+      defaultValue: DataTypes.NOW,
     },
     updated_at: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
+      defaultValue: DataTypes.NOW,
     }
   }, {
-    sequelize: connection,
+    sequelize,
     modelName: 'User',
+    tableName: 'users',
     timestamps: false,
-    tableName: 'users'
+    hooks: {
+      beforeCreate: async (user) => {
+        user.password = await User.hashPassword(user.password);
+      },
+      beforeUpdate: async (user, options) => {
+        if (options.fields.includes('password')) {
+          user.password = await User.hashPassword(user.password);
+        }
+      }
+    }
   });
+
   return User;
 };

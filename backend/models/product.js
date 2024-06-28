@@ -1,9 +1,9 @@
 const { Model, DataTypes, Sequelize } = require('sequelize');
 
 module.exports = function (sequelize) {
-class Category extends Model {}
+  class Product extends Model {}
 
-  Category.init({
+  Product.init({
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -14,14 +14,14 @@ class Category extends Model {}
       allowNull: false,
       unique: true,
     },
-    url: {
+    brand: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
-    description: {
-      type: DataTypes.STRING,
+    price: {
+      type: DataTypes.FLOAT,
       allowNull: false,
+      defaultValue: 0,
     },
     image: {
       type: DataTypes.STRING,
@@ -41,10 +41,10 @@ class Category extends Model {}
     }
   }, {
     sequelize,
-    modelName: 'Category',
-    tableName: 'categories',
+    modelName: 'Product',
+    tableName: 'products',
     timestamps: false,
   });
 
-  return Category;
+  return Product;
 };
