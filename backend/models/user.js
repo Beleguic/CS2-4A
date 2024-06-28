@@ -42,14 +42,35 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Email cannot be null'
+        },
+        isEmail: {
+          msg: 'Email is invalid'
+        }
+      }
     },
     dateOfBirth: {
       type: DataTypes.DATE,
       allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Date of birth cannot be null'
+        },
+        isDate: {
+          msg: 'Date of birth must be a valid date'
+        }
+      }
     },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Password cannot be null'
+        }
+      }
     },
     role: {
       type: DataTypes.STRING,
@@ -83,6 +104,29 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Username cannot be null'
+        }
+      }
+    },
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'First name cannot be null'
+        }
+      }
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Last name cannot be null'
+        }
+      }
     },
     created_at: {
       type: DataTypes.DATE,
