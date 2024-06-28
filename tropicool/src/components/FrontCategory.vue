@@ -8,7 +8,7 @@
             v-for="category in categories" 
             :key="category.id" 
             :name="category.name" 
-            :imgUrl="category.imgUrl || '../uploads/temporary-image.jpg'"
+            :image="category.image || '../uploads/temporary-image.jpg'"
             :url="category.url" 
             path="FrontCategoryDetails"
           />

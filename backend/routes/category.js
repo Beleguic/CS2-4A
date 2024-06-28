@@ -1,111 +1,122 @@
 const express = require('express');
 const Category = require('../models/category');
 const router = express.Router();
-const { Op } = require('sequelize');
+const Joi = require('joi');
+
+// Schéma de validation de la catégorie
+const categorySchema = Joi.object({
+  name: Joi.string().min(3).max(30).required(),
+  url: Joi.string().regex(/^[a-zA-Z0-9-]+$/).required(),
+  description: Joi.string().optional(),
+  image: Joi.string().optional(),
+  is_active: Joi.boolean().optional()
+});
 
 // Filtrer les paramètres de requête pour s'assurer qu'ils sont valides
 const filterQueryParams = (query) => {
-    const validParams = ['name', 'description', 'is_active']; // Ajoutez ici les champs valides pour la recherche
-    return Object.keys(query)
-        .filter(key => validParams.includes(key))
-        .reduce((obj, key) => {
-            obj[key] = query[key];
-            return obj;
-        }, {});
+  const validParams = ['name', 'description', 'image', 'is_active'];
+  return Object.keys(query)
+    .filter(key => validParams.includes(key))
+    .reduce((obj, key) => {
+      obj[key] = query[key];
+      return obj;
+    }, {});
 };
 
-// Toutes les catégories
+// Obtenir toutes les catégories
 router.get('/', async (req, res, next) => {
-    try {
-        const isFrontend = req.query.frontend === 'true';
-        const filteredQuery = filterQueryParams(req.query);
-        const whereCondition = isFrontend ? { is_active: true } : {};
+  try {
+    const isFrontend = req.query.frontend === 'true';
+    const filteredQuery = filterQueryParams(req.query);
+    const whereCondition = isFrontend ? { is_active: true } : {};
 
-        const categories = await Category.findAll({
-            where: {
-                ...whereCondition,
-                ...filteredQuery,
-            },
-        });
-        res.json(categories);
-    } catch (e) {
-        next(e);
-    }
+    const categories = await Category.findAll({
+      where: {
+        ...whereCondition,
+        ...filteredQuery,
+      },
+    });
+    res.json(categories);
+  } catch (e) {
+    next(e);
+  }
 });
 
-// Catégorie spécifique
+// Obtenir une catégorie spécifique par ID ou URL
 router.get('/:id', async (req, res, next) => {
-    try {
-        const id = req.params.id;
-        const isFrontend = req.query.frontend === 'true';
+  try {
+    const id = req.params.id;
+    const isFrontend = req.query.frontend === 'true';
 
-        const whereCondition = isFrontend
-            ? { is_active: true, url: id }
-            : { id: id };
+    const whereCondition = isFrontend
+      ? { is_active: true, url: id }
+      : { id: id };
 
-        const category = await Category.findOne({
-            where: whereCondition,
-        });
+    const category = await Category.findOne({
+      where: whereCondition,
+    });
 
-        if (category) {
-            res.json(category);
-        } else {
-            res.sendStatus(404);
-        }
-    } catch (e) {
-        next(e);
+    if (category) {
+      res.json(category);
+    } else {
+      res.sendStatus(404);
     }
+  } catch (e) {
+    next(e);
+  }
 });
 
-// Mise à jour selon l'UUID
 router.patch('/:id', async (req, res, next) => {
-    try {
-        const category = await Category.findByPk(req.params.id);
-
-        if (category) {
-            await category.update(req.body);
-            res.json(category);
-        } else {
-            res.sendStatus(404);
-        }
-    } catch (e) {
-        next(e);
+  try {
+    const { error } = categorySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
     }
+
+    const category = await Category.findByPk(req.params.id);
+
+    if (category) {
+      await category.update(req.body);
+      res.json(category);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (e) {
+    next(e);
+  }
 });
 
-// Nouvelle catégorie
+// Créer une nouvelle catégorie
 router.post('/new', async (req, res, next) => {
-    try {
-        const { name, url } = req.body;
-
-        // Validation basique des données d'entrée
-        if (!name || !/^[a-zA-Z0-9-]+$/.test(url)) {
-            return res.status(400).json({ error: 'Invalid input data' });
-        }
-
-        const category = await Category.create(req.body);
-        res.status(201).json(category);
-    } catch (e) {
-        next(e);
+  try {
+    const { error } = categorySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
     }
+
+    const category = await Category.create(req.body);
+    res.status(201).json(category);
+  } catch (e) {
+    next(e);
+  }
 });
 
-// Supprimer selon l'URL
+// Supprimer une catégorie par ID
 router.delete('/:id', async (req, res, next) => {
-    try {
-        const nbDeleted = await Category.destroy({
-            where: {
-                id: req.params.id,
-            },
-        });
-        if (nbDeleted === 1) {
-            res.sendStatus(204);
-        } else {
-            res.sendStatus(404);
-        }
-    } catch (e) {
-        next(e);
+  try {
+    const nbDeleted = await Category.destroy({
+      where: {
+        id: req.params.id,
+      },
+    });
+    if (nbDeleted === 1) {
+      res.sendStatus(204);
+    } else {
+      res.sendStatus(404);
     }
+  } catch (e) {
+    next(e);
+  }
 });
 
 module.exports = router;

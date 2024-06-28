@@ -73,9 +73,9 @@ const routes: Route[] = [
 </script>
 
 
-<style>
-.router-link-active,
-.router-link-exact-active {
-  background-color: #1D1F96;
-}
+<style scoped>
+  .router-link-active,
+  .router-link-exact-active {
+    background-color: #1D1F96;
+  }
 </style>

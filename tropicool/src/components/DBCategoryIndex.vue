@@ -7,7 +7,7 @@
           class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
       <template v-if="datas.length > 0">
-        <Table :columns="columns" :datas="datas" EditLink="DBCategoryEdit" DeleteLink="DBCategoryDelete" />
+        <Table :columns="columns" :datas="datas" editLink="DBCategoryEdit" deleteLink="DBCategoryDelete" />
       </template>
       <template v-else>
         <p class="text-center text-gray-500">Pas de catégorie trouvée</p>
