@@ -188,78 +188,94 @@ if (!process.env.SMTP_HOST || !process.env.JWT_SECRET) {
 }
 
 router.post('/register', async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-        const newUser = await User.create({
-            email,
-            password,
-            verificationToken,
-            passwordLastChanged: new Date(),
-            lockUntil: new Date('9999-12-31') // Verrouillage indéfini
-        });
-
-        await PasswordHistory.create({
-            user_id: newUser.id,
-            hashed_password: newUser.password // Le hashage sera fait par les hooks du modèle
-        });
-
-        const emailContent = `
-            <div>
-                <h1>Welcome to Troupicool, ${email}!</h1>
-                <p>We're glad to have you with us.</p>
-                <p>Please click the link below to verify your account:</p>
-                <a href="${process.env.FRONT_END_URL}/verify-account?token=${verificationToken}">Verify my account</a>
-                <p>If you did not create an account on our site, please ignore this email.</p>
-            </div>
-        `;
-
-        try {
-            await sendEmail(email, 'Welcome to Troupicool!', emailContent);
-            res.status(201).json({
-                message: "Account created successfully. Please check your email to activate your account.",
-                user: newUser
-            });
-        } catch (error) {
-            console.error('Error sending email:', error);
-            res.status(500).json({
-                message: "User created, but email sending failed.",
-                emailError: error.message,
-                userId: newUser.id,
-                token: verificationToken
-            });
-        }
-    } catch (error) {
-        console.error('Error creating user:', error);
-        res.status(500).json({ message: 'An error occurred while creating the user.' });
+  const { email, password, lastName, firstName, username, dateOfBirth } = req.body;
+  try {
+    // Vérification que tous les champs requis sont présents
+    if (!email || !password || !lastName || !firstName || !username || !dateOfBirth) {
+      return res.status(400).json({ message: 'All fields are required.' });
     }
+
+    // Création du token de vérification
+    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    // Création de l'utilisateur dans la base de données
+    const newUser = await User.create({
+      email,
+      password, // Le mot de passe sera haché par les hooks du modèle User
+      verification_token: verificationToken,
+      password_last_changed: new Date(),
+      lock_until: new Date('9999-12-31'), // Verrouillage indéfini
+      lastName,
+      firstName,
+      username,
+      dateOfBirth
+    });
+
+    await PasswordHistory.create({
+      user_id: newUser.id,
+      hashed_password: newUser.password // Le hachage sera fait par les hooks du modèle
+    });
+
+    // Préparation de l'email de bienvenue
+    const emailContent = `
+      <div>
+        <h1>Bienvenue sur Troupicool, ${email} !</h1>
+        <p>Nous sommes ravis de vous compter parmi nous.</p>
+        <p>Veuillez cliquer sur le lien ci-dessous pour vérifier votre compte :</p>
+        <a href="${process.env.FRONT_END_URL}/verify-account?token=${verificationToken}">Vérifier mon compte</a>
+        <p>Si vous n'avez pas créé de compte sur notre site, veuillez ignorer cet e-mail.</p>
+      </div>
+    `;
+
+    // Envoi de l'email de bienvenue
+    try {
+      await sendEmail(email, 'Bienvenue sur Troupicool!', emailContent);
+      res.status(201).json({
+        message: "Votre compte a été créé avec succès. Veuillez vérifier votre e-mail pour activer votre compte. Tant que vous n'aurez pas confirmé, votre compte restera bloqué.",
+        user: newUser
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'e-mail:', error);
+      res.status(500).json({
+        message: "Utilisateur créé, mais l'envoi de l'email a échoué.",
+        emailError: error.message,
+        userId: newUser.id,
+        token: verificationToken
+      });
+    }
+  } catch (error) {
+    console.error('Erreur lors de la création de l\'utilisateur:', error);
+    res.status(500).json({ message: 'Erreur lors de la création de l’utilisateur', error: error.message });
+  }
 });
+
+
 
 router.get('/verify/:token', async (req, res) => {
-    try {
-        const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
-        const user = await User.findOne({ where: { verificationToken: req.params.token } });
+  try {
+      const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+      const user = await User.findOne({ where: { verification_token: req.params.token } });
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found or invalid token.' });
-        }
+      if (!user) {
+          return res.status(404).json({ message: 'User not found or invalid token.' });
+      }
 
-        user.isVerified = true;
-        user.verificationToken = null;
-        user.lockUntil = null;
+      user.is_verified = true;
+      user.verification_token = null;
+      user.lock_until = null;
 
-        await user.save();
+      await user.save();
 
-        res.status(200).json({ message: 'Account verified successfully!' });
-    } catch (error) {
-        if (error instanceof jwt.JsonWebTokenError) {
-            return res.status(401).json({ message: 'Invalid verification token.' });
-        }
-        console.error('Error during account verification:', error);
-        res.status(500).json({ message: 'An error occurred during account verification.' });
-    }
+      res.status(200).json({ message: 'Account verified successfully!' });
+  } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+          return res.status(401).json({ message: 'Invalid verification token.' });
+      }
+      console.error('Error during account verification:', error);
+      res.status(500).json({ message: 'An error occurred during account verification.' });
+  }
 });
+
 
 router.post('/logout', (req, res) => {
     req.session.destroy(err => {
