@@ -5,23 +5,19 @@
       <form @submit.prevent="newCategory" class="grid gap-6">
         <div class="grid gap-1">
           <label for="name" class="block text-sm font-medium text-gray-700">Nom de la catégorie</label>
-          <input type="text" id="name" v-model="category.name"
-            class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          <input type="text" id="name" v-model="category.name" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="3" max="255"/>
         </div>
         <div class="grid gap-1">
           <label for="url" class="block text-sm font-medium text-gray-700">URL de la catégorie</label>
-          <input type="text" id="url" v-model="category.url"
-            class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          <input type="text" id="url" v-model="category.url" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="3" max="255"/>
         </div>
         <div class="grid gap-1">
           <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-          <input type="text" id="description" v-model="category.description"
-            class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          <input type="text" id="description" v-model="category.description" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="3" max="255"/>
         </div>
         <div class="grid gap-1">
           <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
-          <input type="text" id="image" v-model="category.image"
-            class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          <input type="text" id="image" v-model="category.image" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="3" max="255"/>
         </div>
         <div class="flex flex-col gap-1 items-start">
           <label for="is_active" class="text-sm font-medium text-gray-700">Statut - {{ is_active ? 'Activé' : 'Désactivé' }}</label>
@@ -70,7 +66,7 @@
       }
       window.dispatchEvent(new CustomEvent('category-added'));
 
-      router.push({ name: 'DBCategoryIndex' });
+      setTimeout(() => {router.push({ name: 'DBCategoryIndex' });}, 100);
     } catch (error) {
       console.error('Error adding category:', error);
     }

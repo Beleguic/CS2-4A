@@ -10,8 +10,7 @@
         <tr v-for="data in datas" :key="data.id" class="hover:bg-slate-200 even:bg-slate-100">
           <td v-for="(column, index) in columns" :key="index" class="py-2 px-4 text-base text-black">
             <template v-if="column.key !== 'actions'">
-              <template
-                v-if="isBoolean(data[column.key]) && (column.label === 'status' || column.label === 'Status') && column.key === 'is_active'">
+              <template v-if="isBoolean(data[column.key]) && (column.label === 'status' || column.label === 'Status') && column.key === 'is_active'">
                 {{ data[column.key] ? 'Activé' : 'Désactivé' }}
               </template>
               <template v-else-if="isBoolean(data[column.key])">
@@ -29,7 +28,7 @@
             </template>
             <template v-else>
               <div class="grid grid-cols-2 gap-4">
-                <router-link :to="{ name: EditLink, params: { id: data.id } }"
+                <router-link :to="{ name: editLink, params: { id: data.id } }"
                   class="p-4 bg-blue-500 hover:bg-blue-800 rounded-md flex flex-col justify-center items-center">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -37,7 +36,7 @@
                       fill="white" />
                   </svg>
                 </router-link>
-                <router-link :to="{ name: DeleteLink, params: { id: data.id } }"
+                <router-link :to="{ name: deleteLink, params: { id: data.id } }"
                   class="p-4 bg-red-500 hover:bg-red-800 rounded-md flex flex-col justify-center items-center">
                   <svg width="8" height="10" viewBox="0 0 8 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -58,17 +57,23 @@
   import { defineProps } from 'vue';
   import DashboardTableHead from '../components/DashboardTableHead.vue';
 
-  const props = defineProps<TableProps>();
+  interface Column {
+    key: string;
+    label: string;
+  }
 
   interface TableProps {
     datas: Array<Record<string, any>>;
-    columns: Array<{ key: string; label: string }>;
-    EditLink: string;
-    DeleteLink: string;
+    columns: Array<Column>;
+    editLink: string;
+    deleteLink: string;
   }
 
+  const props = defineProps<TableProps>();
+  const { datas, columns, editLink, deleteLink } = props;
+
   const isBoolean = (value: any): boolean => {
-    return Object.prototype.toString.call(value) === '[object Boolean]';
+    return typeof value === 'boolean';
   };
 
   const formatDateTime = (dateTimeString: string): string => {

@@ -13,4 +13,5 @@
   }
 
   const props = defineProps<{ column: Column }>();
+  const { column } = props;
 </script>

@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
@@ -26,7 +25,7 @@ const deleteCategory = async () => {
     });
     if (response.ok) {
       window.dispatchEvent(new CustomEvent('category-deleted'));
-      router.push({ name: 'DBCategoryIndex' });
+      setTimeout(() => {router.push({ name: 'DBCategoryIndex' });}, 100);
     } else {
       console.error('Failed to delete category');
     }
