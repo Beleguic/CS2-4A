@@ -3,8 +3,8 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
-const PasswordHistory = require('../models/passwordHistory');
+const { User, PasswordHistory } = require('../models');
+// const PasswordHistory = require('../models/passwordhistory');
 const router = express.Router();
 const { Op } = require('sequelize');
 const { sendEmail } = require('../services/mailService');
@@ -273,8 +273,6 @@ router.get('/verify/:token', async (req, res) => {
       res.status(500).json({ message: 'Erreur lors de la vérification du compte.' });
   }
 });
-
-
 
 router.post('/logout', (req, res) => {
   req.session.destroy(err => {

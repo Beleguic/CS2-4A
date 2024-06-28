@@ -1,5 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('./db.js');  // Assurez-vous que le chemin est correct pour l'importation de votre instance sequelize.
+
+module.exports = function (connection) {
 
 class UserHistory extends Model {}
 
@@ -48,10 +49,13 @@ UserHistory.init({
     defaultValue: DataTypes.NOW
   }
 }, {
-  sequelize,
+  sequelize: connection,
   modelName: 'UserHistory',
   tableName: 'user_history',
   timestamps: false
-});
 
-module.exports = UserHistory;
+  });
+
+
+  return PasswordHistory;
+};
