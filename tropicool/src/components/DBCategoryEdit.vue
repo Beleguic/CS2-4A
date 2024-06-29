@@ -35,62 +35,64 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue';
-  import { useRoute, useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-  interface Category {
-    id: number;
-    name: string;
-    url: string;
-    description: string;
-    image: string;
-    is_active: boolean;
-    createdAt: string;
-    updatedAt: string;
+interface Category {
+  id: string;
+  name: string;
+  url: string;
+  description: string;
+  image: string;
+  is_active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+const route = useRoute();
+const router = useRouter();
+const category = ref<Category | null>(null);
+const apiUrl = import.meta.env.VITE_API_URL as string;
+
+onMounted(async () => {
+  try {
+    const response = await fetch(`${apiUrl}/category/${route.params.id}`);
+    if (!response.ok) {
+      throw new Error('Error fetching category');
+    }
+    category.value = await response.json();
+  } catch (error) {
+    console.error('Error fetching category:', error);
   }
+});
 
-  const route = useRoute();
-  const router = useRouter();
-  const category = ref<Category | null>(null);
-  const apiUrl = import.meta.env.VITE_API_URL as string;
-
-  onMounted(async () => {
+const updateCategory = async () => {
+  if (category.value) {
     try {
-      const response = await fetch(`${apiUrl}/category/${route.params.id}`);
+      const { id, createdAt, updatedAt, created_at, updated_at, ...categoryData } = category.value;
+
+      const requestData = {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(categoryData)
+      };
+
+      const response = await fetch(`${apiUrl}/category/${route.params.id}`, requestData);
+
       if (!response.ok) {
-        throw new Error('Error fetching category');
-      }
-      category.value = await response.json();
-    } catch (error) {
-      console.error('Error fetching category:', error);
-    }
-  });
-
-  const updateCategory = async () => {
-    if (category.value) {
-      try {
-        const { id, createdAt, updatedAt, ...categoryData } = category.value;
-
-        const requestData = {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(categoryData)
-        };
-
-        const response = await fetch(`${apiUrl}/category/${route.params.id}`, requestData);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Response Error Data:', errorData);
-        }
-        
+        const errorData = await response.json();
+        console.error('Response Error Data:', errorData);
+      } else {
         window.dispatchEvent(new CustomEvent('category-updated'));
-        setTimeout(() => {router.push({ name: 'DBCategoryIndex' });}, 100);
-      } catch (error) {
-        console.error('Error updating category:', error);
+        setTimeout(() => { router.push({ name: 'DBCategoryIndex' }); }, 100);
       }
+    } catch (error) {
+      console.error('Error updating category:', error);
     }
-  };
+  }
+};
 </script>
