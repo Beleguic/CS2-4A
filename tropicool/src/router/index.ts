@@ -8,8 +8,17 @@ import ForgotPassword from '../views/ForgotPassword.vue';
 import ResetPassword from '../views/ResetPassword.vue';
 import Profile from '../views/Profile.vue';
 import Product from '../views/Product.vue';
-import PrivacyPolicy from '../views/PrivacyPolicy.vue'; // Assurez-vous que ce fichier existe
-import axios from 'axios';
+import PrivacyPolicy from '../views/PrivacyPolicy.vue';
+// import axios from 'axios';
+import { verifyAdmin } from '../router/authGuard';
+import DBIndex from '../components/DBIndex.vue';
+import FrontCategory from '../components/FrontCategory.vue';
+import FrontCategoryDetails from '../components/FrontCategoryDetails.vue';
+import Category from '../views/Category.vue';
+import DBCategoryIndex from '../components/DBCategoryIndex.vue';
+import DBCategoryEdit from '../components/DBCategoryEdit.vue';
+import DBCategoryDelete from '../components/DBCategoryDelete.vue';
+import DBCategoryNew from '../components/DBCategoryNew.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -31,35 +40,6 @@ const routes: Array<RouteRecordRaw> = [
     path: '/verify-account',
     name: 'VerifyAccount',
     component: VerifyAccount,
-  },
-  {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: Dashboard,
-    meta: { requiresAdmin: true },
-    beforeEnter: async (to, from, next) => {
-      try {
-        const auth = useAuthStore();
-        if (auth.isLoggedIn) {
-          const response = await axios.get(`${import.meta.env.VITE_API_URL}/auth/check-role`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-
-          if (response.data.role === 'admin') {
-            next();
-          } else {
-            next({ name: 'Home' });
-          }
-        } else {
-          next({ name: 'Login' });
-        }
-      } catch (error) {
-        console.error('Erreur lors de la vérification du rôle:', error);
-        next({ name: 'Login' });
-      }
-    }
   },
   {
     path: '/forgot-password',
@@ -95,6 +75,63 @@ const routes: Array<RouteRecordRaw> = [
     path: '/privacy-policy',
     name: 'PrivacyPolicy',
     component: PrivacyPolicy,
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: Dashboard,
+    meta: { requiresAdmin: true },
+    beforeEnter: verifyAdmin,
+    children: [
+      {
+        path: '/',
+        name: 'DashboardIndex',
+        component: DBIndex,
+      },
+      {
+        path: 'category',
+        name: 'DBCategoryIndex',
+        component: DBCategoryIndex,
+        children: [
+          {
+            path: 'edit/:id',
+            name: 'DBCategoryEdit',
+            component: DBCategoryEdit,
+            props: true,
+          },
+          {
+            path: 'delete/:id',
+            name: 'DBCategoryDelete',
+            component: DBCategoryDelete,
+            props: true,
+          },
+          {
+            path : 'new',
+            name : 'DBCategoryNew',
+            component : DBCategoryNew,
+            props : true
+          }
+        ]
+      },
+    ]
+  },
+  {
+    path: '/category',
+    name: 'Category',
+    component: Category,
+    children: [
+      {
+        path: '',
+        name: 'FrontCategory',
+        component: FrontCategory
+      },
+      {
+        path: ':id',
+        name: 'FrontCategoryDetails',
+        component: FrontCategoryDetails,
+        props: true
+      },
+    ]
   },
 ];
 

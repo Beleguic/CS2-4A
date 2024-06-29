@@ -9,3 +9,5 @@ tropicool/.npm/_logs
 tropicool/.env
 package-lock.json
 tropicool/package-lock.json
+tropicool/public/uploads/*
+!tropicool/public/uploads/temporary-image.jpg
