@@ -1,7 +1,15 @@
-const { Model, DataTypes, Sequelize } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
 module.exports = function (sequelize) {
-  class ProductPromotion extends Model {}
+  class ProductPromotion extends Model {
+    static associate(models) {
+      ProductPromotion.belongsTo(models.Product, {
+        foreignKey: 'product_id',
+        as: 'product',
+        onDelete: 'CASCADE'
+      });
+    }
+  }
 
   ProductPromotion.init({
     id: {

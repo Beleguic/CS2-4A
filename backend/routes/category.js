@@ -12,32 +12,26 @@ const categorySchema = Joi.object({
   is_active: Joi.boolean().optional()
 });
 
-// Filter query params
-const filterQueryParams = (query) => {
-  const validParams = ['name', 'description', 'image', 'is_active'];
-  return Object.keys(query)
-    .filter(key => validParams.includes(key))
-    .reduce((obj, key) => {
-      obj[key] = query[key];
-      return obj;
-    }, {});
-};
+// Get all categories for selection
+router.get('/list', async (req, res, next) => {
+  try {
+    const categories = await Category.findAll({
+      attributes: ['id', 'name']
+    });
+    res.json(categories);
+  } catch (e) {
+    console.error('Error fetching category list:', e);
+    next(e);
+  }
+});
 
 // Get all categories
 router.get('/', async (req, res, next) => {
   try {
-    const isFrontend = req.query.frontend === 'true';
-    const filteredQuery = filterQueryParams(req.query);
-    const whereCondition = isFrontend ? { is_active: true } : {};
-
-    const categories = await Category.findAll({
-      where: {
-        ...whereCondition,
-        ...filteredQuery,
-      },
-    });
+    const categories = await Category.findAll();
     res.json(categories);
   } catch (e) {
+    console.error('Error fetching categories:', e);
     next(e);
   }
 });
@@ -46,15 +40,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const isFrontend = req.query.frontend === 'true';
-
-    const whereCondition = isFrontend
-      ? { is_active: true, url: id }
-      : { id: id };
-
-    const category = await Category.findOne({
-      where: whereCondition,
-    });
+    const category = await Category.findByPk(id);
 
     if (category) {
       res.json(category);
@@ -62,34 +48,7 @@ router.get('/:id', async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    next(e);
-  }
-});
-
-// Update category
-router.patch('/:id', async (req, res, next) => {
-  try {
-    console.log('Received payload for update:', req.body); // Log received payload
-
-    // Remove fields not allowed in the payload
-    const { id, created_at, updated_at, createdAt, updatedAt, ...updateData } = req.body;
-
-    const { error } = categorySchema.validate(updateData);
-    if (error) {
-      console.error('Validation error:', error.details); // Log validation error details
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
-    const category = await Category.findByPk(req.params.id);
-
-    if (category) {
-      await category.update(updateData);
-      res.json(category);
-    } else {
-      res.sendStatus(404);
-    }
-  } catch (e) {
-    console.error('Error during category update:', e); // Log the full error
+    console.error('Error fetching category by ID:', e);
     next(e);
   }
 });
@@ -97,17 +56,37 @@ router.patch('/:id', async (req, res, next) => {
 // Create new category
 router.post('/new', async (req, res, next) => {
   try {
-    console.log('Received payload for new category:', req.body); // Log received payload
     const { error } = categorySchema.validate(req.body);
     if (error) {
-      console.error('Validation error:', error.details); // Log validation error details
       return res.status(400).json({ error: error.details[0].message });
     }
 
     const category = await Category.create(req.body);
     res.status(201).json(category);
   } catch (e) {
-    console.error('Error during category creation:', e); // Log the full error
+    console.error('Error creating category:', e);
+    next(e);
+  }
+});
+
+// Update category
+router.patch('/:id', async (req, res, next) => {
+  try {
+    const { error } = categorySchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const category = await Category.findByPk(req.params.id);
+
+    if (category) {
+      await category.update(req.body);
+      res.json(category);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (e) {
+    console.error('Error updating category:', e);
     next(e);
   }
 });
@@ -126,6 +105,7 @@ router.delete('/:id', async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
+    console.error('Error deleting category:', e);
     next(e);
   }
 });
