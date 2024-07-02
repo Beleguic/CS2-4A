@@ -9,16 +9,13 @@ import ResetPassword from '../views/ResetPassword.vue';
 import Profile from '../views/Profile.vue';
 import Product from '../views/Product.vue';
 import PrivacyPolicy from '../views/PrivacyPolicy.vue';
-// import axios from 'axios';
 import { verifyAdmin } from '../router/authGuard';
 import DBIndex from '../components/DBIndex.vue';
 import FrontCategory from '../components/FrontCategory.vue';
 import FrontCategoryDetails from '../components/FrontCategoryDetails.vue';
 import Category from '../views/Category.vue';
 import DBCategoryIndex from '../components/DBCategoryIndex.vue';
-import DBCategoryEdit from '../components/DBCategoryEdit.vue';
-import DBCategoryDelete from '../components/DBCategoryDelete.vue';
-import DBCategoryNew from '../components/DBCategoryNew.vue';
+import DBCategoryForm from '../views/DBCategoryForm.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -94,22 +91,22 @@ const routes: Array<RouteRecordRaw> = [
         component: DBCategoryIndex,
         children: [
           {
+            path: 'new',
+            name: 'DBCategoryNew',
+            component: DBCategoryForm,
+            props: true,
+          },
+          {
             path: 'edit/:id',
             name: 'DBCategoryEdit',
-            component: DBCategoryEdit,
+            component: DBCategoryForm,
             props: true,
           },
           {
             path: 'delete/:id',
             name: 'DBCategoryDelete',
-            component: DBCategoryDelete,
+            component: DBCategoryForm,
             props: true,
-          },
-          {
-            path : 'new',
-            name : 'DBCategoryNew',
-            component : DBCategoryNew,
-            props : true
           }
         ]
       },
