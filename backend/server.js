@@ -36,7 +36,7 @@ app.use(session({
 
 // Middlewares standards pour le parsing des cookies et des JSON bodies
 app.use(cookieParser(process.env.JWT_SECRET));
-app.use(express.json());
+app.use(express.json());  // Assurez-vous que ce middleware est présent
 app.use(cors());
 
 // Utilisation du router pour les utilisateurs

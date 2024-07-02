@@ -18,7 +18,8 @@
 </template>
 
 <script setup>
-import { reactive, defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits } from 'vue';
+import { useFormValidation } from '../composables/useFormValidation';
 
 const props = defineProps({
   fields: {
@@ -36,15 +37,10 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['submit']);
-
-const formData = reactive({});
-const errors = reactive({});
-
-props.fields.forEach((field) => {
-  formData[field.name] = '';
-});
+const { formData, errors, validateForm, resetErrors } = useFormValidation(props.fields);
 
 const handleSubmit = () => {
+  resetErrors();
   const validationErrors = validateForm();
   if (Object.keys(validationErrors).length === 0) {
     if (props.onSubmit && typeof props.onSubmit === 'function') {
@@ -52,19 +48,7 @@ const handleSubmit = () => {
     } else {
       emit('submit', formData);
     }
-  } else {
-    Object.assign(errors, validationErrors);
   }
-};
-
-const validateForm = () => {
-  const validationErrors = {};
-  props.fields.forEach((field) => {
-    if (field.required && !formData[field.name]) {
-      validationErrors[field.name] = `${field.label} est requis`;
-    }
-  });
-  return validationErrors;
 };
 </script>
 

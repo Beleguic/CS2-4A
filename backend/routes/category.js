@@ -1,9 +1,9 @@
 const express = require('express');
-const Category = require('../models/category');
+const { Category } = require('../models');
 const router = express.Router();
 const Joi = require('joi');
 
-// Schéma de validation de la catégorie
+// Category schema validation
 const categorySchema = Joi.object({
   name: Joi.string().min(3).max(30).required(),
   url: Joi.string().regex(/^[a-zA-Z0-9-]+$/).required(),
@@ -12,7 +12,7 @@ const categorySchema = Joi.object({
   is_active: Joi.boolean().optional()
 });
 
-// Filtrer les paramètres de requête pour s'assurer qu'ils sont valides
+// Filter query params
 const filterQueryParams = (query) => {
   const validParams = ['name', 'description', 'image', 'is_active'];
   return Object.keys(query)
@@ -23,7 +23,7 @@ const filterQueryParams = (query) => {
     }, {});
 };
 
-// Obtenir toutes les catégories
+// Get all categories
 router.get('/', async (req, res, next) => {
   try {
     const isFrontend = req.query.frontend === 'true';
@@ -42,7 +42,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// Obtenir une catégorie spécifique par ID ou URL
+// Get category by ID
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -66,42 +66,53 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
+// Update category
 router.patch('/:id', async (req, res, next) => {
   try {
-    const { error } = categorySchema.validate(req.body);
+    console.log('Received payload for update:', req.body); // Log received payload
+
+    // Remove fields not allowed in the payload
+    const { id, created_at, updated_at, createdAt, updatedAt, ...updateData } = req.body;
+
+    const { error } = categorySchema.validate(updateData);
     if (error) {
+      console.error('Validation error:', error.details); // Log validation error details
       return res.status(400).json({ error: error.details[0].message });
     }
 
     const category = await Category.findByPk(req.params.id);
 
     if (category) {
-      await category.update(req.body);
+      await category.update(updateData);
       res.json(category);
     } else {
       res.sendStatus(404);
     }
   } catch (e) {
+    console.error('Error during category update:', e); // Log the full error
     next(e);
   }
 });
 
-// Créer une nouvelle catégorie
+// Create new category
 router.post('/new', async (req, res, next) => {
   try {
+    console.log('Received payload for new category:', req.body); // Log received payload
     const { error } = categorySchema.validate(req.body);
     if (error) {
+      console.error('Validation error:', error.details); // Log validation error details
       return res.status(400).json({ error: error.details[0].message });
     }
 
     const category = await Category.create(req.body);
     res.status(201).json(category);
   } catch (e) {
+    console.error('Error during category creation:', e); // Log the full error
     next(e);
   }
 });
 
-// Supprimer une catégorie par ID
+// Delete category
 router.delete('/:id', async (req, res, next) => {
   try {
     const nbDeleted = await Category.destroy({

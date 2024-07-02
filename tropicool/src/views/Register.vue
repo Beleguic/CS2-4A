@@ -26,15 +26,18 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const fields = [
   { name: 'lastName', label: 'Nom', type: 'text', required: true },
   { name: 'firstName', label: 'Prénom', type: 'text', required: true },
+  { name: 'username', label: 'Nom d\'utilisateur', type: 'text', required: true },
   { name: 'email', label: 'Adresse mail', type: 'email', required: true },
   { name: 'password', label: 'Mot de passe', type: 'password', required: true },
   { name: 'confirmPassword', label: 'Confirmez le mot de passe', type: 'password', required: true },
+  { name: 'birthday', label: 'Date de naissance', type: 'date', required: true },
 ];
 
 const register = async (formData) => {
   console.log('register function called with:', formData);
-  if (!validatePassword(formData.password)) {
-    alert('Le mot de passe doit contenir au moins 12 caractères, incluant des majuscules, des minuscules, des chiffres et des symboles.');
+
+  if (formData.password !== formData.confirmPassword) {
+    alert('Les mots de passe ne correspondent pas.');
     return;
   }
 
@@ -42,8 +45,10 @@ const register = async (formData) => {
     const requestBody = {
       lastName: formData.lastName,
       firstName: formData.firstName,
+      username: formData.username,
       email: formData.email,
-      password: formData.password
+      password: formData.password,
+      dateOfBirth: formData.birthday,
     };
 
     const response = await fetch(`${apiUrl}/auth/register`, {
@@ -66,11 +71,6 @@ const register = async (formData) => {
     console.error('Erreur lors de la communication avec l\'API:', error);
   }
 };
-
-function validatePassword(password) {
-  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\\-])[A-Za-z\d@$!%*?&_\\-]{12,}$/;
-  return regex.test(password);
-}
 </script>
 
 <style scoped>
