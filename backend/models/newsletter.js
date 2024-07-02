@@ -1,7 +1,15 @@
-const { Model, DataTypes, Sequelize } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
-module.exports = function (sequelize) {
-        class Newsletter extends Model {}
+module.exports = (sequelize) => {
+  class Newsletter extends Model {
+    static associate(models) {
+      Newsletter.belongsTo(models.User, {
+        foreignKey: 'user_id',
+        as: 'user',
+        onDelete: 'CASCADE'
+      });
+    }
+  }
 
   Newsletter.init({
     id: {
