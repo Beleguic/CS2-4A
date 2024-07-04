@@ -59,7 +59,15 @@ const register = async (formData) => {
       body: JSON.stringify(requestBody)
     });
 
-    const responseData = await response.json();
+    const responseText = await response.text(); // Lire la réponse en tant que texte
+
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText); // Essayer de parser la réponse JSON
+    } catch (e) {
+      console.error('Erreur de parsing JSON:', e, 'Réponse:', responseText);
+      throw new Error('Réponse JSON invalide');
+    }
 
     if (response.ok) {
       console.log('Inscription réussie:', responseData);
