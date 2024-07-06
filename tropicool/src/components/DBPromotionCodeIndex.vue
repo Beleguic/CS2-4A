@@ -20,6 +20,10 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import Table from '../components/TableComponent.vue';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface PromotionCode {
   id: string;
@@ -53,19 +57,13 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 const fetchPromotionCodes = async () => {
   try {
     const response = await axios.get<PromotionCode[]>(`${apiUrl}/promotion_code/`);
-    console.log('Fetched Promotion Codes:', response.data);
-
-    datas.value = response.data.map(promo => {
-      console.log('Promotion Code Details:', promo);
-      return {
-        ...promo,
-        product_name: promo.product ? promo.product.name : 'N/A',
-        category_name: promo.category ? promo.category.name : 'N/A',
-        start_at: dayjs(promo.start_at).format('DD/MM/YYYY HH:mm'),
-        end_at: dayjs(promo.end_at).format('DD/MM/YYYY HH:mm'),
-      };
-    });
-    console.log('Mapped Promotion Codes:', datas.value);
+    datas.value = response.data.map(promo => ({
+      ...promo,
+      product_name: promo.product ? promo.product.name : 'N/A',
+      category_name: promo.category ? promo.category.name : 'N/A',
+      start_at: dayjs(promo.start_at).tz("Europe/Paris").format('DD/MM/YYYY HH:mm'),
+      end_at: dayjs(promo.end_at).tz("Europe/Paris").format('DD/MM/YYYY HH:mm'),
+    }));
   } catch (error) {
     console.error('Error fetching promotion codes:', error);
   }

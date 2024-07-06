@@ -47,18 +47,14 @@ const fetchCarts = async () => {
   try {
     const response = await axios.get<Cart[]>(`${apiUrl}/cart/`);
     datas.value = response.data.map(cart => {
-      console.log('Processing Cart:', cart);
-      const processedCart = {
+      return {
         ...cart,
+        username: cart.user ? cart.user.username : 'Unknown',
         products: cart.cartProductsData.map(product => `${product.name} (x${product.quantity})`).join(', '),
         created_at: dayjs(cart.created_at).format('DD/MM/YYYY HH:mm'),
-        expire_at: dayjs(cart.expire_at).format('DD/MM/YYYY HH:mm'),
-        user: cart.user ? cart.user : { id: '', username: 'Unknown' }
+        expire_at: dayjs(cart.expire_at).format('DD/MM/YYYY HH:mm')
       };
-      console.log('Processed Cart:', processedCart);
-      return processedCart;
     });
-    console.log('Final Processed Carts:', datas.value);
   } catch (error) {
     console.error('Error fetching carts:', error);
   }
