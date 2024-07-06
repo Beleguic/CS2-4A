@@ -1,15 +1,17 @@
 <template>
   <form @submit.prevent="handleSubmit">
-    <div v-for="(field, index) in fields" :key="index" class="mb-4">
-      <label :for="field.name" class="block text-white mb-1">{{ field.label }}</label>
-      <input
-        :type="field.type"
-        :name="field.name"
-        v-model="formData[field.name]"
-        :required="field.required"
-        class="w-full px-3 py-2 border border-gray-300 rounded"
-      />
-      <span v-if="errors[field.name]" class="text-red-500">{{ errors[field.name] }}</span>
+    <div v-for="(div, field2) in fields" :key="field2" class="flex flex-row -mx-4" >
+      <div v-for="(field, index) in div" :key="index" class="m-4 w-full">
+        <label :for="field.name" class="block text-white mb-1">{{ field.label }}</label>
+        <input
+          :type="field.type"
+          :name="field.name"
+          v-model="formData[field.name]"
+          :required="field.required"
+          class="w-full px-3 py-2 border border-grasy-300 rounded"
+        />
+        <span v-if="errors[field.name]" class="text-red-500">{{ errors[field.name] }}</span>
+       </div>
     </div>
     <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
       {{ submitButtonText }}
