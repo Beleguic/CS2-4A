@@ -81,9 +81,8 @@
   .landing-image-section {
     position: relative;
     height: calc(100vh - 10vh); /* 100vh - 10vh de la navbar */
-    width: 100vw;
+    width: 100%;
     overflow: hidden;
-    margin-top: -10px;
   }
   
   .landing-image {

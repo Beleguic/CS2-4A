@@ -41,7 +41,7 @@ import DBUserForm from '../views/DBUserForm.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/',
+    path: '',
     name: 'Home',
     component: Home,
   },
