@@ -47,17 +47,16 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 const fetchOrders = async () => {
   try {
     const response = await axios.get<Order[]>(`${apiUrl}/order/`);
-    // Assurez-vous que les données sont correctement mappées
     const ordersWithUsers = response.data.map(order => {
       return {
         ...order,
         username: order.User.username,
         email: order.User.email,
-        products: JSON.stringify(order.products),  // Serialize products array to string
-        created_at: dayjs(order.created_at).format('DD/MM/YYYY HH:mm')  // Format the created_at date
+        products: JSON.stringify(order.products),
+        created_at: dayjs(order.created_at).format('DD/MM/YYYY HH:mm')
       };
     });
-    console.log('Mapped orders:', ordersWithUsers);  // Ajoutez cette ligne pour vérifier les données
+    console.log('Mapped orders:', ordersWithUsers);
     datas.value = ordersWithUsers;
   } catch (error) {
     console.error('Error fetching orders:', error);

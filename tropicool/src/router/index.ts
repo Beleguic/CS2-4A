@@ -30,8 +30,6 @@ import DBNewsletterIndex from '../components/DBNewsletterIndex.vue';
 import DBNewsletterForm from '../views/DBNewsletterForm.vue';
 import DBOrderIndex from '../components/DBOrderIndex.vue';
 import DBOrderForm from '../views/DBOrderForm.vue';
-import DBPasswordHistoryIndex from '../components/DBPasswordHistoryIndex.vue';
-import DBPasswordHistoryForm from '../views/DBPasswordHistoryForm.vue';
 import DBProductPromotionIndex from '../components/DBProductPromotionIndex.vue';
 import DBProductPromotionForm from '../views/DBProductPromotionForm.vue';
 import DBPromotionCodeIndex from '../components/DBPromotionCodeIndex.vue';
@@ -40,8 +38,6 @@ import DBStockIndex from '../components/DBStockIndex.vue';
 import DBStockForm from '../views/DBStockForm.vue';
 import DBUserIndex from '../components/DBUserIndex.vue';
 import DBUserForm from '../views/DBUserForm.vue';
-import DBUserHistoryIndex from '../components/DBUserHistoryIndex.vue';
-import DBUserHistoryForm from '../views/DBUserHistoryForm.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -303,30 +299,6 @@ const routes: Array<RouteRecordRaw> = [
         component: DBOrderForm,
         props: true,
       },
-      // Password History Routes
-      {
-        path: 'password-history',
-        name: 'DBPasswordHistoryIndex',
-        component: DBPasswordHistoryIndex,
-      },
-      {
-        path: 'password-history/new',
-        name: 'DBPasswordHistoryNew',
-        component: DBPasswordHistoryForm,
-        props: true,
-      },
-      {
-        path: 'password-history/edit/:id',
-        name: 'DBPasswordHistoryEdit',
-        component: DBPasswordHistoryForm,
-        props: true,
-      },
-      {
-        path: 'password-history/delete/:id',
-        name: 'DBPasswordHistoryDelete',
-        component: DBPasswordHistoryForm,
-        props: true,
-      },
       // Product Promotion Routes
       {
         path: 'product-promotion',
@@ -423,30 +395,7 @@ const routes: Array<RouteRecordRaw> = [
         component: DBUserForm,
         props: true,
       },
-      // User History Routes
-      {
-        path: 'user-history',
-        name: 'DBUserHistoryIndex',
-        component: DBUserHistoryIndex,
-      },
-      {
-        path: 'user-history/new',
-        name: 'DBUserHistoryNew',
-        component: DBUserHistoryForm,
-        props: true,
-      },
-      {
-        path: 'user-history/edit/:id',
-        name: 'DBUserHistoryEdit',
-        component: DBUserHistoryForm,
-        props: true,
-      },
-      {
-        path: 'user-history/delete/:id',
-        name: 'DBUserHistoryDelete',
-        component: DBUserHistoryForm,
-        props: true,
-      },
+
     ]
   },
   {

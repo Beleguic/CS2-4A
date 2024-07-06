@@ -1,29 +1,39 @@
 <template>
   <section class="h-full">
     <div class="py-8 px-6">
-      <h1 v-if="mode === 'new'" class="text-4xl font-bold mb-8 text-black">Ajouter un stock</h1>
-      <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer le stock</h1>
-      <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer le stock</h1>
+      <h1 v-if="mode === 'new'" class="text-4xl font-bold mb-8 text-black">Ajouter un produit</h1>
+      <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer le produit</h1>
+      <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer le produit</h1>
 
       <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
         <div class="grid gap-1">
-          <label for="product_id" class="block text-sm font-medium text-gray-700">Produit</label>
-          <select id="product_id" v-model="stock.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
-            <option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }}</option>
-          </select>
+          <label for="name" class="block text-sm font-medium text-gray-700">Nom</label>
+          <input type="text" id="name" v-model="product.name" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
         </div>
         <div class="grid gap-1">
-          <label for="quantity" class="block text-sm font-medium text-gray-700">Quantité</label>
-          <input type="number" id="quantity" v-model="stock.quantity" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" />
+          <label for="brand" class="block text-sm font-medium text-gray-700">Marque</label>
+          <input type="text" id="brand" v-model="product.brand" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+        </div>
+        <div class="grid gap-1">
+          <label for="price" class="block text-sm font-medium text-gray-700">Prix</label>
+          <input type="number" id="price" v-model="product.price" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" />
+        </div>
+        <div class="grid gap-1">
+          <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
+          <input type="url" id="image" v-model="product.image" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+        </div>
+        <div class="grid gap-1">
+          <label for="is_active" class="block text-sm font-medium text-gray-700">Actif</label>
+          <input type="checkbox" id="is_active" v-model="product.is_active" class="p-2 block border border-gray-300 rounded-md shadow-sm" />
         </div>
         <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
       </form>
 
       <div v-if="mode === 'delete'" class="grid gap-4">
-        <p>Êtes-vous sûr de vouloir supprimer ce stock ?</p>
+        <p>Êtes-vous sûr de vouloir supprimer ce produit ?</p>
         <div class="flex gap-4">
           <button @click="goBack" class="px-6 py-4 bg-blue-500 hover:bg-blue-800 rounded-md text-white">Non</button>
-          <button @click="deleteStock" class="px-6 py-4 bg-red-500 hover:bg-red-800 rounded-md text-white">Oui</button>
+          <button @click="deleteProduct" class="px-6 py-4 bg-red-500 hover:bg-red-800 rounded-md text-white">Oui</button>
         </div>
       </div>
     </div>
@@ -35,50 +45,44 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
-interface Stock {
-  id?: string;
-  product_id: string;
-  quantity: number;
-}
-
 interface Product {
-  id: string;
+  id?: string;
   name: string;
+  brand: string;
+  price: number;
+  image: string;
+  is_active?: boolean;
 }
 
 const route = useRoute();
 const router = useRouter();
-const stock = ref<Stock>({
-  product_id: '',
-  quantity: 0,
+const product = ref<Product>({
+  name: '',
+  brand: '',
+  price: 0,
+  image: '',
+  is_active: true,
 });
-const products = ref<Product[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
 
 onMounted(async () => {
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
-      const response = await axios.get<Stock>(`${apiUrl}/stock/${route.params.id}`);
-      stock.value = response.data;
+      const response = await axios.get<Product>(`${apiUrl}/product/${route.params.id}`);
+      product.value = response.data;
     } catch (error) {
-      console.error('Error fetching stock:', error);
+      console.error('Error fetching product:', error);
     }
-  }
-  try {
-    const productResponse = await axios.get<Product[]>(`${apiUrl}/product`);
-    products.value = productResponse.data;
-  } catch (error) {
-    console.error('Error fetching products:', error);
   }
 });
 
 const submitForm = async () => {
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
-    const url = mode.value === 'new' ? `${apiUrl}/stock/new` : `${apiUrl}/stock/${route.params.id}`;
+    const url = mode.value === 'new' ? `${apiUrl}/product/new` : `${apiUrl}/product/${route.params.id}`;
 
-    const { id, ...payload } = stock.value;
+    const { id, ...payload } = product.value;
 
     const response = await axios({
       method,
@@ -90,35 +94,35 @@ const submitForm = async () => {
     });
 
     if (response.status === 200 || response.status === 201) {
-      window.dispatchEvent(new CustomEvent(`stock-${mode.value === 'new' ? 'added' : 'updated'}`));
+      window.dispatchEvent(new CustomEvent(`product-${mode.value === 'new' ? 'added' : 'updated'}`));
       setTimeout(() => {
-        router.push({ name: 'DBStockIndex' });
+        router.push({ name: 'DBProductIndex' });
       }, 100);
     } else {
-      throw new Error('Error saving stock');
+      throw new Error('Error saving product');
     }
   } catch (error) {
-    console.error('Error saving stock:', error);
+    console.error('Error saving product:', error);
   }
 };
 
-const deleteStock = async () => {
+const deleteProduct = async () => {
   try {
-    const response = await axios.delete(`${apiUrl}/stock/${route.params.id}`);
+    const response = await axios.delete(`${apiUrl}/product/${route.params.id}`);
     if (response.status === 204) {
-      window.dispatchEvent(new CustomEvent('stock-deleted'));
+      window.dispatchEvent(new CustomEvent('product-deleted'));
       setTimeout(() => {
-        router.push({ name: 'DBStockIndex' });
+        router.push({ name: 'DBProductIndex' });
       }, 100);
     } else {
-      console.error('Failed to delete stock');
+      console.error('Failed to delete product');
     }
   } catch (error) {
-    console.error('Error deleting stock:', error);
+    console.error('Error deleting product:', error);
   }
 };
 
 const goBack = () => {
-  router.push({ name: 'DBStockIndex' });
+  router.push({ name: 'DBProductIndex' });
 };
 </script>

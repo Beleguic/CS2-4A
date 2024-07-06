@@ -23,17 +23,18 @@ import Table from '../components/TableComponent.vue';
 
 interface Cart {
   id: string;
-  user_id: string;
-  products: string;
+  user: { id: string; username: string };
+  cartProductsData: Array<{ product_id: string; name: string; quantity: number }>;
   created_at: string;
   expire_at: string;
+  products: string;
 }
 
 const datas = ref<Cart[]>([]);
 
 const columns = [
   { key: 'id', label: 'ID' },
-  { key: 'user_id', label: 'Utilisateur' },
+  { key: 'user.username', label: 'Utilisateur' },
   { key: 'products', label: 'Produits' },
   { key: 'created_at', label: 'Créé le' },
   { key: 'expire_at', label: 'Expire le' },
@@ -45,16 +46,19 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 const fetchCarts = async () => {
   try {
     const response = await axios.get<Cart[]>(`${apiUrl}/cart/`);
-    console.log('Fetched Carts:', response.data);
-
-    // Map data to format dates
-    datas.value = response.data.map(cart => ({
-      ...cart,
-      created_at: dayjs(cart.created_at).format('DD/MM/YYYY HH:mm'),
-      expire_at: dayjs(cart.expire_at).format('DD/MM/YYYY HH:mm')
-    }));
-
-    console.log('Mapped Carts:', datas.value);
+    datas.value = response.data.map(cart => {
+      console.log('Processing Cart:', cart);
+      const processedCart = {
+        ...cart,
+        products: cart.cartProductsData.map(product => `${product.name} (x${product.quantity})`).join(', '),
+        created_at: dayjs(cart.created_at).format('DD/MM/YYYY HH:mm'),
+        expire_at: dayjs(cart.expire_at).format('DD/MM/YYYY HH:mm'),
+        user: cart.user ? cart.user : { id: '', username: 'Unknown' }
+      };
+      console.log('Processed Cart:', processedCart);
+      return processedCart;
+    });
+    console.log('Final Processed Carts:', datas.value);
   } catch (error) {
     console.error('Error fetching carts:', error);
   }

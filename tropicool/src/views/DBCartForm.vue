@@ -14,13 +14,14 @@
         </div>
         <div class="grid gap-1">
           <label for="product_id" class="block text-sm font-medium text-gray-700">Produit</label>
-          <select id="product_id" v-model="selectedProduct.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm">
-            <option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }}</option>
+          <select id="product_id" v-model="selectedProduct.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" @change="updateSelectedProductStock">
+            <option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }} (Stock: {{ product.stock }})</option>
           </select>
         </div>
         <div class="grid gap-1">
           <label for="quantity" class="block text-sm font-medium text-gray-700">Quantité</label>
-          <input type="number" id="quantity" v-model="selectedProduct.quantity" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" />
+          <input type="number" id="quantity" v-model="selectedProduct.quantity" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" :max="selectedProduct.maxQuantity" />
+          <p v-if="selectedProduct.maxQuantity !== null" class="text-sm text-gray-600">Max disponible: {{ selectedProduct.maxQuantity }}</p>
         </div>
         <button type="button" @click="addProduct" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">Ajouter produit</button>
         <ul>
@@ -60,6 +61,7 @@ interface User {
 interface Product {
   id: string;
   name: string;
+  stock: number;
 }
 
 interface Cart {
@@ -73,9 +75,10 @@ const route = useRoute();
 const router = useRouter();
 const users = ref<User[]>([]);
 const products = ref<Product[]>([]);
-const selectedProduct = ref<{ product_id: string; quantity: number; name?: string }>({
+const selectedProduct = ref<{ product_id: string; quantity: number; name?: string; maxQuantity: number | null }>({
   product_id: '',
   quantity: 1,
+  maxQuantity: null,
 });
 const cart = ref<Cart>({
   user_id: '',
@@ -97,7 +100,7 @@ onMounted(async () => {
       }
       const cartData = await response.json();
       // Map product_id to product name for existing cart products
-      cartData.products.forEach((product: { product_id: string; quantity: number }) => {
+      cartData.cartProductsData.forEach((product: { product_id: string; quantity: number }) => {
         const prod = products.value.find(p => p.id === product.product_id);
         if (prod) {
           cart.value.products.push({
@@ -125,22 +128,33 @@ const fetchUsers = async () => {
 
 const fetchProducts = async () => {
   try {
-    const response = await axios.get<Product[]>(`${apiUrl}/product`);
+    const response = await axios.get<Product[]>(`${apiUrl}/product/products-with-stock`);
     products.value = response.data;
   } catch (error) {
     console.error('Error fetching products:', error);
   }
 };
 
-const addProduct = () => {
+const updateSelectedProductStock = () => {
   const product = products.value.find(p => p.id === selectedProduct.value.product_id);
   if (product) {
+    selectedProduct.value.maxQuantity = product.stock;
+  } else {
+    selectedProduct.value.maxQuantity = null;
+  }
+};
+
+const addProduct = () => {
+  const product = products.value.find(p => p.id === selectedProduct.value.product_id);
+  if (product && selectedProduct.value.quantity <= product.stock) {
     cart.value.products.push({
       product_id: selectedProduct.value.product_id,
       name: product.name,
       quantity: selectedProduct.value.quantity,
     });
-    selectedProduct.value = { product_id: '', quantity: 1 };
+    selectedProduct.value = { product_id: '', quantity: 1, maxQuantity: null };
+  } else {
+    alert('Stock insuffisant');
   }
 };
 

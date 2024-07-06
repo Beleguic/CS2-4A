@@ -14,6 +14,12 @@ module.exports = function (sequelize) {
         as: 'promotionCodes',
         onDelete: 'CASCADE'
       });
+
+      Category.hasMany(models.Alert, {
+        foreignKey: 'category_id',
+        as: 'alerts',
+        onDelete: 'CASCADE'
+      });
     }
   }
 

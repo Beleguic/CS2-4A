@@ -1,5 +1,5 @@
 const express = require('express');
-const { Product } = require('../models');
+const { Product, Stock } = require('../models');
 const router = express.Router();
 const Joi = require('joi');
 
@@ -10,6 +10,35 @@ const productSchema = Joi.object({
   price: Joi.number().greater(0).required(),
   image: Joi.string().uri().required(),
   is_active: Joi.boolean().optional()
+});
+
+
+router.get('/products-with-stock', async (req, res, next) => {
+  try {
+    const products = await Product.findAll({
+      attributes: ['id', 'name'],
+      include: [
+        {
+          model: Stock,
+          as: 'stocks',
+          attributes: ['quantity']
+        }
+      ]
+    });
+
+    const productsWithStock = products.map(product => {
+      return {
+        id: product.id,
+        name: product.name,
+        stock: product.stocks.reduce((acc, stock) => acc + stock.quantity, 0)
+      };
+    });
+
+    res.json(productsWithStock);
+  } catch (e) {
+    console.error('Error fetching products with stock:', e);
+    next(e);
+  }
 });
 
 // Get all products for selection
