@@ -20,6 +20,11 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import Table from '../components/TableComponent.vue';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface ProductPromotion {
   id: string;
@@ -52,8 +57,8 @@ const fetchProductPromotions = async () => {
     datas.value = response.data.map(promotion => ({
       id: promotion.id,
       product_name: promotion.product.name,
-      start_at: dayjs(promotion.start_at).format('DD/MM/YYYY HH:mm'),
-      end_at: dayjs(promotion.end_at).format('DD/MM/YYYY HH:mm')
+      start_at: dayjs(promotion.start_at).tz("Europe/Paris").format('DD/MM/YYYY HH:mm'), 
+      end_at: dayjs(promotion.end_at).tz("Europe/Paris").format('DD/MM/YYYY HH:mm'), 
     }));
 
     console.log('Final Mapped Product Promotions:', datas.value);

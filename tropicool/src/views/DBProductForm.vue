@@ -16,7 +16,7 @@
         </div>
         <div class="grid gap-1">
           <label for="price" class="block text-sm font-medium text-gray-700">Prix</label>
-          <input type="number" id="price" v-model="product.price" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" />
+          <input type="number" step="0.01" id="price" v-model.number="product.price" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" /> 
         </div>
         <div class="grid gap-1">
           <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
