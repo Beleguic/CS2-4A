@@ -147,7 +147,7 @@ module.exports = (sequelize) => {
     sequelize,
     modelName: 'User',
     tableName: 'users',
-    timestamps: true, // enable automatic handling of createdAt and updatedAt fields
+    timestamps: true,
     hooks: {
       beforeCreate: async (user) => {
         user.password = await User.hashPassword(user.password);
@@ -156,11 +156,11 @@ module.exports = (sequelize) => {
         if (options.fields.includes('password')) {
           user.password = await User.hashPassword(user.password);
         }
-        user.updated_at = new Date(); // Update the updated_at timestamp on every update
+        user.updated_at = new Date();
       }
     },
-    createdAt: 'created_at', // map createdAt to created_at
-    updatedAt: 'updated_at'  // map updatedAt to updated_at
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   return User;
