@@ -1,7 +1,20 @@
-const { Model, DataTypes, Sequelize } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
 module.exports = function (sequelize) {
-  class Alert extends Model {}
+  class Alert extends Model {
+    static associate(models) {
+      Alert.belongsTo(models.Product, {
+        foreignKey: 'product_id',
+        as: 'product',
+        onDelete: 'CASCADE'
+      });
+      Alert.belongsTo(models.Category, {
+        foreignKey: 'category_id',
+        as: 'category',
+        onDelete: 'CASCADE'
+      });
+    }
+  }
 
   Alert.init({
     id: {

@@ -26,8 +26,8 @@ import Table from '../components/TableComponent.vue';
 interface Alert {
   id: string;
   alert_type_id: number;
-  product_id?: string;
-  category_id?: string;
+  product: { id: string, name: string } | null;
+  category: { id: string, name: string } | null;
   created_at: string;
 }
 
@@ -36,8 +36,8 @@ const datas = ref<Alert[]>([]);
 const columns = [
   { key: 'id', label: 'ID' },
   { key: 'alert_type_id', label: 'Type' },
-  { key: 'product_id', label: 'Produit' },
-  { key: 'category_id', label: 'Catégorie' },
+  { key: 'product_name', label: 'Produit' },
+  { key: 'category_name', label: 'Catégorie' },
   { key: 'created_at', label: 'Crée le' },
   { key: 'actions', label: 'Actions' },
 ];
@@ -49,10 +49,11 @@ const fetchAlerts = async () => {
     const response = await axios.get<Alert[]>(`${apiUrl}/alert/`);
     console.log('Fetched Alerts:', response.data);
 
-    // Map data to format dates
     datas.value = response.data.map(alert => ({
       ...alert,
-      created_at: dayjs(alert.created_at).format('DD/MM/YYYY HH:mm') // Format the created_at date
+      product_name: alert.product ? alert.product.name : 'N/A',
+      category_name: alert.category ? alert.category.name : 'N/A',
+      created_at: dayjs(alert.created_at).format('DD/MM/YYYY HH:mm'),
     }));
 
     console.log('Mapped Alerts:', datas.value);

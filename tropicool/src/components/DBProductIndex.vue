@@ -2,14 +2,14 @@
   <section class="h-full">
     <div class="py-8 px-6">
       <div class="flex items-center justify-between mb-8">
-        <h1 class="text-4xl font-bold text-black">Liste des stocks</h1>
-        <router-link :to="{ name: 'DBStockNew' }" class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
+        <h1 class="text-4xl font-bold text-black">Liste des produits</h1>
+        <router-link :to="{ name: 'DBProductNew' }" class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
       <template v-if="datas.length > 0">
-        <Table :columns="columns" :datas="datas" editLink="DBStockEdit" deleteLink="DBStockDelete" />
+        <Table :columns="columns" :datas="datas" editLink="DBProductEdit" deleteLink="DBProductDelete" />
       </template>
       <template v-else>
-        <p class="text-center text-gray-500">Pas de stock trouvé</p>
+        <p class="text-center text-gray-500">Pas de produit trouvé</p>
       </template>
     </div>
   </section>
@@ -24,61 +24,58 @@ import Table from '../components/TableComponent.vue';
 interface Product {
   id: string;
   name: string;
-}
-
-interface Stock {
-  id: string;
-  product_id: string;
-  product: Product;
-  quantity: number;
+  brand: string;
+  price: number;
+  image: string;
+  is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
-const datas = ref<Stock[]>([]);
+const datas = ref<Product[]>([]);
 
 const columns = [
   { key: 'id', label: 'ID' },
-  { key: 'product_name', label: 'Produit' },
-  { key: 'quantity', label: 'Quantité' },
-  { key: 'created_at', label: 'Date d\'ajout' },
+  { key: 'name', label: 'Nom' },
+  { key: 'brand', label: 'Marque' },
+  { key: 'price', label: 'Prix' },
+  { key: 'image', label: 'Image' },
+  { key: 'is_active', label: 'Actif' },
+  { key: 'created_at', label: 'Créé le' },
+  { key: 'updated_at', label: 'Mis à jour le' },
   { key: 'actions', label: 'Actions' },
 ];
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
-const fetchStocks = async () => {
+const fetchProducts = async () => {
   try {
-    const response = await axios.get<Stock[]>(`${apiUrl}/stock/`);
-    console.log('Fetched Stocks:', response.data);
-
-    // Map data to format dates and flatten product name
-    datas.value = response.data.map(stock => ({
-      ...stock,
-      product_name: stock.product.name,
-      created_at: dayjs(stock.created_at).format('DD/MM/YYYY HH:mm')
+    const response = await axios.get<Product[]>(`${apiUrl}/product/`);
+    datas.value = response.data.map(product => ({
+      ...product,
+      created_at: dayjs(product.created_at).format('DD/MM/YYYY HH:mm'),
+      updated_at: dayjs(product.updated_at).format('DD/MM/YYYY HH:mm'),
     }));
-
-    console.log('Mapped Stocks:', datas.value);
   } catch (error) {
-    console.error('Error fetching stocks:', error);
+    console.error('Error fetching products:', error);
   }
 };
 
 onMounted(() => {
-  fetchStocks();
+  fetchProducts();
 
-  const handleStockUpdated = () => fetchStocks();
-  const handleStockAdded = () => fetchStocks();
-  const handleStockDeleted = () => fetchStocks();
+  const handleProductUpdated = () => fetchProducts();
+  const handleProductAdded = () => fetchProducts();
+  const handleProductDeleted = () => fetchProducts();
 
-  window.addEventListener('stock-updated', handleStockUpdated);
-  window.addEventListener('stock-added', handleStockAdded);
-  window.addEventListener('stock-deleted', handleStockDeleted);
+  window.addEventListener('product-updated', handleProductUpdated);
+  window.addEventListener('product-added', handleProductAdded);
+  window.addEventListener('product-deleted', handleProductDeleted);
 
   onBeforeUnmount(() => {
-    window.removeEventListener('stock-updated', handleStockUpdated);
-    window.removeEventListener('stock-added', handleStockAdded);
-    window.removeEventListener('stock-deleted', handleStockDeleted);
+    window.removeEventListener('product-updated', handleProductUpdated);
+    window.removeEventListener('product-added', handleProductAdded);
+    window.removeEventListener('product-deleted', handleProductDeleted);
   });
 });
 </script>

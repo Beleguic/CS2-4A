@@ -1,5 +1,5 @@
 const express = require('express');
-const { Cart, Product } = require('../models');
+const { Cart, User, Product, Stock } = require('../models');
 const router = express.Router();
 const Joi = require('joi');
 
@@ -12,41 +12,38 @@ const cartSchema = Joi.object({
       quantity: Joi.number().integer().min(1).required(),
     })
   ).required(),
-  expire_at: Joi.date().optional()
+  expire_at: Joi.date().optional(),
+  cartProductsData: Joi.array().items(
+    Joi.object({
+      product_id: Joi.string().uuid().required(),
+      name: Joi.string().required(),
+      quantity: Joi.number().integer().min(1).required(),
+    })
+  ).optional().default([])
 });
 
 // Get all carts
 router.get('/', async (req, res, next) => {
   try {
-    const carts = await Cart.findAll();
-    res.json(carts);
+    const carts = await Cart.findAll({
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'username'] }
+      ]
+    });
+    const cartData = carts.map(cart => {
+      return {
+        ...cart.toJSON(),
+        cartProductsData: cart.cartProductsData.map(product => ({
+          product_id: product.product_id,
+          name: product.name,
+          quantity: product.quantity
+        })),
+        user: cart.user
+      };
+    });
+    res.json(cartData);
   } catch (e) {
     console.error('Error fetching carts:', e);
-    next(e);
-  }
-});
-
-// Get all products for selection
-router.get('/list', async (req, res, next) => {
-  try {
-    const products = await Product.findAll({
-      attributes: ['id', 'name']
-    });
-    res.json(products);
-  } catch (e) {
-    console.error('Error fetching product list:', e);
-    next(e);
-  }
-});
-
-router.get('/', async (req, res, next) => {
-  try {
-    const users = await User.findAll({
-      attributes: ['id', 'username'], // Assurez-vous que le champ username existe
-    });
-    res.json(users);
-  } catch (e) {
-    console.error('Error fetching users:', e);
     next(e);
   }
 });
@@ -55,7 +52,11 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const cart = await Cart.findByPk(id);
+    const cart = await Cart.findByPk(id, {
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'username'] }
+      ]
+    });
 
     if (cart) {
       res.json(cart);
@@ -76,7 +77,33 @@ router.post('/new', async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const cart = await Cart.create(req.body);
+    const { products } = req.body;
+
+    for (let product of products) {
+      const stock = await Stock.findOne({ where: { product_id: product.product_id } });
+      if (!stock || stock.quantity < product.quantity) {
+        return res.status(400).json({ error: `Insufficient stock for product ID ${product.product_id}` });
+      }
+
+      const productDetails = await Product.findByPk(product.product_id, {
+        attributes: ['name']
+      });
+      if (productDetails) {
+        product.name = productDetails.name;
+      }
+    }
+
+    console.log('Creating Cart with Products:', products);
+
+    const cart = await Cart.create({ ...req.body, cartProductsData: products });
+
+    for (let product of products) {
+      await Stock.decrement('quantity', {
+        by: product.quantity,
+        where: { product_id: product.product_id }
+      });
+    }
+
     res.status(201).json(cart);
   } catch (e) {
     console.error('Error creating cart:', e);
@@ -87,7 +114,6 @@ router.post('/new', async (req, res, next) => {
 // Update cart
 router.patch('/:id', async (req, res, next) => {
   try {
-    // Exclude `created_at` from the request body
     const { created_at, ...updateData } = req.body;
 
     const { error } = cartSchema.validate(updateData);
@@ -98,7 +124,31 @@ router.patch('/:id', async (req, res, next) => {
     const cart = await Cart.findByPk(req.params.id);
 
     if (cart) {
-      await cart.update(updateData);
+      const { products } = updateData;
+      for (let product of products) {
+        const stock = await Stock.findOne({ where: { product_id: product.product_id } });
+        if (!stock || stock.quantity < product.quantity) {
+          return res.status(400).json({ error: `Insufficient stock for product ID ${product.product_id}` });
+        }
+
+        const productDetails = await Product.findByPk(product.product_id, {
+          attributes: ['name']
+        });
+        if (productDetails) {
+          product.name = productDetails.name;
+        }
+      }
+
+      await cart.update({ ...updateData, cartProductsData: products });
+
+      // Decrement stock
+      for (let product of products) {
+        await Stock.decrement('quantity', {
+          by: product.quantity,
+          where: { product_id: product.product_id }
+        });
+      }
+
       res.json(cart);
     } else {
       res.sendStatus(404);

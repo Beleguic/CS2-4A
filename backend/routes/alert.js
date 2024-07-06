@@ -1,5 +1,5 @@
 const express = require('express');
-const { Alert } = require('../models');
+const { Alert, Product, Category } = require('../models');
 const router = express.Router();
 const Joi = require('joi');
 
@@ -13,7 +13,12 @@ const alertSchema = Joi.object({
 // Get all alerts
 router.get('/', async (req, res, next) => {
   try {
-    const alerts = await Alert.findAll();
+    const alerts = await Alert.findAll({
+      include: [
+        { model: Product, as: 'product', attributes: ['id', 'name'] },
+        { model: Category, as: 'category', attributes: ['id', 'name'] },
+      ],
+    });
     res.json(alerts);
   } catch (e) {
     next(e);
@@ -24,7 +29,12 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const alert = await Alert.findByPk(id);
+    const alert = await Alert.findByPk(id, {
+      include: [
+        { model: Product, as: 'product', attributes: ['id', 'name'] },
+        { model: Category, as: 'category', attributes: ['id', 'name'] },
+      ],
+    });
 
     if (alert) {
       res.json(alert);
