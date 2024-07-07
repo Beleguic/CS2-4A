@@ -18,62 +18,72 @@
 </template>
 
 <script setup lang="ts">
-  import { useRoute } from 'vue-router';
-  import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
-  import axios from 'axios';
-  import Table from '../components/TableComponent.vue';
+import { useRoute } from 'vue-router';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import Table from '../components/TableComponent.vue';
 
-  interface Category {
-    id: number;
-    name: string;
-    url: string;
-    description: string;
-    image: string;
-    is_active: boolean;
-    createdAt: string;
-    updatedAt: string;
+interface Category {
+  id: number;
+  name: string;
+  url: string;
+  description: string;
+  image: string;
+  is_active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const datas = ref<Category[]>([]);
+
+const columns = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Nom' },
+  { key: 'is_active', label: 'Status' },
+  { key: 'createdAt', label: 'Crée le' },
+  { key: 'updatedAt', label: 'Modifié le' },
+  { key: 'actions', label: 'Actions' },
+];
+
+const apiUrl = import.meta.env.VITE_API_URL as string;
+
+const fetchCategories = async () => {
+  try {
+    const response = await axios.get<Category[]>(`${apiUrl}/category/`);
+    console.log('Fetched Categories:', response.data);
+
+    // Map data to format dates
+    datas.value = response.data.map(category => ({
+      ...category,
+      createdAt: dayjs(category.createdAt).format('DD/MM/YYYY HH:mm'), // Format the createdAt date
+      updatedAt: dayjs(category.updatedAt).format('DD/MM/YYYY HH:mm')  // Format the updatedAt date
+    }));
+
+    console.log('Mapped Categories:', datas.value);
+  } catch (error) {
+    console.error('Error fetching datas:', error);
   }
+};
 
-  const datas = ref<Category[]>([]);
+onMounted(() => {
+  fetchCategories();
 
-  const columns = [
-    { key: 'id', label: 'ID' },
-    { key: 'name', label: 'Nom' },
-    { key: 'is_active', label: 'Status' },
-    { key: 'createdAt', label: 'Crée le' },
-    { key: 'updatedAt', label: 'Modifié le' },
-    { key: 'actions', label: 'Actions' },
-  ];
+  const handleCategoryUpdated = () => fetchCategories();
+  const handleCategoryAdded = () => fetchCategories();
+  const handleCategoryDeleted = () => fetchCategories();
 
-  const apiUrl = import.meta.env.VITE_API_URL as string;
+  window.addEventListener('category-updated', handleCategoryUpdated);
+  window.addEventListener('category-added', handleCategoryAdded);
+  window.addEventListener('category-deleted', handleCategoryDeleted);
 
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get<Category[]>(`${apiUrl}/category/`);
-      datas.value = response.data;
-    } catch (error) {
-      console.error('Error fetching datas:', error);
-    }
-  };
-
-  onMounted(() => {
-    fetchCategories();
-
-    const handleCategoryUpdated = () => fetchCategories();
-    const handleCategoryAdded = () => fetchCategories();
-    const handleCategoryDeleted = () => fetchCategories();
-
-    window.addEventListener('category-updated', handleCategoryUpdated);
-    window.addEventListener('category-added', handleCategoryAdded);
-    window.addEventListener('category-deleted', handleCategoryDeleted);
-
-    onBeforeUnmount(() => {
-      window.removeEventListener('category-updated', handleCategoryUpdated);
-      window.removeEventListener('category-added', handleCategoryAdded);
-      window.removeEventListener('category-deleted', handleCategoryDeleted);
-    });
+  onBeforeUnmount(() => {
+    window.removeEventListener('category-updated', handleCategoryUpdated);
+    window.removeEventListener('category-added', handleCategoryAdded);
+    window.removeEventListener('category-deleted', handleCategoryDeleted);
   });
+});
 
-  const route = useRoute();
-  const isDBCatIndex = computed(() => route.path.endsWith('/category'));
+const route = useRoute();
+const isDBCatIndex = computed(() => route.path.endsWith('/category'));
 </script>

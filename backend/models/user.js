@@ -83,6 +83,7 @@ module.exports = (sequelize) => {
     },
     verification_token: {
       type: DataTypes.STRING,
+      allowNull: true,
     },
     login_attempts: {
       type: DataTypes.INTEGER,
@@ -90,15 +91,19 @@ module.exports = (sequelize) => {
     },
     lock_until: {
       type: DataTypes.DATE,
+      allowNull: true,
     },
     reset_password_token: {
       type: DataTypes.STRING,
+      allowNull: true,
     },
     reset_password_expires: {
       type: DataTypes.DATE,
+      allowNull: true,
     },
     password_last_changed: {
       type: DataTypes.DATE,
+      allowNull: true,
     },
     username: {
       type: DataTypes.STRING,
@@ -131,16 +136,18 @@ module.exports = (sequelize) => {
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+      allowNull: false,
     },
     updated_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+      allowNull: false,
     }
   }, {
     sequelize,
     modelName: 'User',
     tableName: 'users',
-    timestamps: false,
+    timestamps: true,
     hooks: {
       beforeCreate: async (user) => {
         user.password = await User.hashPassword(user.password);
@@ -149,8 +156,11 @@ module.exports = (sequelize) => {
         if (options.fields.includes('password')) {
           user.password = await User.hashPassword(user.password);
         }
+        user.updated_at = new Date();
       }
-    }
+    },
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   return User;
