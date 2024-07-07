@@ -1,7 +1,27 @@
-const { Model, DataTypes, Sequelize } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
 module.exports = function (sequelize) {
-class Category extends Model {}
+  class Category extends Model {
+    static associate(models) {
+      Category.hasMany(models.CategoryProduct, {
+        foreignKey: 'category_id',
+        as: 'categoryProducts',
+        onDelete: 'CASCADE'
+      });
+
+      Category.hasMany(models.PromotionCode, {
+        foreignKey: 'category_id',
+        as: 'promotionCodes',
+        onDelete: 'CASCADE'
+      });
+
+      Category.hasMany(models.Alert, {
+        foreignKey: 'category_id',
+        as: 'alerts',
+        onDelete: 'CASCADE'
+      });
+    }
+  }
 
   Category.init({
     id: {
@@ -43,7 +63,7 @@ class Category extends Model {}
     sequelize,
     modelName: 'Category',
     tableName: 'categories',
-    timestamps: true,
+    timestamps: false,
   });
 
   return Category;
