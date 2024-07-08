@@ -11,12 +11,12 @@
           <input type="text" id="name" v-model="product.name" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
         </div>
         <div class="grid gap-1">
-          <label for="brand" class="block text-sm font-medium text-gray-700">Marque</label>
-          <input type="text" id="brand" v-model="product.brand" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
-        </div>
-        <div class="grid gap-1">
           <label for="price" class="block text-sm font-medium text-gray-700">Prix</label>
           <input type="number" step="0.01" id="price" v-model.number="product.price" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" /> 
+        </div>
+        <div class="grid gap-1">
+          <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+          <textarea id="description" v-model="product.description" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required></textarea>
         </div>
         <div class="grid gap-1">
           <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
@@ -25,6 +25,10 @@
         <div class="grid gap-1">
           <label for="is_active" class="block text-sm font-medium text-gray-700">Actif</label>
           <input type="checkbox" id="is_active" v-model="product.is_active" class="p-2 block border border-gray-300 rounded-md shadow-sm" />
+        </div>
+        <div class="grid gap-1">
+          <label for="is_adult" class="block text-sm font-medium text-gray-700">Produit réservé aux adultes</label>
+          <input type="checkbox" id="is_adult" v-model="product.is_adult" class="p-2 block border border-gray-300 rounded-md shadow-sm" />
         </div>
         <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
       </form>
@@ -48,20 +52,22 @@ import axios from 'axios';
 interface Product {
   id?: string;
   name: string;
-  brand: string;
   price: number;
+  description: string;
   image: string;
   is_active?: boolean;
+  is_adult?: boolean;
 }
 
 const route = useRoute();
 const router = useRouter();
 const product = ref<Product>({
   name: '',
-  brand: '',
   price: 0,
+  description: '',
   image: '',
   is_active: true,
+  is_adult: false,
 });
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
