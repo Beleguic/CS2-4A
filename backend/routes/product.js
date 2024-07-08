@@ -101,15 +101,19 @@ router.post('/new', async (req, res, next) => {
 // Update product
 router.patch('/:id', async (req, res, next) => {
   try {
-    const { error } = productSchema.validate(req.body);
+    // Extract the payload and remove `created_at` and `updated_at` fields
+    const { created_at, updated_at, ...payload } = req.body;
+
+    // Validate the payload
+    const { error } = productSchema.validate(payload);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
 
+    // Find and update the product
     const product = await Product.findByPk(req.params.id);
-
     if (product) {
-      await product.update(req.body);
+      await product.update(payload);
       res.json(product);
     } else {
       res.sendStatus(404);
