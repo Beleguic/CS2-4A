@@ -2,22 +2,18 @@ const { Cart, User, Product, Stock } = require('../models');
 const Joi = require('joi');
 
 // Cart schema validation
+// Cart schema validation
 const cartSchema = Joi.object({
   user_id: Joi.string().uuid().required(),
-  products: Joi.array().items(
-    Joi.object({
-      product_id: Joi.string().uuid().required(),
-      quantity: Joi.number().integer().min(1).required(),
-    })
-  ).required(),
-  expire_at: Joi.date().optional(),
   cartProductsData: Joi.array().items(
     Joi.object({
       product_id: Joi.string().uuid().required(),
       name: Joi.string().required(),
       quantity: Joi.number().integer().min(1).required(),
+      price: Joi.number().required(),
     })
-  ).optional().default([])
+  ).required(),
+  updated_at: Joi.date().optional()
 });
 
 const getAllCarts = async (req, res, next) => {

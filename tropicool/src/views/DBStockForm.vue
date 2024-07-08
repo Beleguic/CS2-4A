@@ -16,6 +16,13 @@
           <label for="quantity" class="block text-sm font-medium text-gray-700">Quantité</label>
           <input type="number" id="quantity" v-model="stock.quantity" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" />
         </div>
+        <div class="grid gap-1">
+          <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+          <select id="status" v-model="stock.status" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
+            <option value="add">Ajout</option>
+            <option value="remove">Suppression</option>
+          </select>
+        </div>
         <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
       </form>
 
@@ -39,6 +46,7 @@ interface Stock {
   id?: string;
   product_id: string;
   quantity: number;
+  status: string;
 }
 
 interface Product {
@@ -51,6 +59,7 @@ const router = useRouter();
 const stock = ref<Stock>({
   product_id: '',
   quantity: 0,
+  status: 'add',
 });
 const products = ref<Product[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
