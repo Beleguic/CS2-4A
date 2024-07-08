@@ -114,17 +114,18 @@ router.post('/new', async (req, res, next) => {
 // Update cart
 router.patch('/:id', async (req, res, next) => {
   try {
-    const { created_at, ...updateData } = req.body;
+    // Extract the payload and remove `created_at`, `updated_at`, and `user` fields
+    const { created_at, updated_at, user, ...payload } = req.body;
 
-    const { error } = cartSchema.validate(updateData);
+    // Validate the payload
+    const { error } = cartSchema.validate(payload);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
 
     const cart = await Cart.findByPk(req.params.id);
-
     if (cart) {
-      const { products } = updateData;
+      const { products } = payload;
       for (let product of products) {
         const stock = await Stock.findOne({ where: { product_id: product.product_id } });
         if (!stock || stock.quantity < product.quantity) {
@@ -139,7 +140,7 @@ router.patch('/:id', async (req, res, next) => {
         }
       }
 
-      await cart.update({ ...updateData, cartProductsData: products });
+      await cart.update({ ...payload, cartProductsData: products });
 
       // Decrement stock
       for (let product of products) {
@@ -158,6 +159,7 @@ router.patch('/:id', async (req, res, next) => {
     next(e);
   }
 });
+
 
 // Delete cart
 router.delete('/:id', async (req, res, next) => {
