@@ -1,4 +1,3 @@
-// composables/useAddToCartFromValidation.js
 import axios from 'axios';
 
 export async function useAddToCartFormValidation(item, quantity, userId) {
@@ -19,6 +18,10 @@ export async function useAddToCartFormValidation(item, quantity, userId) {
   const apiUrl = import.meta.env.VITE_API_URL;
 
   try {
+    // Récupérer les détails du produit y compris le prix
+    const productResponse = await axios.get(`${apiUrl}/product/${item}`);
+    const product = productResponse.data;
+
     // Vérifier s'il y a un panier actif pour cet utilisateur
     let cartResponse = await axios.get(`${apiUrl}/cart`, {
       params: {
@@ -29,22 +32,24 @@ export async function useAddToCartFormValidation(item, quantity, userId) {
 
     let activeCart;
     if (cartResponse.data.length === 0) {
-      // Créer un nouveau panier si aucun panier actif n'existe
+      const cartProductsData = [{ product_id: item, name: product.name, quantity: quantity, price: product.price }];
+      console.log('Creating new cart with:', cartProductsData);  // Debugging
       const newCartResponse = await axios.post(`${apiUrl}/cart/new`, {
         user_id: userId,
-        products: [{ product_id: item, quantity }],
+        cartProductsData: cartProductsData,
       });
       activeCart = newCartResponse.data;
     } else {
-      // Ajouter le produit et la quantité au panier existant
-      activeCart = cartResponse.data[0]; // Assuming the first cart is the most recent one
+      activeCart = cartResponse.data[0];
+      const updatedCartProductsData = [...activeCart.cartProductsData, { product_id: item, name: product.name, quantity: quantity, price: product.price }];
+      console.log('Updating existing cart with:', updatedCartProductsData);  // Debugging
       await axios.patch(`${apiUrl}/cart/${activeCart.id}`, {
-        products: [...activeCart.cartProductsData, { product_id: item, quantity }],
+        cartProductsData: updatedCartProductsData,
       });
     }
 
     return {
-      user,
+      userId,
       activeCart,
     };
   } catch (error) {

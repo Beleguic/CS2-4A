@@ -42,8 +42,8 @@
   onMounted(async () => {
       try {
           const response = await axios.get<Product[]>(`${apiUrl}/product?frontend=true`);
-          products.value = response.data;
-      } catch (error) {
+          products.value = response.data.filter(product => product.is_active === true);
+        } catch (error) {
           console.error('Error fetching products:', error);
       }
   });

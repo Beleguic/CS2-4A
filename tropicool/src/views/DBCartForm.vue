@@ -62,12 +62,13 @@ interface Product {
   id: string;
   name: string;
   stock: number;
+  price: Number;
 }
 
 interface Cart {
   id?: string;
   user_id: string;
-  products: Array<{ product_id: string; name: string; quantity: number }>;
+  products: Array<{ product_id: string; name: string; quantity: number; price : Number }>;
   expire_at?: string;
 }
 
@@ -107,6 +108,7 @@ onMounted(async () => {
             product_id: product.product_id,
             name: prod.name,
             quantity: product.quantity,
+            price: prod.price,
           });
         }
       });
@@ -151,6 +153,7 @@ const addProduct = () => {
       product_id: selectedProduct.value.product_id,
       name: product.name,
       quantity: selectedProduct.value.quantity,
+      price : product.price,
     });
     selectedProduct.value = { product_id: '', quantity: 1, maxQuantity: null };
   } else {
