@@ -93,6 +93,19 @@ const routes: Array<RouteRecordRaw> = [
     path: '/product',
     name: 'Product',
     component: Product,
+    children: [
+      {
+        path: '',
+        name: 'FrontProduct',
+        component: FrontProduct
+      },
+      {
+        path: ':id',
+        name: 'FrontProductDetails',
+        component: FrontProductDetails,
+        props: true
+      },
+    ],
   },
   {
     path: '/privacy-policy',

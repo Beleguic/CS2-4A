@@ -5,6 +5,7 @@ const Joi = require('joi');
 const stockSchema = Joi.object({
   quantity: Joi.number().integer().min(0).required(),
   product_id: Joi.string().uuid().required(),
+  status: Joi.string().required(),
 });
 
 // Filtrer les champs non autorisés
