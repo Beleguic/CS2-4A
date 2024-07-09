@@ -115,7 +115,13 @@ const submitForm = async () => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/promotion_code/new` : `${apiUrl}/promotion_code/${route.params.id}`;
 
-    const { id, ...payload } = promotionCode.value;
+    const payload = {
+      product_id: promotionCode.value.product_id,
+      category_id: promotionCode.value.category_id,
+      code: promotionCode.value.code,
+      start_at: promotionCode.value.start_at,
+      end_at: promotionCode.value.end_at
+    };
 
     const response = await fetch(url, {
       method,
