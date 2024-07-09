@@ -67,6 +67,12 @@ const getAllProducts = async (req, res, next) => {
       currentPage: page,
       products: rows
     });
+    const products = await Product.findAll({
+      where: {
+        ...whereCondition
+      }
+    });
+    res.json(products);
   } catch (e) {
     console.error('Error fetching products:', e);
     next(e);
@@ -77,7 +83,14 @@ const getAllProducts = async (req, res, next) => {
 const getProductById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const product = await Product.findByPk(id);
+    const isFrontend = req.query.frontend === 'true';
+    const whereCondition = isFrontend
+      ? { is_active: true, name: id }
+      : { id: id };
+
+    const product = await Product.findOne({
+      where: whereCondition,
+    });
 
     if (product) {
       res.json(product);

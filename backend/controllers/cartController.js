@@ -2,7 +2,6 @@ const { Cart, User, Product, Stock } = require('../models');
 const Joi = require('joi');
 
 // Cart schema validation
-// Cart schema validation
 const cartSchema = Joi.object({
   user_id: Joi.string().uuid().required(),
   cartProductsData: Joi.array().items(
@@ -13,7 +12,7 @@ const cartSchema = Joi.object({
       price: Joi.number().required(),
     })
   ).required(),
-  updated_at: Joi.date().optional()
+  updated_at: Joi.date().required()
 });
 
 const getAllCarts = async (req, res, next) => {
@@ -29,7 +28,8 @@ const getAllCarts = async (req, res, next) => {
         cartProductsData: cart.cartProductsData.map(product => ({
           product_id: product.product_id,
           name: product.name,
-          quantity: product.quantity
+          quantity: product.quantity,
+          price: product.price
         })),
         user: cart.user
       };
@@ -62,43 +62,21 @@ const getCartById = async (req, res, next) => {
 };
 
 const createCart = async (req, res, next) => {
+  const { error, value } = cartSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
+  }
+
   try {
-    const { error } = cartSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
-    const { products } = req.body;
-
-    for (let product of products) {
-      const stock = await Stock.findOne({ where: { product_id: product.product_id } });
-      if (!stock || stock.quantity < product.quantity) {
-        return res.status(400).json({ error: `Insufficient stock for product ID ${product.product_id}` });
-      }
-
-      const productDetails = await Product.findByPk(product.product_id, {
-        attributes: ['name']
-      });
-      if (productDetails) {
-        product.name = productDetails.name;
-      }
-    }
-
-    console.log('Creating Cart with Products:', products);
-
-    const cart = await Cart.create({ ...req.body, cartProductsData: products });
-
-    for (let product of products) {
-      await Stock.decrement('quantity', {
-        by: product.quantity,
-        where: { product_id: product.product_id }
-      });
-    }
-
-    res.status(201).json(cart);
-  } catch (e) {
-    console.error('Error creating cart:', e);
-    next(e);
+    console.log('Creating new cart with:', value.cartProductsData);  // Debugging
+    const newCart = await Cart.create({
+      user_id: value.user_id,
+      cartProductsData: value.cartProductsData,
+      expired_at: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes from now
+    });
+    res.status(201).json(newCart);
+  } catch (err) {
+    next(err);
   }
 };
 
