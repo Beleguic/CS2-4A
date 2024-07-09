@@ -16,12 +16,12 @@ services:
   node:
     image: node:20.0.0-alpine
     environment:
-      PORT: 3001
+      PORT: 3000
       MONGO_URL: mongodb://root:password@mongo:27018/app?authSource=admin
       DATABASE_URL: postgres://root:password@postgres:5432/app
       JWT_SECRET: secret
     ports:
-      - 127.0.0.1:3001:3001
+      - 127.0.0.1:3000:3000
     volumes:
       - ./backend:/home/node/app
     working_dir: /home/node/app
@@ -33,7 +33,7 @@ services:
     working_dir: /home/node
     command: npm run dev -- --port 5174 --host
     ports:
-      - "127.0.0.1:8001:5174"
+      - "127.0.0.1:8000:5174"
     volumes:
       - ./tropicool:/home/node
 
