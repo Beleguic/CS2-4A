@@ -1,13 +1,10 @@
 backend/.env.production/
 backend/.env/
 backend/node_modules/
-backend/package-lock.json/
 node_modules/
 tropicool/node_modules/
 tropicool/.npm/
 tropicool/.npm/_logs
 tropicool/.env
-package-lock.json
-tropicool/package-lock.json
 tropicool/public/uploads/*
 !tropicool/public/uploads/temporary-image.jpg
