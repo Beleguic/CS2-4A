@@ -25,7 +25,7 @@ services:
     volumes:
       - ./backend:/home/node/app
     working_dir: /home/node/app
-    command: sh -c "npm install && npm run dev node --watch"
+    command: sh -c "npm install && npm run dev node --watch && npm test"
 
   vue:
     image: node:20.0.0-alpine
