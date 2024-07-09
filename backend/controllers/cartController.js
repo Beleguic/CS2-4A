@@ -2,7 +2,6 @@ const { Cart, User, Product, Stock } = require('../models');
 const Joi = require('joi');
 
 // Cart schema validation
-// Cart schema validation
 const cartSchema = Joi.object({
   user_id: Joi.string().uuid().required(),
   cartProductsData: Joi.array().items(
@@ -81,7 +80,6 @@ const getCartById = async (req, res, next) => {
 
 const createCart = async (req, res, next) => {
   const { error, value } = cartSchema.validate(req.body);
-
   if (error) {
     return res.status(400).json({ error: error.details[0].message });
   }
