@@ -113,31 +113,33 @@
         }
       });
       
-      const submitForm = async () => {
-        try {
-          const method = mode.value === 'new' ? 'POST' : 'PATCH';
-          const url = mode.value === 'new' ? `${apiUrl}/alert/new` : `${apiUrl}/alert/${route.params.id}`;
-      
-          const { id, created_at, ...payload } = alert.value;
-      
-          const response = await fetch(url, {
-            method,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-          });
-          if (!response.ok) {
-            throw new Error('Error saving alert');
-          }
-          window.dispatchEvent(new CustomEvent(`alert-${mode.value === 'new' ? 'added' : 'updated'}`));
-          setTimeout(() => {
-            router.push({ name: 'DBAlertIndex' });
-          }, 100);
-        } catch (error) {
-          console.error('Error saving alert:', error);
-        }
-      };
+const submitForm = async () => {
+  try {
+    const method = mode.value === 'new' ? 'POST' : 'PATCH';
+    const url = mode.value === 'new' ? `${apiUrl}/alert/new` : `${apiUrl}/alert/${route.params.id}`;
+
+    const { id, product, category, created_at, ...payload } = alert.value;
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Error saving alert');
+    }
+    window.dispatchEvent(new CustomEvent(`alert-${mode.value === 'new' ? 'added' : 'updated'}`));
+    setTimeout(() => {
+      router.push({ name: 'DBAlertIndex' });
+    }, 100);
+  } catch (error) {
+    console.error('Error saving alert:', error);
+  }
+};
+
       
       const deleteAlert = async () => {
         try {

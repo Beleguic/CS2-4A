@@ -148,24 +148,26 @@ const submitForm = async () => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/order/new` : `${apiUrl}/order/${route.params.id}`;
 
-    const { id, products, ...payload } = order.value;
-
-    // Extract the product IDs and quantities
-    const productsPayload = products.map(product => ({
-      product_id: product.product_id,
-      quantity: product.quantity,
-    }));
+    const payload = {
+      user_id: order.value.user_id,
+      products: order.value.products.map(product => ({
+        product_id: product.product_id,
+        quantity: product.quantity,
+      })),
+    };
 
     const response = await fetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ ...payload, products: productsPayload }),
+      body: JSON.stringify(payload),
     });
+
     if (!response.ok) {
       throw new Error('Error saving order');
     }
+
     window.dispatchEvent(new CustomEvent(`order-${mode.value === 'new' ? 'added' : 'updated'}`));
     setTimeout(() => {
       router.push({ name: 'DBOrderIndex' });
