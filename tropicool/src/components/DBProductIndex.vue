@@ -24,10 +24,11 @@ import Table from '../components/TableComponent.vue';
 interface Product {
   id: string;
   name: string;
-  brand: string;
   price: number;
+  description: string;
   image: string;
   is_active: boolean;
+  is_adult: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -37,10 +38,11 @@ const datas = ref<Product[]>([]);
 const columns = [
   { key: 'id', label: 'ID' },
   { key: 'name', label: 'Nom' },
-  { key: 'brand', label: 'Marque' },
   { key: 'price', label: 'Prix' },
+  { key: 'description', label: 'Description' },
   { key: 'image', label: 'Image' },
   { key: 'is_active', label: 'Actif' },
+  { key: 'is_adult', label: 'Adulte' },
   { key: 'created_at', label: 'Créé le' },
   { key: 'updated_at', label: 'Mis à jour le' },
   { key: 'actions', label: 'Actions' },
