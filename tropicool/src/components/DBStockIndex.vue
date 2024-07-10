@@ -28,6 +28,7 @@ interface Stock {
     name: string;
   };
   quantity: number;
+  status: string;
   created_at: string;
 }
 
@@ -38,6 +39,7 @@ const columns = [
   { key: 'productName', label: 'Produit' }, // Use a flattened key
   { key: 'quantity', label: 'Quantité' },
   { key: 'created_at', label: 'Date d\'ajout' },
+  { key: 'status', label: 'Status' },
   { key: 'actions', label: 'Actions' },
 ];
 

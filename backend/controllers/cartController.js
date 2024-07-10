@@ -10,43 +10,73 @@ const cartSchema = Joi.object({
       name: Joi.string().required(),
       quantity: Joi.number().integer().min(1).required(),
       price: Joi.number().required(),
+      image: Joi.string().required(),
     })
   ).required(),
-  updated_at: Joi.date().required()
+  expired_at: Joi.date().optional(),
+  updated_at: Joi.date().optional()
 });
 
 const getAllCarts = async (req, res, next) => {
   try {
-    const carts = await Cart.findAll({
+    const { user_id } = req.query;
+
+    const queryOptions = {
       include: [
-        { model: User, as: 'user', attributes: ['id', 'username'] }
+        { model: User, as: 'user', attributes: ['id'] }
       ]
-    });
-    const cartData = carts.map(cart => {
-      return {
-        ...cart.toJSON(),
-        cartProductsData: cart.cartProductsData.map(product => ({
+    };
+
+    let carts;
+    if (user_id) {
+      queryOptions.where = { user_id: user_id };
+      carts = await Cart.findOne(queryOptions);
+    } else {
+      carts = await Cart.findAll(queryOptions);
+    }
+
+    if (user_id && carts) {
+      const cartData = {
+        ...carts.toJSON(),
+        cartProductsData: carts.cartProductsData.map(product => ({
           product_id: product.product_id,
           name: product.name,
           quantity: product.quantity,
-          price: product.price
+          price: product.price,
+          image: product.image
         })),
-        user: cart.user
+        user: carts.user
       };
-    });
-    res.json(cartData);
+      res.json(cartData);
+    } else {
+      const cartData = carts.map(cart => {
+        return {
+          ...cart.toJSON(),
+          cartProductsData: cart.cartProductsData.map(product => ({
+            product_id: product.product_id,
+            name: product.name,
+            quantity: product.quantity,
+            price: product.price,
+            image: product.image
+          })),
+          user: cart.user
+        };
+      });
+      res.json(cartData);
+    }
   } catch (e) {
     console.error('Error fetching carts:', e);
     next(e);
   }
 };
 
+
 const getCartById = async (req, res, next) => {
   try {
     const id = req.params.id;
     const cart = await Cart.findByPk(id, {
       include: [
-        { model: User, as: 'user', attributes: ['id', 'username'] }
+        { model: User, as: 'user', attributes: ['id'] }
       ]
     });
 
@@ -63,65 +93,49 @@ const getCartById = async (req, res, next) => {
 
 const createCart = async (req, res, next) => {
   const { error, value } = cartSchema.validate(req.body);
+
   if (error) {
-    return res.status(400).json({ error: error.details[0].message });
+    return res.status(400);
   }
 
   try {
-    console.log('Creating new cart with:', value.cartProductsData);  // Debugging
     const newCart = await Cart.create({
       user_id: value.user_id,
       cartProductsData: value.cartProductsData,
-      expired_at: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes from now
+      expired_at: new Date(Date.now() + 15 * 60 * 1000)
     });
-    res.status(201).json(newCart);
+    res.status(201);
   } catch (err) {
     next(err);
   }
 };
 
 const updateCart = async (req, res, next) => {
+  const { error, value } = cartSchema.validate(req.body);
+
+  if (error) {
+    return res.status(400);
+  }
+
+  const { id } = req.params;
   try {
-    const { created_at, updated_at, user, ...payload } = req.body;
+    const updatedCart = await Cart.update(
+      {
+        cartProductsData: value.cartProductsData,
+      },
+      {
+        where: { id },
+        returning: true,
+      }
+    );
 
-    const { error } = cartSchema.validate(payload);
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+    if (updatedCart[0] === 0) {
+      return res.status(404);
     }
 
-    const cart = await Cart.findByPk(req.params.id);
-    if (cart) {
-      const { products } = payload;
-      for (let product of products) {
-        const stock = await Stock.findOne({ where: { product_id: product.product_id } });
-        if (!stock || stock.quantity < product.quantity) {
-          return res.status(400).json({ error: `Insufficient stock for product ID ${product.product_id}` });
-        }
-
-        const productDetails = await Product.findByPk(product.product_id, {
-          attributes: ['name']
-        });
-        if (productDetails) {
-          product.name = productDetails.name;
-        }
-      }
-
-      await cart.update({ ...payload, cartProductsData: products });
-
-      for (let product of products) {
-        await Stock.decrement('quantity', {
-          by: product.quantity,
-          where: { product_id: product.product_id }
-        });
-      }
-
-      res.json(cart);
-    } else {
-      res.sendStatus(404);
-    }
-  } catch (e) {
-    console.error('Error updating cart:', e);
-    next(e);
+    res.status(200).json(updatedCart[1][0]);
+  } catch (err) {
+    next(err);
   }
 };
 
