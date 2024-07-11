@@ -30,5 +30,8 @@
     "sequelize": "^6.37.3",
     "vue": "^3.4.23",
     "vue-server-renderer": "^2.2.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10"
   }
 }

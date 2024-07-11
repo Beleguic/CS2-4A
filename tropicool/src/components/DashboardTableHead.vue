@@ -1,5 +1,5 @@
 <template>
-  <th class="py-2 px-4 text-2xl bg-main text-white">
+  <th class="py-2 px-4 text-2xl bg-main text-white whitespace-nowrap">
     {{ column.label }}
   </th>
 </template>

@@ -7,28 +7,20 @@
 
       <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
         <div class="grid gap-1">
-          <label for="product_id" class="block text-sm font-medium text-gray-700">Produit</label>
-          <select id="product_id" v-model="promotionCode.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm">
-            <option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }}</option>
-          </select>
-        </div>
-        <div class="grid gap-1">
-          <label for="category_id" class="block text-sm font-medium text-gray-700">Catégorie</label>
-          <select id="category_id" v-model="promotionCode.category_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm">
-            <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
-          </select>
-        </div>
-        <div class="grid gap-1">
           <label for="code" class="block text-sm font-medium text-gray-700">Code</label>
           <input type="text" id="code" v-model="promotionCode.code" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
         </div>
         <div class="grid gap-1">
+          <label for="reduction" class="block text-sm font-medium text-gray-700">Réduction (% du panier)</label>
+          <input type="number" min="1" max="100" id="reduction" v-model="promotionCode.reduction" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+        </div>
+        <div class="grid gap-1">
           <label for="start_at" class="block text-sm font-medium text-gray-700">Début</label>
-          <input type="datetime-local" id="start_at" v-model="promotionCode.start_at" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          <input type="datetime-local" id="start_at" v-model="promotionCode.start_at" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm"/>
         </div>
         <div class="grid gap-1">
           <label for="end_at" class="block text-sm font-medium text-gray-700">Fin</label>
-          <input type="datetime-local" id="end_at" v-model="promotionCode.end_at" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          <input type="datetime-local" id="end_at" v-model="promotionCode.end_at" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm"/>
         </div>
         <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
       </form>
@@ -50,34 +42,20 @@ import { useRoute, useRouter } from 'vue-router';
 
 interface PromotionCode {
   id?: string;
-  product_id: string | null;
-  category_id: string | null;
   code: string;
-  start_at: string;
-  end_at: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
+  reduction: number;
+  start_at: string | null;
+  end_at: string | null;
 }
 
 const route = useRoute();
 const router = useRouter();
 const promotionCode = ref<PromotionCode>({
-  product_id: null,
-  category_id: null,
   code: '',
-  start_at: '',
-  end_at: '',
+  reduction: 1,
+  start_at: null,
+  end_at: null,
 });
-const products = ref<Product[]>([]);
-const categories = ref<Category[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
 
@@ -93,21 +71,6 @@ onMounted(async () => {
       console.error('Error fetching promotion code:', error);
     }
   }
-  try {
-    const productResponse = await fetch(`${apiUrl}/product`);
-    if (!productResponse.ok) {
-      throw new Error('Error fetching products');
-    }
-    products.value = await productResponse.json();
-
-    const categoryResponse = await fetch(`${apiUrl}/category`);
-    if (!categoryResponse.ok) {
-      throw new Error('Error fetching categories');
-    }
-    categories.value = await categoryResponse.json();
-  } catch (error) {
-    console.error('Error fetching products or categories:', error);
-  }
 });
 
 const submitForm = async () => {
@@ -116,11 +79,10 @@ const submitForm = async () => {
     const url = mode.value === 'new' ? `${apiUrl}/promotion_code/new` : `${apiUrl}/promotion_code/${route.params.id}`;
 
     const payload = {
-      product_id: promotionCode.value.product_id,
-      category_id: promotionCode.value.category_id,
       code: promotionCode.value.code,
-      start_at: promotionCode.value.start_at,
-      end_at: promotionCode.value.end_at
+      reduction: promotionCode.value.reduction,
+      start_at: promotionCode.value.start_at || null,
+      end_at: promotionCode.value.end_at || null
     };
 
     const response = await fetch(url, {
@@ -130,7 +92,12 @@ const submitForm = async () => {
       },
       body: JSON.stringify(payload),
     });
+
+    console.log("response", response);
+
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error:', errorData);
       throw new Error('Error saving promotion code');
     }
     window.dispatchEvent(new CustomEvent(`promotion-code-${mode.value === 'new' ? 'added' : 'updated'}`));
