@@ -30,40 +30,26 @@ const getAllCarts = async (req, res, next) => {
     let carts;
     if (user_id) {
       queryOptions.where = { user_id: user_id };
-      carts = await Cart.findOne(queryOptions);
+      carts = await Cart.findAll(queryOptions);
     } else {
       carts = await Cart.findAll(queryOptions);
     }
 
-    if (user_id && carts) {
-      const cartData = {
-        ...carts.toJSON(),
-        cartProductsData: carts.cartProductsData.map(product => ({
+    const cartData = carts.map(cart => {
+      return {
+        ...cart.toJSON(),
+        cartProductsData: cart.cartProductsData.map(product => ({
           product_id: product.product_id,
           name: product.name,
           quantity: product.quantity,
           price: product.price,
           image: product.image
         })),
-        user: carts.user
+        user: cart.user
       };
-      res.json(cartData);
-    } else {
-      const cartData = carts.map(cart => {
-        return {
-          ...cart.toJSON(),
-          cartProductsData: cart.cartProductsData.map(product => ({
-            product_id: product.product_id,
-            name: product.name,
-            quantity: product.quantity,
-            price: product.price,
-            image: product.image
-          })),
-          user: cart.user
-        };
-      });
-      res.json(cartData);
-    }
+    });
+
+    res.json(cartData);
   } catch (e) {
     console.error('Error fetching carts:', e);
     next(e);

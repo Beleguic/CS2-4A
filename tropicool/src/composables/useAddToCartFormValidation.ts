@@ -78,7 +78,7 @@ export async function useAddToCartFormValidation(
     const cartData = cartResponse.data;
 
     let activeCart: Cart;
-    if (cartData.length === 0) {
+    if (!cartData || cartData.length === 0) {
       const cartProductsData: CartProduct[] = [{ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image }];
       const newCartResponse = await axios.post<Cart>(`${apiUrl}/cart/new`, {
         user_id: userId,

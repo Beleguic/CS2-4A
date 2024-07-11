@@ -1,6 +1,6 @@
 <template>
-  <div class="max-h-[500px] overflow-auto">
-    <table class="w-full text-left">
+  <div :style="{ maxWidth: dynamicMaxWidth }" class="max-h-[500px] overflow-auto">
+    <table class="w-full text-left table-auto">
       <thead>
         <tr>
           <DashboardTableHead v-for="(column, index) in columns" :key="index" :column="column" />
@@ -8,7 +8,7 @@
       </thead>
       <tbody>
         <tr v-for="data in datas" :key="data.id" class="hover:bg-slate-200 even:bg-slate-100">
-          <td v-for="(column, index) in columns" :key="index" class="py-2 px-4 text-base text-black">
+          <td v-for="(column, index) in columns" :key="index" class="py-2 px-4 text-base text-black whitespace-nowrap">
             <template v-if="column.key !== 'actions'">
               <template v-if="isBoolean(data[column.key]) && (column.label === 'status' || column.label === 'Status') && column.key === 'is_active'">
                 {{ data[column.key] ? 'Activé' : 'Désactivé' }}
@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue';
+import { defineProps, ref, onMounted, onBeforeUnmount } from 'vue';
 import DashboardTableHead from '../components/DashboardTableHead.vue';
 
 interface Column {
@@ -66,6 +66,23 @@ interface TableProps {
 const props = defineProps<TableProps>();
 const { datas, columns, editLink, deleteLink } = props;
 
+const dynamicMaxWidth = ref('calc(100vw - 50px)');
+
+const updateWidth = () => {
+  const leftPartWidth = 20 * 16;
+  const newWidth = `calc(100vw - ${leftPartWidth}px - 50px)`;
+  dynamicMaxWidth.value = newWidth;
+};
+
+onMounted(() => {
+  window.addEventListener('resize', updateWidth);
+  updateWidth();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateWidth);
+});
+
 const isBoolean = (value: any): boolean => {
   return typeof value === 'boolean';
 };
@@ -81,3 +98,7 @@ const formatDateTime = (dateTimeString: string): string => {
   return `${formattedDate} à ${formattedTime}`;
 };
 </script>
+
+<style scoped>
+/* Si nécessaire, ajoutez des styles supplémentaires ici */
+</style>

@@ -27,14 +27,7 @@ dayjs.extend(timezone);
 
 interface PromotionCode {
   id: string;
-  product: {
-    id: string;
-    name: string;
-  } | null;
-  category: {
-    id: string;
-    name: string;
-  } | null;
+  reduction: string;
   code: string;
   start_at: string;
   end_at: string;
@@ -44,9 +37,8 @@ const datas = ref<PromotionCode[]>([]);
 
 const columns = [
   { key: 'id', label: 'ID' },
-  { key: 'product_name', label: 'Produit' },
-  { key: 'category_name', label: 'Catégorie' },
   { key: 'code', label: 'Code' },
+  { key: 'reduction', label: 'Code %' },
   { key: 'start_at', label: 'Début' },
   { key: 'end_at', label: 'Fin' },
   { key: 'actions', label: 'Actions' },
@@ -59,8 +51,6 @@ const fetchPromotionCodes = async () => {
     const response = await axios.get<PromotionCode[]>(`${apiUrl}/promotion_code/`);
     datas.value = response.data.map(promo => ({
       ...promo,
-      product_name: promo.product ? promo.product.name : 'N/A',
-      category_name: promo.category ? promo.category.name : 'N/A',
       start_at: dayjs(promo.start_at).tz("Europe/Paris").format('DD/MM/YYYY HH:mm'),
       end_at: dayjs(promo.end_at).tz("Europe/Paris").format('DD/MM/YYYY HH:mm'),
     }));

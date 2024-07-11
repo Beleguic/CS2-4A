@@ -39,13 +39,13 @@
           <p class="product-text">Troupicool Tequila</p>
         </div>
         <div class="image-wrapper">
-          <img src="/tequila.svg" alt="Troupicool Tequila" class="product-image" />
+          <component :is="tequila" alt="Troupicool Tequila" class="product-image" />
           <button class="product-button">Voir la boutique</button>
         </div>
       </div>
       <div class="product-item">
         <div class="image-wrapper">
-          <img src="/TropicoolBeer.svg" alt="Biere blonde Troupicool" class="product-image" />
+          <img src="/tropicool-beer.png" alt="Biere blonde Troupicool" class="product-image" />
           <button class="product-button">Voir la boutique</button>
         </div>
         <div class="text-wrapper">
@@ -55,21 +55,19 @@
     </section>
     <section class="family-meal-section">
       <div class="family-meal-wrapper">
-        <img src="/TropicoolFamilyMeal2.svg" alt="Tropicool Family Meal Left" class="family-meal-image" />
+        <img src="/tropicool-meal.png" alt="Tropicool Family Meal Left" class="family-meal-image" />
         <div class="center-content">
-          <img src="/Tropicoolverre.svg" alt="Tropicool Verre" class="family-meal-image center" />
+          <img src="/tropicool-verre.png" alt="Tropicool Verre" class="family-meal-image center" />
           <button class="product-button center-button">Voir la boutique</button>
         </div>
-        <img src="/Tropicool-Family-Meal.svg" alt="Tropicool Family Meal Right" class="family-meal-image" />
+        <img src="/tropicool-meal-2.png" alt="Tropicool Family Meal Right" class="family-meal-image" />
       </div>
     </section>
     <section class="transition-section"></section> 
   </div>
 </template>
 
-<script setup>
-  console.log(localStorage.getItem('token')); 
-</script>
+<script setup></script>
 
 <style scoped>
   .home-container {
