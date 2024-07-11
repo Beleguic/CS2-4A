@@ -1,21 +1,21 @@
 const request = require('supertest');
 const app = require('../server');
-const { Product, Category, sequelize } = require('../models');
+const { Product, syncDB, closeDB } = require('../models');
 
 describe('Product API', () => {
   // Synchroniser la base de données avant chaque test
   beforeAll(async () => {
-    await sequelize.sync({ force: true });
+    await syncDB();
   });
 
   // Nettoyage de la base de données avant chaque test
   beforeEach(async () => {
-    await sequelize.sync({ force: true });
+    await syncDB();
   });
 
   // Fermer la connexion à la base de données après tous les tests
   afterAll(async () => {
-    await sequelize.close();
+    await closeDB();
   });
 
   it('should create a new product', async () => {

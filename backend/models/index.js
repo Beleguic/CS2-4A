@@ -23,4 +23,25 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = require('sequelize');
 
+// Méthodes pour synchroniser et fermer la base de données
+db.syncDB = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connected successfully.');
+    await sequelize.sync({ force: true });
+    console.log('Database synchronized successfully.');
+  } catch (error) {
+    console.error('Error synchronizing database:', error);
+  }
+};
+
+db.closeDB = async () => {
+  try {
+    await sequelize.close();
+    console.log('Database connection closed.');
+  } catch (error) {
+    console.error('Error closing database connection:', error);
+  }
+};
+
 module.exports = db;
