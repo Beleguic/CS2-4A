@@ -1,7 +1,7 @@
 <template>
   <div class="grid gap-4 w-full max-w-7xl mx-auto">
     <h1 class="font-bold text-xl text-main">Mon Panier</h1>
-    <div v-if="cartItems.length === 1">
+    <div v-if="cartItems.length > 0 || !cartItems">
       <div class="flex w-full">
         <section class="w-3/4">
           <div>
@@ -39,20 +39,33 @@
           </div>
         </section>
         <section class="w-1/4">
-          <h1>Résumé</h1>
-          <div>
-            <span>Total</span>
-            <span>{{ total.toFixed(2) }} €</span>
+          <div class="grid gap-4 h-full">
+            <h1 class="font-bold text-xl">Résumé</h1>
+            <div class="flex justify-between">
+              <span class="font-bold">Total</span>
+              <span>{{ total.toFixed(2) }} €</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-bold">TVA</span>
+              <span>{{ tva.toFixed(2) }} €</span>
+            </div>
+            <p class="text-xs">Calcul des frais de ports lors de la procédure de paiement</p>
           </div>
-          <div>
-            <span>TVA</span>
-            <span>{{ tva.toFixed(2) }} €</span>
+          <div class="grid gap-4">
+            <h1 class="font-bold text-xl">Code Promo</h1>
+            <form>
+              <input type="text" name="promo" id="promo">
+              <button type="submit">Appliquer</button>
+            </form>
           </div>
         </section>
       </div>
     </div>
     <div v-else>
       <p>Votre panier est vide.</p>
+      <div>
+        consulter nos <router-link :to="{name : 'Product'}" class="underline">produits</router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -60,6 +73,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+
+interface Cart {
+  id: string;
+  user_id: string;
+  cartProductsData: CartItem[];
+}
 
 interface CartItem {
   product_id: string;
@@ -75,19 +94,13 @@ const apiUrl = import.meta.env.VITE_API_URL as string
 const userId = localStorage.getItem('userId')
 
 const fetchCart = async () => {
-  try {
-    const response = await axios.get(`${apiUrl}/cart?user_id=${userId}`)
-    if (response.data) {
-      if (Array.isArray(response.data)) {
-        if (response.data.length > 0) {
-          cartItems.value = response.data[0].cartProductsData
-        }
-      } else {
-        cartItems.value = response.data.cartProductsData
-      }
+  const response = await axios.get<Cart[]>(`${apiUrl}/cart`, {
+    params: { user_id: userId }
+  });
+  if (response.data && Array.isArray(response.data)) {
+    if (response.data.length > 0) {
+      cartItems.value = response.data[0].cartProductsData
     }
-  } catch (error) {
-    console.error('Erreur lors de la récupération du panier :', error)
   }
 }
 
