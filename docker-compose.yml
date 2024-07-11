@@ -16,16 +16,16 @@ services:
   node:
     image: node:20.0.0-alpine
     environment:
-      PORT: 3000
-      MONGO_URL: mongodb://root:password@mongo:27018/app?authSource=admin
-      DATABASE_URL: postgres://root:password@postgres:5432/app
-      JWT_SECRET: secret
+      - PORT=3000
+      - MONGO_URL=${MONGO_URL}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
     ports:
       - 127.0.0.1:3000:3000
     volumes:
       - ./backend:/home/node/app
     working_dir: /home/node/app
-    command: sh -c "npm install && npm run dev node --watch && npm test"
+    command: sh -c "npm install && npm run dev node --watch && npm test && node start"
 
   vue:
     image: node:20.0.0-alpine
@@ -39,12 +39,14 @@ services:
 
   postgres:
     image: postgres
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: app
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
 
   adminer:
     image: adminer

@@ -1,19 +1,23 @@
 const request = require('supertest');
-const app = require('../server'); // Importer l'application sans démarrer le serveur
-const { Product, Stock } = require('../models');
-const { sequelize } = require('../models');
-
-// Nettoyage de la base de données avant chaque test
-beforeEach(async () => {
-  await sequelize.sync({ force: true });
-});
-
-// Fermer la connexion à la base de données après tous les tests
-afterAll(async () => {
-  await sequelize.close();
-});
+const app = require('../server');
+const { Product, Category, sequelize } = require('../models');
 
 describe('Product API', () => {
+  // Synchroniser la base de données avant chaque test
+  beforeAll(async () => {
+    await sequelize.sync({ force: true });
+  });
+
+  // Nettoyage de la base de données avant chaque test
+  beforeEach(async () => {
+    await sequelize.sync({ force: true });
+  });
+
+  // Fermer la connexion à la base de données après tous les tests
+  afterAll(async () => {
+    await sequelize.close();
+  });
+
   it('should create a new product', async () => {
     const res = await request(app)
       .post('/product/new')
