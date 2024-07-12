@@ -8,7 +8,7 @@
       <p class="intro-text">Des produits de qualité pour des moments inoubliables</p>
     </section>
     <section class="products-section">
-      <ProductCardComponent v-for="product in products" :key="product.id" :product="product" />
+      <ProductCardComponent v-for="product in activeProducts" :key="product.id" :product="product" />
     </section>
     <section class="family-meal-section">
       <div class="family-meal-wrapper">
@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import ProductCardComponent from '../components/ProductCardComponent.vue';
 
@@ -40,6 +40,11 @@ const fetchProducts = async () => {
     console.error('Error fetching products:', error);
   }
 };
+
+// Définir une propriété calculée pour obtenir les produits actifs
+const activeProducts = computed(() => {
+  return products.value.filter(product => product.is_active);
+});
 
 onMounted(() => {
   fetchProducts();
@@ -61,104 +66,104 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.product-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
+  .product-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
 
-.landing-image-section {
-  position: relative;
-  height: calc(100vh - 10vh); /* 100vh - 10vh de la navbar */
-  width: 100%;
-  overflow: hidden;
-}
+  .landing-image-section {
+    position: relative;
+    height: calc(100vh - 10vh); 
+    width: 100%;
+    overflow: hidden;
+  }
 
-.landing-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; 
-}
+  .landing-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+  }
 
-.content-section {
-  background-color: #FEFEF6;
-  padding: 20px;
-  color: #696BE2;
-  font-family: 'Inter', sans-serif;
-  width: 100%;
-}
+  .content-section {
+    background-color: #FEFEF6;
+    padding: 20px;
+    color: #696BE2;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+  }
 
-.title {
-  font-weight: bold;
-  font-size: 32px;
-  margin-bottom: 20px;
-  text-align: center;
-}
+  .title {
+    font-weight: bold;
+    font-size: 32px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
 
-.intro-text {
-  font-size: 24px;
-  font-style: italic;
-  font-weight: 500;
-  margin-bottom: 20px;
-  text-align: center;
-}
+  .intro-text {
+    font-size: 24px;
+    font-style: italic;
+    font-weight: 500;
+    margin-bottom: 20px;
+    text-align: center;
+  }
 
-.products-section {
-  display: flex;
-  flex-wrap: wrap;  /* Ajout de flex-wrap pour gérer plusieurs cartes */
-  justify-content: center;
-  background-color: #FEFEF6; 
-  padding: 20px;
-  gap: 20px; 
-}
+  .products-section {
+    display: flex;
+    flex-wrap: wrap;  /* Ajout de flex-wrap pour gérer plusieurs cartes */
+    justify-content: center;
+    background-color: #FEFEF6; 
+    padding: 20px;
+    gap: 20px; 
+  }
 
-.product-button {
-  background-color: #696BE2;
-  color: #FEFEF6;
-  font-family: 'Inter', sans-serif;
-  font-style: italic;
-  font-size: 18px; 
-  font-weight: 500;
-  padding: 8px 16px; 
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  margin-top: 10px;
-}
+  .product-button {
+    background-color: #696BE2;
+    color: #FEFEF6;
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    font-size: 18px; 
+    font-weight: 500;
+    padding: 8px 16px; 
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
 
-.transition-section {
-  background-color: #FEFEF6;
-  height: 50px;
-}
+  .transition-section {
+    background-color: #FEFEF6;
+    height: 50px;
+  }
 
-.family-meal-section {
-  background: linear-gradient(90deg, #1FCDD2 0%, #31D6DC 100%);
-  padding: 40px 20px;
-}
+  .family-meal-section {
+    background: linear-gradient(90deg, #1FCDD2 0%, #31D6DC 100%);
+    padding: 40px 20px;
+  }
 
-.family-meal-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+  .family-meal-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-.family-meal-image {
-  max-width: 33%;
-  height: auto;
-}
+  .family-meal-image {
+    max-width: 33%;
+    height: auto;
+  }
 
-.family-meal-image.center {
-  margin: 0 20px;
-  max-width: 60%; 
-}
+  .family-meal-image.center {
+    margin: 0 20px;
+    max-width: 60%; 
+  }
 
-.center-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+  .center-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-.center-button {
-  margin-top: 40px; 
-}
+  .center-button {
+    margin-top: 40px; 
+  }
 </style>

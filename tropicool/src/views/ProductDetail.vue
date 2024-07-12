@@ -1,39 +1,38 @@
 <template>
-    <div class="page-container">
-      <div class="product-page" v-if="isAllowed">
-        <div class="product-container">
-          <div class="product-image">
-            <img :src="product.image" alt="product image" class="product-image"/>
-          </div>
-          <div class="product-details">
-            <h1 class="product-name">{{ product.name }}</h1>
-            <p class="product-description">{{ product.description }}</p>
-            <div class="product-price">
-              <label for="quantity">Quantité</label>
-              <div class="quantity-input-container">
-                <button @click="decreaseQuantity" class="quantity-button">-</button>
-                <input type="number" v-model="quantity" min="1" class="quantity-input"/>
-                <button @click="increaseQuantity" class="quantity-button">+</button>
-              </div>
-              <p>Prix Total: {{ totalPrice }} €</p>
+    <div class="product-page" v-if="isAllowed">
+      <div class="product-container">
+        <div class="product-image">
+          <img :src="product.image" alt="product image" class="product-image"/>
+        </div>
+        <div class="product-details">
+          <h1 class="product-name">{{ product.name }}</h1>
+          <p class="product-description">{{ product.description }}</p>
+          <div class="product-price">
+            <label for="quantity">Quantité</label>
+            <div class="quantity-input-container">
+              <button @click="decreaseQuantity" class="quantity-button">-</button>
+              <input type="number" v-model="quantity" min="1" class="quantity-input"/>
+              <button @click="increaseQuantity" class="quantity-button">+</button>
             </div>
-            <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
-            <button @click="addToFridge" class="add-to-cart-button">
-              <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
-              Ajouter au frigo
-            </button>
+            <p>Prix Total: {{ totalPrice }} €</p>
           </div>
+          <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
+          <button @click="addToFridge" class="add-to-cart-button">
+            <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
+            Ajouter au frigo
+          </button>
         </div>
       </div>
-      <div v-else class="access-denied">
-        <p class="main-message">Vous devez être majeur pour accéder à cette page.</p>
-        <p class="secondary-message">
-          Vous aurez toute la vie pour savourer et partager des moments festifs avec modération grâce à nos alcools Trôpicool !
-          N'hésitez pas à essayer nos produits sans alcool, car sans alcool, la fête est encore plus folle !
-        </p>
-      </div>
+    </div>
+    <div v-else class="access-denied">
+      <p class="main-message">Vous devez être majeur pour accéder à cette page.</p>
+      <p class="secondary-message">
+        Vous aurez toute la vie pour savourer et partager des moments festifs avec modération grâce à nos alcools Trôpicool !
+        N'hésitez pas à essayer nos produits sans alcool, car sans alcool, la fête est encore plus folle !
+      </p>
     </div>
   </template>
+  
   
   <script setup>
   import { ref, computed, onMounted } from 'vue';
@@ -124,7 +123,7 @@
   });
   </script>
   
-  <style scoped>
+<style scoped>
   body {
     background-color: #FEFEF6;
     margin: 0;
@@ -155,7 +154,7 @@
     border-radius: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     max-width: 1200px;
-    width: 100%;
+    width: 80%; /* Ajustez cette valeur pour augmenter la largeur */
     min-height: 600px;
     box-sizing: border-box;
   }
@@ -324,5 +323,5 @@
     line-height: 1.5;
     max-width: 800px;
   }
-  </style>
+</style>
   

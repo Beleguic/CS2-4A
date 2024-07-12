@@ -4,12 +4,15 @@
     <h3 class="product-name">{{ product.name }}</h3>
     <p class="product-price">{{ product.price }} €</p>
     <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
-    <router-link :to="{ name: 'ProductPage', params: { id: product.id } }" class="add-to-cart-button">
-      <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
-      Ajouter au frigo
-    </router-link>
+    <div class="button-container">
+      <router-link :to="{ name: 'ProductPage', params: { id: product.id } }" class="add-to-cart-button">
+        <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
+        Voir le produit
+      </router-link>
+    </div>
   </div>
 </template>
+
 
 <script setup>
 import { defineProps } from 'vue';
@@ -31,6 +34,8 @@ const props = defineProps({
   text-align: center;
   width: 300px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .product-image {
@@ -59,10 +64,14 @@ const props = defineProps({
   margin-bottom: 10px;
 }
 
+.button-container {
+  margin-top: auto;
+}
+
 .add-to-cart-button {
   background-color: #696BE2;
   color: #FEFEF6;
-  font-size: 18px; 
+  font-size: 18px;
   font-weight: 500;
   padding: 10px 20px;
   border: none;
