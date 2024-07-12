@@ -1,73 +1,127 @@
 <template>
-    <div class="product-page">
-      <div class="product-container">
-        <div class="product-image">
-          <img :src="product.image" alt="product image" class="product-image"/>
-        </div>
-        <div class="product-details">
-          <h1 class="product-name">{{ product.name }}</h1>
-          <p class="product-description">{{ product.description }}</p>
-          <div class="product-price">
-            <label for="quantity">Quantité</label>
-            <div class="quantity-input-container">
-              <button @click="decreaseQuantity" class="quantity-button">-</button>
-              <input type="number" v-model="quantity" min="1" class="quantity-input"/>
-              <button @click="increaseQuantity" class="quantity-button">+</button>
-            </div>
-            <p>Prix Total: {{ totalPrice }} €</p>
+    <div class="page-container">
+      <div class="product-page" v-if="isAllowed">
+        <div class="product-container">
+          <div class="product-image">
+            <img :src="product.image" alt="product image" class="product-image"/>
           </div>
-          <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
-          <button @click="addToFridge" class="add-to-cart-button">
-            <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
-            Ajouter au frigo
-          </button>
+          <div class="product-details">
+            <h1 class="product-name">{{ product.name }}</h1>
+            <p class="product-description">{{ product.description }}</p>
+            <div class="product-price">
+              <label for="quantity">Quantité</label>
+              <div class="quantity-input-container">
+                <button @click="decreaseQuantity" class="quantity-button">-</button>
+                <input type="number" v-model="quantity" min="1" class="quantity-input"/>
+                <button @click="increaseQuantity" class="quantity-button">+</button>
+              </div>
+              <p>Prix Total: {{ totalPrice }} €</p>
+            </div>
+            <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
+            <button @click="addToFridge" class="add-to-cart-button">
+              <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
+              Ajouter au frigo
+            </button>
+          </div>
         </div>
+      </div>
+      <div v-else class="access-denied">
+        <p class="main-message">Vous devez être majeur pour accéder à cette page.</p>
+        <p class="secondary-message">
+          Vous aurez toute la vie pour savourer et partager des moments festifs avec modération grâce à nos alcools Trôpicool !
+          N'hésitez pas à essayer nos produits sans alcool, car sans alcool, la fête est encore plus folle !
+        </p>
       </div>
     </div>
   </template>
   
-  <script>
-  export default {
-    data() {
-      return {
-        product: {},
-        quantity: 1,
-      };
-    },
-    computed: {
-      totalPrice() {
-        return this.product.price * this.quantity;
-      },
-    },
-    methods: {
-      fetchProduct() {
-        const productId = this.$route.params.id;
-        const apiUrl = import.meta.env.VITE_API_URL;
-        fetch(`${apiUrl}/product/${productId}`)
-          .then(response => response.json())
-          .then(data => {
-            this.product = data;
-          })
-          .catch(error => {
-            console.error('Error fetching product:', error);
-          });
-      },
-      addToFridge() {
-        console.log(`Product ${this.product.name} added to fridge`);
-      },
-      increaseQuantity() {
-        this.quantity += 1;
-      },
-      decreaseQuantity() {
-        if (this.quantity > 1) {
-          this.quantity -= 1;
-        }
-      },
-    },
-    mounted() {
-      this.fetchProduct();
-    },
+  <script setup>
+  import { ref, computed, onMounted } from 'vue';
+  import { useAuthStore } from '@/stores/authStore'; // Assurez-vous que le chemin est correct
+  import { useRouter } from 'vue-router';
+  import axios from 'axios';
+  
+  const product = ref({});
+  const quantity = ref(1);
+  const isAllowed = ref(true);
+  const router = useRouter();
+  
+  const authStore = useAuthStore();
+  
+  const fetchProduct = async () => {
+    const productId = router.currentRoute.value.params.id;
+    const apiUrl = import.meta.env.VITE_API_URL;
+    try {
+      const response = await fetch(`${apiUrl}/product/${productId}`);
+      const data = await response.json();
+      product.value = data;
+      if (data.is_adult) {
+        checkAge();
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+    }
   };
+  
+  const checkAge = async () => {
+    if (authStore.userId) {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      try {
+        const response = await axios.get(`${apiUrl}/users/${authStore.userId}`);
+        const user = response.data;
+        console.log('User data:', user);
+        const age = calculateAge(new Date(user.dateOfBirth));
+        console.log('User age:', age);
+        if (age < 18) {
+          isAllowed.value = false;
+          console.log('Access denied: User is not an adult.');
+        } else {
+          isAllowed.value = true;
+          console.log('Access granted: User is an adult.');
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        isAllowed.value = false;
+      }
+    } else {
+      isAllowed.value = false;
+      console.log('Access denied: No user ID found.');
+    }
+  };
+  
+  const calculateAge = (birthdate) => {
+    const today = new Date();
+    let age = today.getFullYear() - birthdate.getFullYear();
+    const monthDifference = today.getMonth() - birthdate.getMonth();
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthdate.getDate())) {
+      age--;
+    }
+    console.log('Calculated age:', age);
+    return age;
+  };
+  
+  const addToFridge = () => {
+    console.log(`Product ${product.value.name} added to fridge`);
+  };
+  
+  const increaseQuantity = () => {
+    quantity.value += 1;
+  };
+  
+  const decreaseQuantity = () => {
+    if (quantity.value > 1) {
+      quantity.value -= 1;
+    }
+  };
+  
+  const totalPrice = computed(() => {
+    return (product.value.price * quantity.value).toFixed(2);
+  });
+  
+  onMounted(() => {
+    console.log('Fetching product...');
+    fetchProduct();
+  });
   </script>
   
   <style scoped>
@@ -75,6 +129,11 @@
     background-color: #FEFEF6;
     margin: 0;
     font-family: Arial, sans-serif;
+  }
+  
+  .page-container {
+    background-color: #FEFEF6;
+    min-height: 100vh;
   }
   
   .product-page {
@@ -97,7 +156,7 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     max-width: 1200px;
     width: 100%;
-    min-height: 600px; /* Increase the minimum height */
+    min-height: 600px;
     box-sizing: border-box;
   }
   
@@ -136,6 +195,28 @@
     font-size: 20px;
     color: #4A4A4A;
     margin-bottom: 30px;
+  }
+  
+  .age-verification {
+    font-size: 20px;
+    color: red;
+    margin-bottom: 30px;
+  }
+  
+  .verify-age-button {
+    background-color: #696BE2;
+    color: #FEFEF6;
+    font-size: 18px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .verify-age-button:hover {
+    background-color: #5756A1;
   }
   
   .product-price {
@@ -215,6 +296,33 @@
   .cart-icon {
     width: 30px;
     height: 30px;
+  }
+  
+  .access-denied {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    background-color: #FEFEF6;
+    min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 24px;
+    color: red;
+  }
+  
+  .access-denied .main-message {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .access-denied .secondary-message {
+    font-size: 18px;
+    line-height: 1.5;
+    max-width: 800px;
   }
   </style>
   
