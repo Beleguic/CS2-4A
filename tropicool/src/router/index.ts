@@ -38,6 +38,8 @@ import DBStockIndex from '../components/DBStockIndex.vue';
 import DBStockForm from '../views/DBStockForm.vue';
 import DBUserIndex from '../components/DBUserIndex.vue';
 import DBUserForm from '../views/DBUserForm.vue';
+import ProductPageComponent from '@/components/ProductPageComponent.vue';
+
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -415,6 +417,11 @@ const routes: Array<RouteRecordRaw> = [
         props: true
       },
     ]
+  },
+  {
+    path: '/product/:id',
+    name: 'ProductPage',
+    component: ProductPageComponent,
   },
 ];
 
