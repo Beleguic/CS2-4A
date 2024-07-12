@@ -3,10 +3,11 @@
     <img :src="product.image" alt="Product Image" class="product-image" />
     <h3 class="product-name">{{ product.name }}</h3>
     <p class="product-price">{{ product.price }} €</p>
-    <button @click="addToCart" class="add-to-cart-button">
+    <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
+    <router-link :to="{ name: 'ProductPage', params: { id: product.id } }" class="add-to-cart-button">
       <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
-      Ajouter au panier
-    </button>
+      Ajouter au frigo
+    </router-link>
   </div>
 </template>
 
@@ -19,10 +20,6 @@ const props = defineProps({
     required: true
   }
 });
-
-function addToCart() {
-  console.log(`${props.product.name} ajouté au panier.`);
-}
 </script>
 
 <style scoped>
@@ -56,10 +53,16 @@ function addToCart() {
   margin-bottom: 20px;
 }
 
+.alcohol-warning {
+  color: red;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
 .add-to-cart-button {
   background-color: #696BE2;
   color: #FEFEF6;
-  font-size: 18px;
+  font-size: 18px; 
   font-weight: 500;
   padding: 10px 20px;
   border: none;
@@ -80,5 +83,11 @@ function addToCart() {
 .cart-icon {
   width: 30px;
   height: 30px;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 10px;
 }
 </style>
