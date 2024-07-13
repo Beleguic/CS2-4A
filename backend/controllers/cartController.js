@@ -46,7 +46,6 @@ const getAllCarts = async (req, res, next) => {
   }
 };
 
-
 const getCartById = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -71,7 +70,7 @@ const createCart = async (req, res, next) => {
   const { error, value } = cartSchema.validate(req.body);
 
   if (error) {
-    return res.status(400);
+    return res.status(400).json({ error: error.details[0].message });
   }
 
   try {
@@ -80,7 +79,7 @@ const createCart = async (req, res, next) => {
       cartProductsData: value.cartProductsData,
       expired_at: new Date(Date.now() + 15 * 60 * 1000)
     });
-    res.status(201);
+    res.status(201).json(newCart);
   } catch (err) {
     next(err);
   }
