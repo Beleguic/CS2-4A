@@ -5,6 +5,7 @@ interface Product {
   name: string;
   image: string;
   price: number;
+  reference: string;
 }
 
 interface CartProduct {
@@ -13,6 +14,7 @@ interface CartProduct {
   image: string;
   quantity: number;
   price: number;
+  reference: string;
 }
 
 interface Cart {
@@ -66,12 +68,6 @@ export async function useAddToCartFormValidation(
       return { message: { error: "Stock unavailable" } };
     }
 
-    await axios.post(`${apiUrl}/stock/new`, {
-      product_id: item,
-      quantity: latestStock.quantity - quantity,
-      status: 'remove'
-    });
-
     const cartResponse = await axios.get<Cart[]>(`${apiUrl}/cart`, {
       params: { user_id: userId }
     });
@@ -79,30 +75,50 @@ export async function useAddToCartFormValidation(
 
     let activeCart: Cart;
     if (!cartData || cartData.length === 0) {
-      const cartProductsData: CartProduct[] = [{ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image }];
+      const cartProductsData: CartProduct[] = [{ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image, reference: product.reference }];
       const newCartResponse = await axios.post<Cart>(`${apiUrl}/cart/new`, {
         user_id: userId,
         cartProductsData: cartProductsData,
       });
       activeCart = newCartResponse.data;
+
+      await axios.post(`${apiUrl}/stock/new`, {
+        product_id: item,
+        quantity: latestStock.quantity - quantity,
+        status: 'remove'
+      });
+
       return { message: { success: "Item has been added to your cart! You have 15 min to checkout" } };
     } else {
       activeCart = cartData[0];
       const existingProductIndex = activeCart.cartProductsData.findIndex(product => product.product_id === item);
 
       if (existingProductIndex !== -1) {
-        activeCart.cartProductsData[existingProductIndex].quantity += quantity;
+        const newQuantity = activeCart.cartProductsData[existingProductIndex].quantity + quantity;
+        if (newQuantity < 1 || newQuantity > 10) {
+          return { message: { error: "Total quantity for this item must be between 1 and 10" } };
+        }
+        activeCart.cartProductsData[existingProductIndex].quantity = newQuantity;
       } else {
-        activeCart.cartProductsData.push({ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image });
+        if (quantity < 1 || quantity > 10) {
+          return { message: { error: "Quantity for this item must be between 1 and 10" } };
+        }
+        activeCart.cartProductsData.push({ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image, reference: product.reference });
       }
 
       await axios.patch<Cart>(`${apiUrl}/cart/${activeCart.id}`, {
         user_id: userId,
         cartProductsData: activeCart.cartProductsData,
       });
-
-      return { message: { success: "Item has been added to your cart!" } };
     }
+
+    await axios.post(`${apiUrl}/stock/new`, {
+      product_id: item,
+      quantity: latestStock.quantity - quantity,
+      status: 'remove'
+    });
+    
+    return { message: { success: "Item has been added to your cart!" } };
   } catch (error) {
     return { message: { error: "An error has occurred" } };
   }

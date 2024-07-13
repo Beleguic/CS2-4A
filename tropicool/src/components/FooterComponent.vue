@@ -1,5 +1,5 @@
 <template>
-  <footer class="bg-[#696BE2] text-white p-6 flex flex-col items-center justify-center w-full min-h-[15vh]">
+  <footer class="bg-[#696BE2] text-white p-6 flex flex-col items-center justify-center w-full h-full">
     <div class="flex flex-col items-center">
       <img src="/Tropicool preview.png" alt="Tropicool Logo" class="w-20 h-auto mb-4" />
       <p class="text-center italic font-medium text-lg">
@@ -30,10 +30,6 @@
 </script>
 
 <style scoped>
-footer {
-  min-height: 15vh; 
-}
-
 a {
   color: #1D1F96;
 }

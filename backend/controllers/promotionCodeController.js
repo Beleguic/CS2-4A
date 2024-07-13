@@ -11,12 +11,12 @@ const promotionCodeSchema = Joi.object({
 
 const getAllPromotionCodes = async (req, res, next) => {
   try {
-    const { usedCode } = req.query;
+    const { code } = req.query;
 
     let queryOptions = {};
 
-    if (usedCode) {
-      queryOptions.where = { code: usedCode };
+    if (code) {
+      queryOptions.where = { code: code };
     }
 
     const codes = await PromotionCode.findAll(queryOptions);
