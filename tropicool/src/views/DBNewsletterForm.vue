@@ -47,9 +47,10 @@ const router = useRouter();
 const newsletter = ref<Newsletter>({ user_id: '' });
 const users = ref<User[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const mode = ref<'new' | 'edit' | 'delete'>('new');
 
 onMounted(async () => {
+  mode.value = route.name === "DBNewsletterNew" ? 'new' : route.name === "DBNewsletterEdit" ? 'edit' : 'delete';
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
       const response = await axios.get(`${apiUrl}/newsletter/${route.params.id}`);
@@ -71,7 +72,9 @@ const submitForm = async () => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/newsletter/new` : `${apiUrl}/newsletter/${route.params.id}`;
 
-    const { id, ...payload } = newsletter.value;
+    const payload = {
+      user_id: newsletter.value.user_id
+    };
 
     const response = await axios({
       method,
