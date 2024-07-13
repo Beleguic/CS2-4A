@@ -43,7 +43,6 @@ import FrontProduct from '../components/FrontProduct.vue';
 import FrontProductDetails from '../components/FrontProductDetails.vue';
 import Cart from '../views/Cart.vue';
 import Search from '../views/Search.vue';
-import CartIndex from '../components/CartIndex.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
