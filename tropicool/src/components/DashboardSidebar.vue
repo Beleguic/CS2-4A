@@ -14,7 +14,7 @@
           </router-link>
         </li>
       </ul>
-      <div class="overflow-y-auto max-h-[585px]">
+      <div :style="{ maxHeight: dynamicMaxHeight }" class="overflow-y-auto">
         <ul class="flex flex-col gap-4">
           <li v-for="(route, index) in routes" :key="index">
             <router-link :to="{ name: route.path }"
@@ -32,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+
 interface Route {
   text: string;
   path: string;
@@ -42,78 +44,92 @@ import iconDashboard from '@/assets/icons/dashboard.svg';
 import iconPromotionCode from '@/assets/icons/promotion-code.svg';
 
 const routes: Route[] = [
-    {
-      text: "Dashboard",
-      path: "Dashboard",
-      icon: iconDashboard
-    },
-    {
-      text: "Categories",
-      path: "DBCategoryIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Alerts",
-      path: "DBAlertIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Products",
-      path: "DBProductIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Alert Types",
-      path: "DBAlertTypeIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Carts",
-      path: "DBCartIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Orders",
-      path: "DBOrderIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Newsletters",
-      path: "DBNewsletterIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Stocks",
-      path: "DBStockIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Category Product",
-      path: "DBCategoryProductIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "User",
-      path: "DBUserIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Product Promotion",
-      path: "DBProductPromotionIndex",
-      icon: iconDashboard
-    },
-    {
-      text: "Promotion code",
-      path: "DBPromotionCodeIndex",
-      icon: iconPromotionCode,
-    },
+  {
+    text: "Dashboard",
+    path: "Dashboard",
+    icon: iconDashboard
+  },
+  {
+    text: "Categories",
+    path: "DBCategoryIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Alerts",
+    path: "DBAlertIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Products",
+    path: "DBProductIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Alert Types",
+    path: "DBAlertTypeIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Carts",
+    path: "DBCartIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Orders",
+    path: "DBOrderIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Newsletters",
+    path: "DBNewsletterIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Stocks",
+    path: "DBStockIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Category Product",
+    path: "DBCategoryProductIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "User",
+    path: "DBUserIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Product Promotion",
+    path: "DBProductPromotionIndex",
+    icon: iconDashboard
+  },
+  {
+    text: "Promotion code",
+    path: "DBPromotionCodeIndex",
+    icon: iconPromotionCode,
+  },
 ];
 
+const dynamicMaxHeight = ref('calc(100vh - 115px)');
+
+const updateHeight = () => {
+  dynamicMaxHeight.value = `calc(100vh - 115px)`;
+};
+
+onMounted(() => {
+  window.addEventListener('resize', updateHeight);
+  updateHeight();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateHeight);
+});
 </script>
 
 <style scoped>
-  .router-link-active,
-  .router-link-exact-active {
-    background-color: #1D1F96;
-  }
+.router-link-active,
+.router-link-exact-active {
+  background-color: #1D1F96;
+}
 </style>

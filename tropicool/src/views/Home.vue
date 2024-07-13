@@ -39,7 +39,7 @@
           <p class="product-text">Troupicool Tequila</p>
         </div>
         <div class="image-wrapper">
-          <component :is="tequila" alt="Troupicool Tequila" class="product-image" />
+          <img src="/tropicool-tequila.png" alt="Troupicool Tequila" class="product-image" />
           <button class="product-button">Voir la boutique</button>
         </div>
       </div>

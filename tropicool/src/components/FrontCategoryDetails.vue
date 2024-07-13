@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="max-w-7xl w-full py-4 mx-auto">
     <h1>Category Details</h1>
     <section v-if="category">
       <div>

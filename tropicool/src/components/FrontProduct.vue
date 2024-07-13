@@ -1,5 +1,5 @@
 <template>
-    <div class="max-w-5xl w-full py-4">
+    <div class="max-w-7xl w-full py-4 mx-auto">
       <h1 class="text-4xl font-bold mb-8 text-black">Tous les produits</h1>
       <section id="products">
         <template v-if="products.length > 0">

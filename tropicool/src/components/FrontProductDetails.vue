@@ -1,5 +1,5 @@
 <template>
-  <div class="text-black">
+  <div class="text-black max-w-7xl w-full py-4 mx-auto">
     <h1>Product Details</h1>
     <section v-if="product">
       <h1>Name: <span class="capitalize">{{ product.name }}</span></h1>

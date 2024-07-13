@@ -72,7 +72,11 @@ module.exports = function (sequelize) {
     updated_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
-    }
+    },
+    reference: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   }, {
     sequelize,
     modelName: 'Product',

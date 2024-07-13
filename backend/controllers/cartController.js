@@ -11,6 +11,7 @@ const cartSchema = Joi.object({
       quantity: Joi.number().integer().min(1).required(),
       price: Joi.number().required(),
       image: Joi.string().required(),
+      reference: Joi.string().required(),
     })
   ).required(),
   expired_at: Joi.date().optional(),
@@ -43,7 +44,8 @@ const getAllCarts = async (req, res, next) => {
           name: product.name,
           quantity: product.quantity,
           price: product.price,
-          image: product.image
+          image: product.image,
+          reference: product.reference,
         })),
         user: cart.user
       };
@@ -55,7 +57,6 @@ const getAllCarts = async (req, res, next) => {
     next(e);
   }
 };
-
 
 const getCartById = async (req, res, next) => {
   try {
@@ -81,7 +82,7 @@ const createCart = async (req, res, next) => {
   const { error, value } = cartSchema.validate(req.body);
 
   if (error) {
-    return res.status(400);
+    return res.status(400).json({ error: error.details[0].message });
   }
 
   try {
@@ -90,7 +91,7 @@ const createCart = async (req, res, next) => {
       cartProductsData: value.cartProductsData,
       expired_at: new Date(Date.now() + 15 * 60 * 1000)
     });
-    res.status(201);
+    res.status(201).json(newCart);
   } catch (err) {
     next(err);
   }
@@ -100,12 +101,12 @@ const updateCart = async (req, res, next) => {
   const { error, value } = cartSchema.validate(req.body);
 
   if (error) {
-    return res.status(400);
+    return res.status(400).json({ error: error.details[0].message });
   }
 
   const { id } = req.params;
   try {
-    const updatedCart = await Cart.update(
+    const [affectedRows, [updatedCart]] = await Cart.update(
       {
         cartProductsData: value.cartProductsData,
       },
@@ -115,11 +116,11 @@ const updateCart = async (req, res, next) => {
       }
     );
 
-    if (updatedCart[0] === 0) {
-      return res.status(404);
+    if (affectedRows === 0) {
+      return res.status(404).json({ error: 'Cart not found' });
     }
 
-    res.status(200).json(updatedCart[1][0]);
+    res.status(200).json(updatedCart);
   } catch (err) {
     next(err);
   }
@@ -143,10 +144,39 @@ const deleteCart = async (req, res, next) => {
   }
 };
 
+const removeProductFromCart = async (req, res, next) => {
+  const { user_id, product_id } = req.body;
+
+  try {
+    const cart = await Cart.findOne({ where: { user_id } });
+
+    if (!cart) {
+      return res.status(404)
+    }
+
+    const updatedProducts = cart.cartProductsData.filter(
+      (product) => product.product_id !== product_id
+    );
+
+    if (updatedProducts.length === cart.cartProductsData.length) {
+      return res.status(404)
+    }
+
+    cart.cartProductsData = updatedProducts;
+    await cart.save();
+
+    res.status(200).json(cart);
+  } catch (e) {
+    console.error('Error removing product from cart:', e);
+    next(e);
+  }
+};
+
 module.exports = {
   getAllCarts,
   getCartById,
   createCart,
   updateCart,
   deleteCart,
+  removeProductFromCart
 };

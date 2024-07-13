@@ -1,7 +1,7 @@
 <template>
-  <div :style="{ maxWidth: dynamicMaxWidth }" class="max-h-[500px] overflow-auto">
-    <table class="w-full text-left table-auto">
-      <thead>
+  <div :style="{ maxWidth: dynamicMaxWidth, maxHeight: dynamicMaxHeight }" class="overflow-auto">
+    <table class="w-full text-left table-auto relative">
+      <thead class="w-full sticky left-0 top-0">
         <tr>
           <DashboardTableHead v-for="(column, index) in columns" :key="index" :column="column" />
         </tr>
@@ -67,20 +67,21 @@ const props = defineProps<TableProps>();
 const { datas, columns, editLink, deleteLink } = props;
 
 const dynamicMaxWidth = ref('calc(100vw - 50px)');
+const dynamicMaxHeight = ref('calc(100vh - 215px)');
 
-const updateWidth = () => {
+const updateDimensions = () => {
   const leftPartWidth = 20 * 16;
-  const newWidth = `calc(100vw - ${leftPartWidth}px - 50px)`;
-  dynamicMaxWidth.value = newWidth;
+  dynamicMaxWidth.value = `calc(100vw - ${leftPartWidth}px - 50px)`;
+  dynamicMaxHeight.value = `calc(100vh - 215px)`;
 };
 
 onMounted(() => {
-  window.addEventListener('resize', updateWidth);
-  updateWidth();
+  window.addEventListener('resize', updateDimensions);
+  updateDimensions();
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateWidth);
+  window.removeEventListener('resize', updateDimensions);
 });
 
 const isBoolean = (value: any): boolean => {
