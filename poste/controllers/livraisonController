@@ -1,0 +1,42 @@
+const { Livraison } = require('../models/livraison'); // Assurez-vous que le chemin vers le modèle Livraison est correct
+
+// Obtenir une livraison par ID
+exports.getLivraisonById = async (req, res) => {
+    try {
+        const livraison = await Livraison.findByPk(req.params.id);
+        if (!livraison) {
+            return res.status(404).json({ error: 'Livraison non trouvée' });
+        }
+        res.json(livraison);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
+
+// Créer une nouvelle livraison
+exports.createLivraison = async (req, res) => {
+    try {
+        const newLivraison = await Livraison.create(req.body);
+        res.status(201).json(newLivraison);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
+
+// Mettre à jour le statut d'une livraison
+exports.updateLivraisonStatus = async (req, res) => {
+    try {
+        const livraison = await Livraison.findByPk(req.params.id);
+        if (!livraison) {
+            return res.status(404).json({ error: 'Livraison non trouvée' });
+        }
+        livraison.status = req.body.status;
+        await livraison.save();
+        res.json(livraison);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
