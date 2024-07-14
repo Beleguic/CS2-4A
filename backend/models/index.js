@@ -28,8 +28,20 @@ db.syncDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connected successfully.');
-    await sequelize.sync({ force: true });
-    console.log('Database synchronized successfully.');
+
+    await db.User.sync({ force: true });
+    // await db.AlertType.sync({ force: true });
+    await db.Category.sync({ force: true });
+    await db.Product.sync({ force: true });
+    await db.CategoryProduct.sync({ force: true });
+    await db.Newsletter.sync({ force: true });
+    await db.ProductPromotion.sync({ force: true });
+    await db.PromotionCode.sync({ force: true });
+    await db.Stock.sync({ force: true });
+    await db.UserHistory.sync({ force: true });
+    await db.PasswordHistory.sync({ force: true });
+    // await db.Alert.sync({ force: true });
+
   } catch (error) {
     console.error('Error synchronizing database:', error);
   }

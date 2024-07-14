@@ -10,7 +10,7 @@ const passwordHistorySchema = Joi.object({
 const getAllPasswordHistories = async (req, res, next) => {
   try {
     const passwordHistories = await PasswordHistory.findAll({
-      include: [{ model: User, attributes: ['id', 'name', 'email'] }]
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'email'] }]
     });
     res.json(passwordHistories);
   } catch (e) {
@@ -23,7 +23,7 @@ const getPasswordHistoryById = async (req, res, next) => {
   try {
     const id = req.params.id;
     const passwordHistory = await PasswordHistory.findByPk(id, {
-      include: [{ model: User, attributes: ['id', 'name', 'email'] }]
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'email'] }]
     });
 
     if (passwordHistory) {
