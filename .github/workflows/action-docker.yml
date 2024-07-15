@@ -29,46 +29,38 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up Docker Compose
-      run: |
-        docker-compose --version
+      run: docker-compose --version
 
     - name: Copy .env.example to .env.development
-      run: |
-        cp .env.example .env.development
+      run: cp .env.example .env.development
 
     - name: Start services with Docker Compose
-      run: |
-        docker-compose --env-file .env.development up -d
+      run: docker-compose --env-file .env.development up -d
 
     - name: Wait for services to be ready
-      run: |
-        sleep 30
-        
-    - name: Start services backend
-      run: |
-        docker-compose exec node node start
+      run: sleep 30
 
-    - name: Wait for services to be ready
-      run: |
-        sleep 30
+    - name: Install dependencies in Node container
+      run: docker-compose exec -T node npm install
 
-    - name: Install dependencies and run migrations in Node container
-      run: |
-        docker-compose exec node npm install && npm run migrate
+    - name: Run migrations in Node container
+      run: docker-compose exec -T node npm run migrate
 
     - name: Run tests in Node container
-      run: |
-        docker-compose exec node npm run test
+      run: docker-compose exec -T node npm test
+
+    - name: Start backend service
+      run: docker-compose exec -T node npm run start &
+
+    - name: Wait for backend service to be ready
+      run: sleep 10
 
     - name: Check Vue service
-      run: |
-        curl -f http://localhost:8000 || exit 1
+      run: curl -f http://localhost:8000 || exit 1
 
     - name: Check Node service
-      run: |
-        curl -f http://localhost:3000 || exit 1
+      run: curl -f http://localhost:3000 || exit 1
 
     - name: Tear down services
       if: always()
-      run: |
-        docker-compose down
+      run: docker-compose down
