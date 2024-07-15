@@ -34,14 +34,14 @@ jobs:
     - name: Copy .env.example to .env.development
       run: cp .env.example .env.development
 
-    - name: Install dependencies in Node container
-      run: docker-compose run --rm node npm install
-
     - name: Fix npm permissions in Vue container
-      run: docker-compose run --rm vue sh -c "mkdir -p /home/node/.npm && chown -R node:node /home/node/.npm"
+      run: docker-compose run --rm --user root vue sh -c "mkdir -p /home/node/.npm && chown -R node:node /home/node/.npm"
+
+    - name: Install dependencies in Node container
+      run: docker-compose run --rm --user root node npm install
 
     - name: Install dependencies in Vue container
-      run: docker-compose run --rm vue npm install
+      run: docker-compose run --rm --user root vue npm install
 
     - name: Start services with Docker Compose
       run: docker-compose --env-file .env.development up -d
