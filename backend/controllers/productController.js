@@ -1,13 +1,13 @@
 const { Product, Stock } = require('../models');
 const Joi = require('joi');
 
-// Product schema validation
 const productSchema = Joi.object({
   name: Joi.string().min(3).max(255).required(),
-  brand: Joi.string().min(3).max(255).required(),
   price: Joi.number().greater(0).required(),
   image: Joi.string().uri().required(),
-  is_active: Joi.boolean().optional()
+  is_active: Joi.boolean().optional(),
+  description: Joi.string().min(3).required(),
+  is_adult: Joi.boolean().optional()
 });
 
 const getAllProductsWithStock = async (req, res, next) => {
@@ -93,16 +93,13 @@ const createProduct = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
   try {
-    // Extract the payload and remove `created_at` and `updated_at` fields
     const { created_at, updated_at, ...payload } = req.body;
 
-    // Validate the payload
     const { error } = productSchema.validate(payload);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    // Find and update the product
     const product = await Product.findByPk(req.params.id);
     if (product) {
       await product.update(payload);

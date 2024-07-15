@@ -44,14 +44,14 @@ module.exports = function (sequelize) {
       allowNull: false,
       unique: true,
     },
-    brand: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
     price: {
       type: DataTypes.FLOAT,
       allowNull: false,
       defaultValue: 0,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
     },
     image: {
       type: DataTypes.STRING,
@@ -60,6 +60,10 @@ module.exports = function (sequelize) {
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
+    },
+    is_adult: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     created_at: {
       type: DataTypes.DATE,
