@@ -1,0 +1,74 @@
+name: CI Docker Compose Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: password
+
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: app_prod
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Compose
+      run: |
+        docker-compose --version
+
+    - name: Copy .env.example to .env.development
+      run: |
+        cp .env.example .env.development
+
+    - name: Start services with Docker Compose
+      run: |
+        docker-compose --env-file .env.developement up -d
+
+    - name: Wait for services to be ready
+      run: |
+        sleep 30
+        
+    - name: Start services backend
+      run: |
+        docker-compose exec node node start
+
+    - name: Wait for services to be ready
+      run: |
+        sleep 30
+
+    - name: Install dependencies and run migrations in Node container
+      run: |
+        docker-compose exec node npm install && npm run migrate
+
+    - name: Run tests in Node container
+      run: |
+        docker-compose exec node npm run test
+
+    - name: Check Vue service
+      run: |
+        curl -f http://localhost:8000 || exit 1
+
+    - name: Check Node service
+      run: |
+        curl -f http://localhost:3000 || exit 1
+
+    - name: Tear down services
+      if: always()
+      run: |
+        docker-compose down
