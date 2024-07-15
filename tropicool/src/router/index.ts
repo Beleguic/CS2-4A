@@ -39,6 +39,8 @@ import DBStockForm from '../views/DBStockForm.vue';
 import DBUserIndex from '../components/DBUserIndex.vue';
 import DBUserForm from '../views/DBUserForm.vue';
 import ProductDetail from '../views/ProductDetail.vue';
+import ConditionGeneralDutilisation from '../views/ConditionGeneralDutilisation.vue';
+import VenteAlcool from '../views/VenteAlcool.vue';
 
 
 const routes: Array<RouteRecordRaw> = [
@@ -96,6 +98,16 @@ const routes: Array<RouteRecordRaw> = [
     path: '/privacy-policy',
     name: 'PrivacyPolicy',
     component: PrivacyPolicy,
+  },
+  {
+    path: '/conditions-generales-dutilisation',
+    name: 'ConditionGeneralDutilisation',
+    component: ConditionGeneralDutilisation,
+  },
+  {
+    path: '/venteAlcool',
+    name: 'VenteAlcool',
+    component: VenteAlcool,
   },
   {
     path: '/dashboard',
