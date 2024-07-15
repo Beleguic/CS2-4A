@@ -46,11 +46,11 @@ jobs:
     - name: Run migrations in Node container
       run: docker-compose exec -T node npm run migrate
 
-    # - name: Run tests in Node container
-    #   run: docker-compose exec -T node npm test
+    - name: List used ports
+      run: netstat -tuln
 
     - name: Start backend service
-      run: docker-compose exec -T node npm run start &
+      run: docker-compose exec -T node node start &
 
     - name: Wait for backend service to be ready
       run: sleep 10
