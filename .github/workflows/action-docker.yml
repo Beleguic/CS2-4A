@@ -59,7 +59,7 @@ jobs:
       run: netstat -tuln
 
     - name: Check Vue service
-      run: curl -f http://localhost:5174 || exit 1
+      run: curl -f http://localhost:8000 || exit 1
 
     - name: Check Node service
       run: curl -f http://localhost:3000 || exit 1
