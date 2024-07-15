@@ -30,6 +30,8 @@
         Vous aurez toute la vie pour savourer et partager des moments festifs avec modération grâce à nos alcools Trôpicool !
         N'hésitez pas à essayer nos produits sans alcool, car sans alcool, la fête est encore plus folle !
       </p>
+      <br> 
+      <router-link to="/product" class="redirect-button">Voir nos autres produits</router-link>
     </div>
   </template>
   
@@ -322,6 +324,21 @@
     font-size: 18px;
     line-height: 1.5;
     max-width: 800px;
+  }
+
+  .redirect-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #696BE2;
+  color: white;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  }
+
+  .redirect-button:hover {
+    background-color: #5a5ccd; 
   }
 </style>
   
