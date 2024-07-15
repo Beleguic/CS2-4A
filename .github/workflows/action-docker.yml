@@ -47,7 +47,7 @@ jobs:
       run: docker-compose run --rm --user root vue npm install
 
     - name: Start services with Docker Compose
-      run: docker-compose --env-file .env.development up -d
+      run: docker-compose --env-file .env.development up
 
     - name: Wait for services to be ready
       run: sleep 30
