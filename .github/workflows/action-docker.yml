@@ -50,7 +50,7 @@ jobs:
       run: netstat -tuln
 
     - name: Start backend service
-      run: docker-compose exec -T node node start &
+      run: docker-compose exec -T node npm run start &
 
     - name: Wait for backend service to be ready
       run: sleep 10
