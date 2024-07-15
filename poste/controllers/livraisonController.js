@@ -1,9 +1,21 @@
-const { Livraison } = require('../models/livraison'); // Assurez-vous que le chemin vers le modèle Livraison est correct
+const { Livraison } = require('../models');
+
+exports.getAllLivraison = async (req, res) => {
+    console.log('here');
+    console.log(Livraison);
+    try {
+        const livraisons = await Livraison.findAll();
+        res.json(livraisons);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+};
 
 // Obtenir une livraison par ID
 exports.getLivraisonById = async (req, res) => {
     try {
-        const livraison = await Livraison.findByPk(req.params.id);
+        const livraison = await Livraison.findOne({ where: { livraison: req.params.id}});
         if (!livraison) {
             return res.status(404).json({ error: 'Livraison non trouvée' });
         }
@@ -16,7 +28,9 @@ exports.getLivraisonById = async (req, res) => {
 
 // Créer une nouvelle livraison
 exports.createLivraison = async (req, res) => {
+    console.log(Livraison);
     try {
+        console.log(req.body);
         const newLivraison = await Livraison.create(req.body);
         res.status(201).json(newLivraison);
     } catch (error) {
@@ -28,7 +42,7 @@ exports.createLivraison = async (req, res) => {
 // Mettre à jour le statut d'une livraison
 exports.updateLivraisonStatus = async (req, res) => {
     try {
-        const livraison = await Livraison.findByPk(req.params.id);
+        const livraison = await Livraison.findOne({ where: { livraison: req.params.id}});
         if (!livraison) {
             return res.status(404).json({ error: 'Livraison non trouvée' });
         }
