@@ -37,6 +37,9 @@ jobs:
     - name: Fix npm permissions in Vue container
       run: docker-compose run --rm --user root vue sh -c "mkdir -p /home/node/.npm && chown -R node:node /home/node/.npm"
 
+    - name: Adjust permissions for vite.config.ts
+      run: docker-compose run --rm --user root vue sh -c "chown -R node:node /home/node/vite.config.ts*"
+
     - name: Install dependencies in Node container
       run: docker-compose run --rm --user root node npm install
 
@@ -44,7 +47,7 @@ jobs:
       run: docker-compose run --rm --user root vue npm install
 
     - name: Start services with Docker Compose
-      run: docker-compose --env-file .env.development up
+      run: docker-compose --env-file .env.development up -d
 
     - name: Wait for services to be ready
       run: sleep 30
@@ -55,19 +58,8 @@ jobs:
     - name: List used ports
       run: netstat -tuln
 
-    - name: Wait for backend service to be ready
-      run: sleep 10
-
-    - name: Wait for Vue service to be ready
-      run: |
-        for i in `seq 1 30`; do
-          curl -f http://localhost:8000 && break
-          echo "Waiting for Vue service to be ready..."
-          sleep 5
-        done
-
     - name: Check Vue service
-      run: curl -f http://localhost:8000 || exit 1
+      run: curl -f http://localhost:5174 || exit 1
 
     - name: Check Node service
       run: curl -f http://localhost:3000 || exit 1
