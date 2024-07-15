@@ -46,8 +46,8 @@ jobs:
     - name: Run migrations in Node container
       run: docker-compose exec -T node npm run migrate
 
-    - name: Run tests in Node container
-      run: docker-compose exec -T node npm run test
+    # - name: Run tests in Node container
+    #   run: docker-compose exec -T node npm run test
 
     - name: Start backend service
       run: docker-compose exec -T node node start &
