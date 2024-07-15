@@ -35,7 +35,7 @@ jobs:
       run: cp .env.example .env.development
 
     - name: Start services with Docker Compose
-      run: docker-compose --env-file .env.development up --build 
+      run: docker-compose --env-file .env.development up --build -d
 
     - name: Wait for services to be ready
       run: sleep 30
