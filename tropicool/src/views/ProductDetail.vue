@@ -35,92 +35,92 @@
   
   
   <script setup>
-  import { ref, computed, onMounted } from 'vue';
-  import { useAuthStore } from '@/stores/authStore'; // Assurez-vous que le chemin est correct
-  import { useRouter } from 'vue-router';
-  import axios from 'axios';
-  
-  const product = ref({});
-  const quantity = ref(1);
-  const isAllowed = ref(true);
-  const router = useRouter();
-  
-  const authStore = useAuthStore();
-  
-  const fetchProduct = async () => {
-    const productId = router.currentRoute.value.params.id;
-    const apiUrl = import.meta.env.VITE_API_URL;
-    try {
-      const response = await fetch(`${apiUrl}/product/${productId}`);
-      const data = await response.json();
-      product.value = data;
-      if (data.is_adult) {
-        checkAge();
-      }
-    } catch (error) {
-      console.error('Error fetching product:', error);
-    }
-  };
-  
-  const checkAge = async () => {
-    if (authStore.userId) {
+    import { ref, computed, onMounted } from 'vue';
+    import { useAuthStore } from '@/stores/authStore'; 
+    import { useRouter } from 'vue-router';
+    import axios from 'axios';
+    
+    const product = ref({});
+    const quantity = ref(1);
+    const isAllowed = ref(true);
+    const router = useRouter();
+    
+    const authStore = useAuthStore();
+    
+    const fetchProduct = async () => {
+      const productId = router.currentRoute.value.params.id;
       const apiUrl = import.meta.env.VITE_API_URL;
       try {
-        const response = await axios.get(`${apiUrl}/users/${authStore.userId}`);
-        const user = response.data;
-        console.log('User data:', user);
-        const age = calculateAge(new Date(user.dateOfBirth));
-        console.log('User age:', age);
-        if (age < 18) {
-          isAllowed.value = false;
-          console.log('Access denied: User is not an adult.');
-        } else {
-          isAllowed.value = true;
-          console.log('Access granted: User is an adult.');
+        const response = await fetch(`${apiUrl}/product/${productId}`);
+        const data = await response.json();
+        product.value = data;
+        if (data.is_adult) {
+          checkAge();
         }
       } catch (error) {
-        console.error('Error fetching user:', error);
-        isAllowed.value = false;
+        console.error('Error fetching product:', error);
       }
-    } else {
-      isAllowed.value = false;
-      console.log('Access denied: No user ID found.');
-    }
-  };
-  
-  const calculateAge = (birthdate) => {
-    const today = new Date();
-    let age = today.getFullYear() - birthdate.getFullYear();
-    const monthDifference = today.getMonth() - birthdate.getMonth();
-    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthdate.getDate())) {
-      age--;
-    }
-    console.log('Calculated age:', age);
-    return age;
-  };
-  
-  const addToFridge = () => {
-    console.log(`Product ${product.value.name} added to fridge`);
-  };
-  
-  const increaseQuantity = () => {
-    quantity.value += 1;
-  };
-  
-  const decreaseQuantity = () => {
-    if (quantity.value > 1) {
-      quantity.value -= 1;
-    }
-  };
-  
-  const totalPrice = computed(() => {
-    return (product.value.price * quantity.value).toFixed(2);
-  });
-  
-  onMounted(() => {
-    console.log('Fetching product...');
-    fetchProduct();
-  });
+    };
+    
+    const checkAge = async () => {
+      if (authStore.userId) {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        try {
+          const response = await axios.get(`${apiUrl}/users/${authStore.userId}`);
+          const user = response.data;
+          console.log('User data:', user);
+          const age = calculateAge(new Date(user.dateOfBirth));
+          console.log('User age:', age);
+          if (age < 18) {
+            isAllowed.value = false;
+            console.log('Access denied: User is not an adult.');
+          } else {
+            isAllowed.value = true;
+            console.log('Access granted: User is an adult.');
+          }
+        } catch (error) {
+          console.error('Error fetching user:', error);
+          isAllowed.value = false;
+        }
+      } else {
+        isAllowed.value = false;
+        console.log('Access denied: No user ID found.');
+      }
+    };
+    
+    const calculateAge = (birthdate) => {
+      const today = new Date();
+      let age = today.getFullYear() - birthdate.getFullYear();
+      const monthDifference = today.getMonth() - birthdate.getMonth();
+      if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthdate.getDate())) {
+        age--;
+      }
+      console.log('Calculated age:', age);
+      return age;
+    };
+    
+    const addToFridge = () => {
+      console.log(`Product ${product.value.name} added to fridge`);
+    };
+    
+    const increaseQuantity = () => {
+      quantity.value += 1;
+    };
+    
+    const decreaseQuantity = () => {
+      if (quantity.value > 1) {
+        quantity.value -= 1;
+      }
+    };
+    
+    const totalPrice = computed(() => {
+      return (product.value.price * quantity.value).toFixed(2);
+    });
+    
+    onMounted(() => {
+      console.log('Fetching product...');
+      fetchProduct();
+    });
   </script>
   
 <style scoped>
