@@ -16,7 +16,10 @@
         </a>
       </div>
       <p class="text-center italic font-medium text-lg mt-4">
-        <router-link to="/privacy-policy" class="link" active-class="active-link">Politique de confidentialité</router-link> | Conditions d'utilisation<br />
+        <router-link to="/privacy-policy" class="link" active-class="active-link">Politique de confidentialité</router-link> |
+        <router-link to="/conditions-generales-dutilisation" class="link" active-class="active-link">Conditions Générales d'Utilisation</router-link>|
+        Informations légales sur la <router-link to="/venteAlcool" class="link" active-class="active-link">vente d'alcool</router-link>
+        <br />
         Dégustez nos boissons avec modération. Ne pas conduire en état d'ébriété.
       </p>
     </div>
