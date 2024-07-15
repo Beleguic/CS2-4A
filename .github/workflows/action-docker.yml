@@ -47,13 +47,21 @@ jobs:
       run: docker-compose exec -T node npm run migrate
 
     # - name: Run tests in Node container
-    #   run: docker-compose exec -T node npm run test
+    #   run: docker-compose exec -T node npm test
 
     - name: Start backend service
-      run: docker-compose exec -T node node start &
+      run: docker-compose exec -T node npm run start &
 
     - name: Wait for backend service to be ready
       run: sleep 10
+
+    - name: Wait for Vue service to be ready
+      run: |
+        for i in `seq 1 30`; do
+          curl -f http://localhost:8000 && break
+          echo "Waiting for Vue service to be ready..."
+          sleep 5
+        done
 
     - name: Check Vue service
       run: curl -f http://localhost:8000 || exit 1
