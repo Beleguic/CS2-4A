@@ -35,7 +35,7 @@ jobs:
       run: cp .env.example .env.development
 
     - name: Start services with Docker Compose
-      run: docker-compose --env-file .env.development up -d
+      run: docker-compose --env-file .env.development up --build 
 
     - name: Wait for services to be ready
       run: sleep 30
@@ -46,11 +46,6 @@ jobs:
     - name: Run migrations in Node container
       run: docker-compose exec -T node npm run migrate
 
-    - name: List used ports
-      run: netstat -tuln
-
-    - name: Start backend service
-      run: docker-compose exec -T node npm run start &
 
     - name: Wait for backend service to be ready
       run: sleep 10
