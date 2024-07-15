@@ -38,7 +38,7 @@ jobs:
 
     - name: Start services with Docker Compose
       run: |
-        docker-compose --env-file .env.developement up -d
+        docker-compose --env-file .env.development up -d
 
     - name: Wait for services to be ready
       run: |
