@@ -56,7 +56,7 @@ services:
     image: node:20.0.0-alpine
     environment:
       PORT: 3001
-      DATABASE_URL: postgres-poste://root:password@postgres:5432/app
+      DATABASE_URL_POSTE: postgres://root:password@postgres-poste:5432/poste
       JWT_SECRET: posteAPI
     ports:
       - 127.0.0.1:3001:3001

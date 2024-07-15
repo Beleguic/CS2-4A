@@ -1,18 +1,20 @@
 const { Model, DataTypes } = require('sequelize');
 const { Client } = require('pg');
+require('dotenv').config();
 
 module.exports = function (sequelize) {
   class Livraison extends Model {
     static async generateString() {
+        console.log('Generating string');
         const prefix = 'FR';
         const year = new Date().getFullYear();
-        const client = new Client();
+        const client = new Client({connectionString: process.env.DATABASE_URL_POSTE});
     
         try {
             await client.connect();
     
             // Trouver le dernier enregistrement et obtenir le numéro
-            const res = await client.query('SELECT MAX(livraison) AS last_number FROM Livraisons');
+            const res = await client.query('SELECT MAX(livraison) AS last_number from "Livraisons";');
             const lastNumber = res.rows[0].last_number;
             const number = lastNumber !== null ? parseInt(lastNumber.split('-')[2]) + 1 : 1;
     
@@ -25,10 +27,14 @@ module.exports = function (sequelize) {
             console.log(generatedString);
             return generatedString;
         } catch (error) {
+            console.error("-------------------------------------------------------------");
             console.error(error);
+
         } finally {
             await client.end();
+            
         }
+
     }
     
     // Fonction pour générer des lettres aléatoires
@@ -52,7 +58,6 @@ module.exports = function (sequelize) {
     livraison: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: async () => await Livraison.generateString(),
     },
     expediteur: {
       type: DataTypes.JSON,
@@ -76,6 +81,12 @@ module.exports = function (sequelize) {
     modelName: 'Livraison',
     tableName: 'Livraisons',
     timestamps: false,
+  });
+
+  Livraison.addHook('beforeValidate', async (livraison, options) => {
+    if (!livraison.livraison) {
+      livraison.livraison = await Livraison.generateString();
+    }
   });
 
   return Livraison;
