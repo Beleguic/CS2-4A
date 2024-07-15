@@ -34,24 +34,29 @@ jobs:
     - name: Copy .env.example to .env.development
       run: cp .env.example .env.development
 
-    - name: Set up Dependance vue
-      run: docker compose run --rm vue npm install
+    - name: Install dependencies in Node container
+      run: docker-compose run --rm node npm install
 
-    - name: Set up Dependance node
-      run: docker compose run --rm node npm install
-      
+    - name: Install dependencies in Vue container
+      run: docker-compose run --rm vue npm install
+
     - name: Start services with Docker Compose
-      run: docker-compose --env-file .env.development up --build -d
+      run: docker-compose --env-file .env.development up -d
 
     - name: Wait for services to be ready
       run: sleep 30
 
-    - name: Install dependencies in Node container
-      run: docker-compose exec -T node npm install
-
     - name: Run migrations in Node container
       run: docker-compose exec -T node npm run migrate
 
+    - name: List used ports
+      run: netstat -tuln
+
+    - name: Start backend service
+      run: docker-compose exec -T node npm run start &
+
+    - name: Start Vue service
+      run: docker-compose exec -T vue npm run dev &
 
     - name: Wait for backend service to be ready
       run: sleep 10
