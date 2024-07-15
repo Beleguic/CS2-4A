@@ -37,6 +37,9 @@ jobs:
     - name: Install dependencies in Node container
       run: docker-compose run --rm node npm install
 
+    - name: Fix npm permissions in Vue container
+      run: docker-compose run --rm vue sh -c "mkdir -p /home/node/.npm && chown -R node:node /home/node/.npm"
+
     - name: Install dependencies in Vue container
       run: docker-compose run --rm vue npm install
 
