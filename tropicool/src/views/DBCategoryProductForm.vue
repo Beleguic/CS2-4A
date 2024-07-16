@@ -85,6 +85,7 @@ onMounted(async () => {
 });
 
 const submitForm = async () => {
+  console.log(categoryProduct.value);
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/category_product/new` : `${apiUrl}/category_product/${route.params.id}`;
