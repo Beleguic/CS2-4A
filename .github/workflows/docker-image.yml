@@ -1,0 +1,84 @@
+name: Build and Test Docker Images
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: password
+
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: app_prod
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Build backend Docker image
+      run: docker build -t my-backend:latest -f backend/Dockerfile backend
+
+    - name: Build frontend Docker image
+      run: docker build -t my-frontend:latest -f tropicool/Dockerfile tropicool
+
+    - name: Wait for MongoDB to be ready
+      run: |
+        echo "Waiting for MongoDB to start...";
+        until nc -z localhost 27017; do
+          sleep 5;
+        done;
+        echo "MongoDB is up and running.";
+
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        echo "Waiting for PostgreSQL to start...";
+        until pg_isready -h localhost -p 5432; do
+          sleep 5;
+        done;
+        echo "PostgreSQL is up and running.";
+
+    - name: Get MongoDB container IP
+      id: mongo
+      run: echo "::set-output name=ip::$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -qf "name=mongo"))"
+
+    - name: Get PostgreSQL container IP
+      id: postgres
+      run: echo "::set-output name=ip::$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -qf "name=postgres"))"
+
+    - name: Run backend container
+      run: docker run -d --name backend-test -e MONGO_URL=mongodb://root:password@${{ steps.mongo.outputs.ip }}:27017 -e DATABASE_URL=postgres://root:password@${{ steps.postgres.outputs.ip }}:5432/app_prod -e JWT_SECRET=mysecret -p 3000:3000 my-backend:latest
+
+    - name: Run frontend container
+      run: docker run -d --name frontend-test -p 5174:5174 my-frontend:latest
+
+    - name: Wait for backend container to be ready
+      run: |
+        echo "Waiting for backend to be ready...";
+        until [ "`docker inspect -f {{.State.Running}} backend-test`" == "true" ]; do
+          sleep 5;
+        done;
+        echo "Backend is up and running.";

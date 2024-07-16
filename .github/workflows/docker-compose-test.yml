@@ -1,0 +1,76 @@
+name: CI Docker Compose Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: password
+
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: app_prod
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Compose
+      run: docker-compose --version
+
+    - name: Copy .env.example to .env.development
+      run: cp .env.example .env.development
+
+    - name: Fix npm permissions in Vue container
+      run: docker-compose run --rm --user root vue sh -c "mkdir -p /home/node/.npm && chown -R node:node /home/node/.npm"
+
+    - name: Adjust permissions for vite.config.ts
+      run: docker-compose run --rm --user root vue sh -c "chown -R node:node /home/node/vite.config.ts*"
+
+    - name: Adjust permissions for project files
+      run: docker-compose run --rm --user root vue sh -c "chown -R node:node /home/node"
+
+    - name: Install dependencies in Node container
+      run: docker-compose run --rm --user root node npm install
+
+    - name: Install dependencies in Vue container
+      run: docker-compose run --rm --user root vue npm install
+
+    - name: Start services with Docker Compose
+      run: docker-compose --env-file .env.development up -d
+
+    - name: Wait for services to be ready
+      run: sleep 30
+
+    - name: Run migrations in Node container
+      run: docker-compose exec -T node npm run migrate
+
+    - name: List used ports
+      run: netstat -tuln
+
+    - name: Check Vue service
+      run: |
+        for i in {1..10}; do
+          curl -f http://localhost:8000 && break || sleep 5;
+        done || exit 1
+    - name: Check Node service
+      run: |
+        for i in {1..10}; do
+          curl -f http://localhost:3000 && break || sleep 5;
+        done || exit 1
+    - name: Tear down services
+      if: always()
+      run: docker-compose down
