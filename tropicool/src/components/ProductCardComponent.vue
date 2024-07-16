@@ -1,6 +1,6 @@
 <template>
   <div class="product-card">
-    <img :src="product.image" alt="Product Image" class="product-image" />
+    <img :src="getImageUrl(product.image)" alt="Product Image" class="product-image" />
     <h3 class="product-name">{{ product.name }}</h3>
     <p class="product-price">{{ product.price }} €</p>
     <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
@@ -13,7 +13,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { defineProps } from 'vue';
 
@@ -23,6 +22,30 @@ const props = defineProps({
     required: true
   }
 });
+
+const getImageUrl = (path) => {
+  const baseUrl = import.meta.env.VITE_API_URL;
+  let relativePath = path;
+
+  // Enlever le chemin de base s'il est déjà présent
+  if (path.startsWith(baseUrl)) {
+    relativePath = path.replace(baseUrl, '');
+  }
+
+  // Enlever la partie spécifique au système de fichiers pour obtenir un chemin relatif
+  relativePath = relativePath.replace('/home/node/app', '');
+
+  // Enlever la barre oblique initiale si elle est présente
+  if (relativePath.startsWith('/')) {
+    relativePath = relativePath.substring(1);
+  }
+
+  // Construire l'URL complète
+  const imageUrl = `${baseUrl}${relativePath}`;
+  
+  console.log('Image URL:', imageUrl); // Log de l'URL de l'image
+  return imageUrl;
+};
 </script>
 
 <style scoped>
