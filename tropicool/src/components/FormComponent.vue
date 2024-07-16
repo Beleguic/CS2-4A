@@ -2,14 +2,15 @@
   <form @submit.prevent="handleSubmit">
     <div v-for="(groups, divGroups) in fields" :key="divGroups" class="flex flex-col">
         <h2 v-if="groups.header != ''" class="text-2xl font-bold mb-1 text-center text-white">{{ groups.header }}</h2>
-        <div v-for="(div, field2) in groups.field" :key="field2" class="flex flex-row -mx-4" >
+        <div v-for="(div, field2) in groups.field" :key="field2" class="flex flex-row -mx-4">
             <div v-for="(field, index) in div" :key="index" class="m-4 w-full">
                 <div v-if="field.type == 'select'">
                     <label :for="field.name" class="block mb-1" :style="{color: field.color}">{{ field.label }}</label>
                     <select
                     :name="field.name"
+                    v-model="formData[field.name]"
                     :required="field.required"
-                    class="w-full px-3 py-2 border border-grasy-300 rounded"
+                    class="w-full px-3 py-2 border border-gray-300 rounded"
                     >
                         <option
                             v-for="(option, indexOption) in field.options"
@@ -28,14 +29,12 @@
                     v-model="formData[field.name]"
                     :required="field.required"
                     :placeholder="field.placeholder || field.label"
-                    :style="{rezize : field.resize || 'none'}"
-                    class="w-full px-3 py-2 border border-grasy-300 rounded"
-                    >
-
-                    </textarea>
+                    :style="{resize: field.resize || 'none'}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded"
+                    ></textarea>
                     <span v-if="errors[field.name]" class="text-red-500">{{ errors[field.name] }}</span>
                 </div>
-                <div v-else-if="field.type == 'checkbox'" class="flex justify-start">
+                <div v-else-if="field.type == 'checkbox'" class="flex justify-start items-center">
                     <input
                     :type="field.type"
                     :name="field.name"
@@ -44,9 +43,11 @@
                     :required="field.required"
                     :placeholder="field.placeholder || field.label"
                     :id="field.name"
-                    class="w-6 h-6 px-3 py-2 border border-grasy-300 cursor-pointer"
+                    class="w-6 h-6 px-3 py-2 border border-gray-300 cursor-pointer"
                     />
-                    <label :for="field.name" class="block mb-1 ml-2 cursor-pointer" :style="{color: field.color}">{{ field.label }}</label>
+                    <label :for="field.name" class="block mb-1 ml-2 cursor-pointer" :style="{color: field.color}">
+                      {{ field.label }} - {{ formData[field.name] ? field.textOn : field.textOff }}
+                    </label>
                     <span v-if="errors[field.name]" class="text-red-500">{{ errors[field.name] }}</span>
                 </div>
                 <div v-else>
@@ -57,7 +58,7 @@
                     v-model="formData[field.name]"
                     :required="field.required"
                     :placeholder="field.placeholder || field.label"
-                    class="w-full px-3 py-2 border border-grasy-300 rounded"
+                    class="w-full px-3 py-2 border border-gray-300 rounded"
                     />
                     <span v-if="errors[field.name]" class="text-red-500">{{ errors[field.name] }}</span>
                 </div>
@@ -71,7 +72,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, reactive } from 'vue';
 import { useFormValidation } from '../composables/useFormValidation';
 
 const props = defineProps({
@@ -100,6 +101,11 @@ const handleSubmit = () => {
       props.onSubmit(formData);
     } else {
       emit('submit', formData);
+    }
+  } else {
+    // Assign validation errors to errors object
+    for (const key in validationErrors) {
+      errors[key] = validationErrors[key];
     }
   }
 };
