@@ -1,3 +1,4 @@
+const { join } = require('path');
 const { Product, Stock } = require('../models');
 const Joi = require('joi');
 
@@ -7,7 +8,10 @@ const productSchema = Joi.object({
   image: Joi.string().optional(), // L'image devient optionnelle car elle sera gérée par Multer
   is_active: Joi.boolean().optional(),
   description: Joi.string().min(3).required(),
-  is_adult: Joi.boolean().optional()
+  is_adult: Joi.boolean().optional(),
+  image: Joi.string().required(),
+  reference: Joi.string().required(),
+  tva: Joi.number().required(),
 });
 
 const getAllProductsWithStock = async (req, res, next) => {

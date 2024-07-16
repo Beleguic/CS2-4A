@@ -40,7 +40,9 @@ import DBStockForm from '../views/DBStockForm.vue';
 import DBUserIndex from '../components/DBUserIndex.vue';
 import DBUserForm from '../views/DBUserForm.vue';
 import FrontProduct from '../components/FrontProduct.vue';
-import FrontProductDetails from '../components/FrontProductDetails.vue';
+import ProductDetail from '../views/ProductDetail.vue';
+import ConditionGeneralDutilisation from '../views/ConditionGeneralDutilisation.vue';
+import VenteAlcool from '../views/VenteAlcool.vue';
 import Cart from '../views/Cart.vue';
 import Search from '../views/Search.vue';
 
@@ -103,9 +105,9 @@ const routes: Array<RouteRecordRaw> = [
       },
       {
         path: ':id',
-        name: 'FrontProductDetails',
-        component: FrontProductDetails,
-        props: true
+        name: 'ProductPage',
+        component: ProductDetail,
+        props: true,
       },
     ],
   },
@@ -446,9 +448,14 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
-    path: '/product/:id',
-    name: 'ProductPage',
-    component: ProductDetail,
+    path: '/cart',
+    name: 'Cart',
+    component: Cart,
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: Search,
   },
 ];
 

@@ -1,3 +1,4 @@
+const { number } = require('joi');
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = function (sequelize) {
@@ -77,6 +78,10 @@ module.exports = function (sequelize) {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    tva: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+    }
   }, {
     sequelize,
     modelName: 'Product',

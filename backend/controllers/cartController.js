@@ -8,14 +8,17 @@ const cartSchema = Joi.object({
     Joi.object({
       product_id: Joi.string().uuid().required(),
       name: Joi.string().required(),
-      quantity: Joi.number().integer().min(1).required(),
       price: Joi.number().required(),
       image: Joi.string().required(),
+      quantity: Joi.number().integer().min(1).required(),
       reference: Joi.string().required(),
+      is_adult: Joi.boolean().optional(),
+      tva: Joi.number().required(),
     })
   ).required(),
   expired_at: Joi.date().optional(),
-  updated_at: Joi.date().optional()
+  updated_at: Joi.date().optional(),
+  created_at: Joi.date().optional(),
 });
 
 const getAllCarts = async (req, res, next) => {

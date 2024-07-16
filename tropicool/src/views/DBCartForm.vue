@@ -8,13 +8,13 @@
       <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
         <div class="grid gap-1">
           <label for="user_id" class="block text-sm font-medium text-gray-700">Utilisateur</label>
-          <select id="user_id" v-model="cart.value.user_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
+          <select id="user_id" v-model="cart.user_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
             <option v-for="user in users" :key="user.id" :value="user.id">{{ user.username }}</option>
           </select>
         </div>
         <div class="grid gap-1">
           <label for="product_id" class="block text-sm font-medium text-gray-700">Produit</label>
-          <select id="product_id" v-model="selectedProduct.value.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" @change="updateSelectedProductStock">
+          <select id="product_id" v-model="selectedProduct.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" @change="updateSelectedProductStock">
             <option v-for="product in products" :key="product.id" :value="product.id" :disabled="product.stock <= 0">
               {{ product.name }} (Stock: {{ product.stock <= 0 ? 0 : product.stock }})
             </option>
@@ -22,11 +22,11 @@
         </div>
         <div class="grid gap-1">
           <label for="quantity" class="block text-sm font-medium text-gray-700">Quantité</label>
-          <input type="number" id="quantity" v-model="selectedProduct.value.quantity" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" min="1" :max="selectedProduct.value.maxQuantity || 10" />
+          <input type="number" id="quantity" v-model="selectedProduct.quantity" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" min="1" :max="selectedProduct.maxQuantity || 10" />
         </div>
         <button type="button" @click="addProduct" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">Ajouter produit</button>
         <ul>
-          <li v-for="(product, index) in cart.value.cartProductsData" :key="index" class="text-black">
+          <li v-for="(product, index) in cart.cartProductsData" :key="index" class="text-black">
             {{ product.name }} - {{ product.quantity }}
             <button type="button" @click="removeProduct(index)" class="text-red-500 ml-2">Supprimer</button>
           </li>
@@ -62,6 +62,8 @@ interface Product {
   price: number;
   image: string;
   reference: string;
+  is_adult: boolean;
+  tva: number;
 }
 
 interface Stock {
@@ -73,7 +75,7 @@ interface Stock {
 interface Cart {
   id?: string;
   user_id: string;
-  cartProductsData: Array<{ product_id: string; name: string; quantity: number; price: number; image: string; reference: string }>;
+  cartProductsData: Array<{ product_id: string; name: string; quantity: number; price: number; image: string; reference: string; is_adult: boolean; tva: number }>;
 }
 
 const route = useRoute();
@@ -114,6 +116,8 @@ onMounted(async () => {
             price: prod.price,
             image: prod.image,
             reference: prod.reference,
+            is_adult: prod.is_adult,
+            tva: prod.tva
           });
         }
       });
@@ -198,6 +202,8 @@ const addProduct = () => {
         price: product.price,
         image: product.image,
         reference: product.reference,
+        is_adult: product.is_adult,
+        tva: product.tva
       });
     } else if (selectedProduct.value.quantity > product.stock) {
       alert('Stock insuffisant');
@@ -205,10 +211,7 @@ const addProduct = () => {
       alert('La quantité totale ne peut pas dépasser 10');
     }
   }
-
   selectedProduct.value = { product_id: '', quantity: 1, maxQuantity: null };
-
-  console.log("cart :", cart.value);
 };
 
 const removeProduct = (index: number) => {
@@ -216,15 +219,21 @@ const removeProduct = (index: number) => {
 };
 
 const submitForm = async () => {
+  console.log("Cart value:", cart.value); // Ajouter ce log
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/cart/new` : `${apiUrl}/cart/${route.params.id}`;
-
+    
     const { id, cartProductsData, ...payload } = cart.value;
-
     const productsPayload = cartProductsData.map(product => ({
       product_id: product.product_id,
+      name: product.name,
       quantity: product.quantity,
+      price: product.price,
+      image: product.image,
+      reference: product.reference,
+      is_adult: product.is_adult,
+      tva: product.tva
     }));
 
     const response = await fetch(url, {
@@ -232,11 +241,13 @@ const submitForm = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ ...payload, products: productsPayload }),
+      body: JSON.stringify({ ...payload, cartProductsData: productsPayload }),
     });
+
     if (!response.ok) {
       throw new Error('Error saving cart');
     }
+    
     window.dispatchEvent(new CustomEvent(`cart-${mode.value === 'new' ? 'added' : 'updated'}`));
     setTimeout(() => {
       router.push({ name: 'DBCartIndex' });

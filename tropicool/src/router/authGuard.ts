@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
+import router from '../router';
 
 export const verifyAdmin = async (to, from, next) => {
   try {
@@ -27,11 +28,13 @@ export const verifyAdmin = async (to, from, next) => {
 
 export function isAuthenticated(to, from, next) {
   const auth = useAuthStore();
-  if (auth.isLoggedIn) {
+  console.log('bbauth :', auth.isLoggedIn)
+  if (auth.isLoggedIn = true) {
     next();
   } else {
-    next({
-      name: 'Login'
-    });
+    console.log('bauth :', auth.isLoggedIn)
+    router.push("Logout")
+    auth.logout();
+    console.log('aauth :', auth.isLoggedIn)
   }
 }
