@@ -134,7 +134,7 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: verifyAdmin,
     children: [
       {
-        path: '/',
+        path: '',
         name: 'DashboardIndex',
         component: DBIndex,
       },

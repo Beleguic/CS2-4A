@@ -30,7 +30,7 @@
         </div>
         <div class="grid gap-1">
           <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
-          <input type="file" id="image" @change="handleFileUpload" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          <input type="file" id="image" @change="handleFileUpload" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required accept="image/webp, image/jpeg, image/png, image/jpg"/>
         </div>
         <div class="grid gap-1">
           <label for="is_active" class="block text-sm font-medium text-gray-700">Actif</label>
@@ -112,7 +112,9 @@ const submitForm = async () => {
     const formData = new FormData();
     formData.append('name', product.value.name);
     formData.append('price', product.value.price.toString());
+    formData.append('tva', product.value.tva.toString());
     formData.append('description', product.value.description);
+    formData.append('reference', product.value.reference);
     if (product.value.image) {
       formData.append('image', product.value.image);
     }

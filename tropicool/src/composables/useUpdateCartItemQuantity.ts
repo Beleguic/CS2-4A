@@ -29,6 +29,7 @@ interface Stock {
   product_id: string;
   quantity: number;
   status: string;
+  difference: string;
 }
 
 export function useUpdateCartItemQuantity() {
@@ -38,6 +39,11 @@ export function useUpdateCartItemQuantity() {
   const selectItem = (productId: string, currentQuantity: number) => {
     selectedItem.value = productId;
     selectedQuantity.value = currentQuantity;
+  };
+
+  const calculateDifference = (oldQuantity: number, newQuantity: number) => {
+    const difference = newQuantity - oldQuantity;
+    return difference > 0 ? `+${difference}` : `${difference}`;
   };
 
   const updateQuantity = async (
@@ -102,16 +108,20 @@ export function useUpdateCartItemQuantity() {
 
           activeCart.cartProductsData[existingProductIndex].quantity = newQuantity;
 
+          const difference = calculateDifference(currentQuantity, newQuantity);
+
           await axios.post(`${apiUrl}/stock/new`, {
             product_id: productId,
             quantity: currentQuantity,
-            status: 'add'
+            status: 'add',
+            difference: difference
           });
 
           await axios.post(`${apiUrl}/stock/new`, {
             product_id: productId,
             quantity: latestStock.quantity + currentQuantity - newQuantity,
-            status: 'remove'
+            status: 'remove',
+            difference: difference
           });
 
         } else {

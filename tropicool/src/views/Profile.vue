@@ -1,8 +1,5 @@
 <template>
   <div class="w-full max-w-7xl mx-auto py-4">
-      <div>
-          <router-link :to="{ name:'Logout' }">Se déconnecter</router-link>
-      </div>
       <div class="profile-view">
           <h1>Profil Utilisateur</h1>
           <form @submit.prevent="deleteAccount">

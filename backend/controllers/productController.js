@@ -9,7 +9,6 @@ const productSchema = Joi.object({
   is_active: Joi.boolean().optional(),
   description: Joi.string().min(3).required(),
   is_adult: Joi.boolean().optional(),
-  image: Joi.string().required(),
   reference: Joi.string().required(),
   tva: Joi.number().required(),
 });
@@ -55,34 +54,38 @@ const getAllProductsForSelection = async (req, res, next) => {
 };
 
 const getAllProducts = async (req, res, next) => {
+  const isFrontend = req.query.frontend === 'true';
+
   try {
-    const page = parseInt(req.query.page) || 1;  
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
+    if (isFrontend) {
+      const products = await Product.findAll({
+        where: {
+          is_active: true
+        }
+      });
+      res.json(products);
+    } else {
+      const page = parseInt(req.query.page) || 1;  
+      const limit = parseInt(req.query.limit) || 10;
+      const offset = (page - 1) * limit;
 
-    const { count, rows } = await Product.findAndCountAll({
-      offset: offset,
-      limit: limit
-    });
+      const { count, rows } = await Product.findAndCountAll({
+        offset: offset,
+        limit: limit
+      });
 
-    res.json({
-      totalItems: count,
-      totalPages: Math.ceil(count / limit),
-      currentPage: page,
-      products: rows
-    });
-    const products = await Product.findAll({
-      where: {
-        ...whereCondition
-      }
-    });
-    res.json(products);
+      res.json({
+        totalItems: count,
+        totalPages: Math.ceil(count / limit),
+        currentPage: page,
+        products: rows
+      });
+    }
   } catch (e) {
     console.error('Error fetching products:', e);
     next(e);
   }
 };
-
 
 const getProductById = async (req, res, next) => {
   try {

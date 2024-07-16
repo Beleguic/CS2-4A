@@ -33,15 +33,16 @@
 <script setup lang="ts">
   import CartTable from '../components/CartTable.vue';
   import CartResume from '../components/CartResume.vue';
-  import { ref, onMounted, computed } from 'vue'
-  import axios from 'axios'
-  import { useAuthStore } from '../stores/authStore'
+  import { ref, onMounted, computed } from 'vue';
+  import axios from 'axios';
+  import { useAuthStore } from '../stores/authStore';
 
   interface Stock {
     id: string;
     product_id: string;
     quantity: number;
     status: string;
+    difference: string;
   }
 
   interface Cart {
@@ -61,17 +62,17 @@
     is_adult: boolean;
   }
 
-  const cartItems = ref<CartItem[]>([])
-  const authStore = useAuthStore()
-  const isLoggedIn = ref(authStore.isLoggedIn)
-  const cartId = ref<string | null>(null) 
+  const cartItems = ref<CartItem[]>([]);
+  const authStore = useAuthStore();
+  const isLoggedIn = ref(authStore.isLoggedIn);
+  const cartId = ref<string | null>(null);
 
-  const apiUrl = import.meta.env.VITE_API_URL as string
-  const userId = localStorage.getItem('userId')
+  const apiUrl = import.meta.env.VITE_API_URL as string;
+  const userId = localStorage.getItem('userId');
 
-  const promoCode = ref<string>('')
-  const promoMessage = ref<string>('')
-  const reduction = ref<number>(0)
+  const promoCode = ref<string>('');
+  const promoMessage = ref<string>('');
+  const reduction = ref<number>(0);
 
   const fetchCart = async () => {
     if (isLoggedIn.value) {
@@ -80,12 +81,17 @@
       });
       if (response.data && Array.isArray(response.data)) {
         if (response.data.length > 0) {
-          cartItems.value = response.data[0].cartProductsData
-          cartId.value = response.data[0].id
+          cartItems.value = response.data[0].cartProductsData;
+          cartId.value = response.data[0].id;
         }
       }
     }
-  }
+  };
+
+  const calculateDifference = (oldQuantity: number, newQuantity: number) => {
+    const difference = newQuantity - oldQuantity;
+    return difference > 0 ? `+${difference}` : `${difference}`;
+  };
 
   const removeFromCart = async (productId: string, quantity: number) => {
     if (isLoggedIn.value) {
@@ -109,47 +115,51 @@
 
         if (stockData.length > 0) {
           const lastStockEntry = stockData[stockData.length - 1];
-
           const updatedQuantity = lastStockEntry.quantity + quantity;
+          const difference = calculateDifference(lastStockEntry.quantity, updatedQuantity);
 
           await axios.post(`${apiUrl}/stock/new`, {
             product_id: productId,
             quantity: updatedQuantity,
-            status: 'add'
+            status: 'add',
+            difference: difference
           });
         } else {
+          const difference = calculateDifference(0, quantity);
+
           await axios.post(`${apiUrl}/stock/new`, {
             product_id: productId,
             quantity: quantity,
-            status: 'add'
+            status: 'add',
+            difference: difference
           });
         }
-        
+
       } catch (error) {
         console.error("Failed to remove item from cart:", error);
       }
     }
-  }
+  };
 
   onMounted(() => {
-    fetchCart()
-  })
+    fetchCart();
+  });
 
   const total = computed(() => {
-    return cartItems.value.reduce((acc, item) => acc + item.price * item.quantity, 0)
-  })
+    return cartItems.value.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  });
 
   const discountedTotal = computed(() => {
-    return total.value * ((100 - reduction.value) / 100)
-  })
+    return total.value * ((100 - reduction.value) / 100);
+  });
 
   const tvaBase = computed(() => {
-    return total.value * 0.2
-  })
+    return total.value * 0.2;
+  });
 
   const tva = computed(() => {
-    return discountedTotal.value * 0.2
-  })
+    return discountedTotal.value * 0.2;
+  });
 </script>
 
 <style scoped>

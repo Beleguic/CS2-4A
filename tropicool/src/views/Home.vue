@@ -250,5 +250,5 @@
     background-color: #FEFEF6;
     height: 50px;
   }
-  }
+  
 </style>

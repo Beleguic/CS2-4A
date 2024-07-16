@@ -30,6 +30,7 @@ interface Stock {
   quantity: number;
   status: string;
   created_at: string;
+  difference: string;
 }
 
 const datas = ref<Stock[]>([]);
@@ -38,8 +39,9 @@ const columns = [
   { key: 'id', label: 'ID' },
   { key: 'productName', label: 'Produit' }, // Use a flattened key
   { key: 'quantity', label: 'Quantité' },
-  { key: 'created_at', label: 'Date d\'ajout' },
   { key: 'status', label: 'Status' },
+  { key: 'difference', label: 'Différence' },
+  { key: 'created_at', label: 'Date' },
   { key: 'actions', label: 'Actions' },
 ];
 
