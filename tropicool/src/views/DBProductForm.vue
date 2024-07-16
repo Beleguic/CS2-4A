@@ -11,8 +11,18 @@
           <input type="text" id="name" v-model="product.name" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
         </div>
         <div class="grid gap-1">
-          <label for="price" class="block text-sm font-medium text-gray-700">Prix</label>
-          <input type="number" step="0.01" id="price" v-model.number="product.price" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" /> 
+          <label for="reference" class="block text-sm font-medium text-gray-700">Référence</label>
+          <input type="text" id="reference" v-model="product.reference" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+        </div>
+        <div class="grid gap-4 grid-cols-2">
+          <div>
+            <label for="price" class="block text-sm font-medium text-gray-700">Prix</label>
+            <input type="number" step="0.01" id="price" v-model.number="product.price" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" /> 
+          </div>
+          <div>
+            <label for="tva" class="block text-sm font-medium text-gray-700">TVA (%)</label>
+            <input type="number" step="0.01" id="tva" v-model.number="product.tva" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" /> 
+          </div>
         </div>
         <div class="grid gap-1">
           <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
@@ -53,10 +63,12 @@ interface Product {
   id?: string;
   name: string;
   price: number;
+  tva: number;
   description: string;
   image?: File; // Modifier pour gérer les fichiers
   is_active?: boolean;
   is_adult?: boolean;
+  reference: string;
 }
 
 const route = useRoute();
@@ -64,10 +76,12 @@ const router = useRouter();
 const product = ref<Product>({
   name: '',
   price: 0,
+  tva: 0,
   description: '',
   image: undefined,
   is_active: true,
   is_adult: false,
+  reference: '',
 });
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');

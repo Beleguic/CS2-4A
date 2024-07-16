@@ -7,6 +7,8 @@ interface Product {
   image: string;
   price: number;
   reference: string;
+  tva: string;
+  is_adult: boolean;
 }
 
 interface CartProduct {
@@ -16,6 +18,8 @@ interface CartProduct {
   quantity: number;
   price: number;
   reference: string;
+  tva: string;
+  is_adult: boolean;
 }
 
 interface Cart {
@@ -41,11 +45,11 @@ export async function useAddToCartFormValidation(
   const apiUrl = import.meta.env.VITE_API_URL;
 
   if (!userId) {
-    return { message: { error: "You have to be connected" } };
+    return { message: { error: "Veuillez vous connecter" } };
   }
 
   if (!item) {
-    return { message: { error: "Item is required" } };
+    return { message: { error: "Veuillez choisir un produit" } };
   }
 
   if (isNaN(quantity) || quantity <= 0 || quantity >= 11) {
@@ -66,7 +70,7 @@ export async function useAddToCartFormValidation(
     const latestStock = stockData[stockData.length - 1];
 
     if (!latestStock || latestStock.quantity < quantity) {
-      return { message: { error: "Stock unavailable" } };
+      return { message: { error: "Stock indisponible" } };
     }
 
     const cartResponse = await axios.get<Cart[]>(`${apiUrl}/cart`, {
@@ -76,7 +80,7 @@ export async function useAddToCartFormValidation(
 
     let activeCart: Cart;
     if (!cartData || cartData.length === 0) {
-      const cartProductsData: CartProduct[] = [{ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image, reference: product.reference }];
+      const cartProductsData: CartProduct[] = [{ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image, reference: product.reference, tva: product.tva, is_adult: product.is_adult }];
       const newCartResponse = await axios.post<Cart>(`${apiUrl}/cart/new`, {
         user_id: userId,
         cartProductsData: cartProductsData,
@@ -89,7 +93,7 @@ export async function useAddToCartFormValidation(
         status: 'remove'
       });
 
-      return { message: { success: "Item has been added to your cart! You have 15 min to checkout" } };
+      return { message: { success: "Produit ajouté au panier" } };
     } else {
       activeCart = cartData[0];
       const existingProductIndex = activeCart.cartProductsData.findIndex(product => product.product_id === item);
@@ -97,14 +101,14 @@ export async function useAddToCartFormValidation(
       if (existingProductIndex !== -1) {
         const newQuantity = activeCart.cartProductsData[existingProductIndex].quantity + quantity;
         if (newQuantity < 1 || newQuantity > 10) {
-          return { message: { error: "Total quantity for this item must be between 1 and 10" } };
+          return { message: { error: "La quantité ne doit pas excéder 10 !" } };
         }
         activeCart.cartProductsData[existingProductIndex].quantity = newQuantity;
       } else {
         if (quantity < 1 || quantity > 10) {
-          return { message: { error: "Quantity for this item must be between 1 and 10" } };
+          return { message: { error: "La quantité ne doit pas excéder 10 !" } };
         }
-        activeCart.cartProductsData.push({ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image, reference: product.reference });
+        activeCart.cartProductsData.push({ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image, reference: product.reference, tva: product.tva, is_adult: product.is_adult });
       }
 
       await axios.patch<Cart>(`${apiUrl}/cart/${activeCart.id}`, {
@@ -118,9 +122,9 @@ export async function useAddToCartFormValidation(
       quantity: latestStock.quantity - quantity,
       status: 'remove'
     });
-    
-    return { message: { success: "Item has been added to your cart!" } };
+
+    return { message: { success: "Produit ajouté au panier" } };
   } catch (error) {
-    return { message: { error: "An error has occurred" } };
+    return { message: { error: "Un problème est survenu, veuillez recommencer !" } };
   }
 }

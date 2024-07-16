@@ -7,9 +7,6 @@
         <p>Description: {{ category.description }}</p>
       </div>
       <hr class="my-8">
-      <div>
-        Tous les produits
-      </div>
     </section>
     <section v-else>
       <p>Loading...</p>

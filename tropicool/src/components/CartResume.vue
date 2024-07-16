@@ -45,13 +45,24 @@
 
 <script setup lang="ts">
   import iconCross from '../assets/icons/cross.svg';
-  import { computed, ref, watch } from 'vue';
+  import { computed, ref } from 'vue';
   import axios from 'axios';
   import { defineProps, defineEmits } from 'vue';
 
   interface PromotionCode {
     code: string;
     reduction: number;
+  }
+
+  interface CartProduct {
+    product_id: string;
+    name: string;
+    quantity: number;
+    price: number;
+    image: string;
+    reference: string;
+    is_adult: boolean;
+    tva: number;
   }
 
   const props = defineProps({
@@ -67,21 +78,9 @@
       type: Number,
       default: 0
     },
-    total: {
-      type: Number,
-      default: 0
-    },
-    discountedTotal: {
-      type: Number,
-      default: 0
-    },
-    tvaBase: {
-      type: Number,
-      default: 0
-    },
-    tva: {
-      type: Number,
-      default: 0
+    cartProductsData: {
+      type: Array as () => CartProduct[],
+      default: () => []
     }
   });
 
@@ -119,21 +118,25 @@
     }, 1000);
   };
 
-  (event: Event) => {
-    const target = event.target as HTMLInputElement | null;
-    if (target) {
-      localPromoCode.value = target.value;
-      emit('update:promoCode', target.value);
-    }
-  };
+  const total = computed(() => {
+    return props.cartProductsData.reduce((acc, product) => acc + (product.price * product.quantity), 0);
+  });
+
+  const tvaBase = computed(() => {
+    return props.cartProductsData.reduce((acc, product) => acc + (product.price * product.quantity * (product.tva / 100)), 0);
+  });
 
   const updatedTotal = computed(() => {
-    return props.total * ((100 - props.reduction) / 100);
+    return total.value * ((100 - props.reduction) / 100);
   });
 
   const updatedTva = computed(() => {
-    return updatedTotal.value * 0.2;
+    return props.cartProductsData.reduce((acc, product) => {
+      const discountedPrice = product.price * ((100 - props.reduction) / 100);
+      return acc + (discountedPrice * product.quantity * (product.tva / 100));
+    }, 0);
   });
+
 </script>
 
 <style scoped>

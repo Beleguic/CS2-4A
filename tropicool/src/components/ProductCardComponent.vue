@@ -5,10 +5,10 @@
     <p class="product-price">{{ product.price }} €</p>
     <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
     <div class="button-container">
-      <router-link :to="{ name: 'ProductPage', params: { id: product.id } }" class="add-to-cart-button">
+      <router-link :to="{ name: 'ProductPage', params: { id: product.name } }" class="add-to-cart-button">
         <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
         Voir le produit
-      </router-link>
+      </router-link>  
     </div>
   </div>
 </template>
