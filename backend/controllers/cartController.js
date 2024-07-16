@@ -8,17 +8,16 @@ const cartSchema = Joi.object({
     Joi.object({
       product_id: Joi.string().uuid().required(),
       name: Joi.string().required(),
+      quantity: Joi.number().integer().min(1).required(),
       price: Joi.number().required(),
       image: Joi.string().required(),
-      quantity: Joi.number().integer().min(1).required(),
       reference: Joi.string().required(),
-      is_adult: Joi.boolean().optional(),
+      is_adult: Joi.bool().required(),
       tva: Joi.number().required(),
     })
   ).required(),
   expired_at: Joi.date().optional(),
-  updated_at: Joi.date().optional(),
-  created_at: Joi.date().optional(),
+  updated_at: Joi.date().optional()
 });
 
 const getAllCarts = async (req, res, next) => {
@@ -27,9 +26,18 @@ const getAllCarts = async (req, res, next) => {
 
     const queryOptions = {
       include: [
-        { model: User, as: 'user', attributes: ['id', 'username'] }
+        { model: User, as: 'user', attributes: ['id'] }
       ]
-    });
+    };
+
+    let carts;
+    if (user_id) {
+      queryOptions.where = { user_id: user_id };
+      carts = await Cart.findAll(queryOptions);
+    } else {
+      carts = await Cart.findAll(queryOptions);
+    }
+
     const cartData = carts.map(cart => {
       return {
         ...cart.toJSON(),
@@ -37,11 +45,16 @@ const getAllCarts = async (req, res, next) => {
           product_id: product.product_id,
           name: product.name,
           quantity: product.quantity,
-          price: product.price
+          price: product.price,
+          image: product.image,
+          reference: product.reference,
+          is_adult: product.is_adult,
+          tva: product.tva
         })),
         user: cart.user
       };
     });
+
     res.json(cartData);
   } catch (e) {
     console.error('Error fetching carts:', e);
@@ -73,7 +86,7 @@ const createCart = async (req, res, next) => {
   const { error, value } = cartSchema.validate(req.body);
 
   if (error) {
-    return res.status(400).json({ error: error.details[0].message });
+    return res.status(400);
   }
 
   try {
@@ -82,7 +95,7 @@ const createCart = async (req, res, next) => {
       cartProductsData: value.cartProductsData,
       expired_at: new Date(Date.now() + 15 * 60 * 1000)
     });
-    res.status(201).json(newCart);
+    res.status(201);
   } catch (err) {
     next(err);
   }

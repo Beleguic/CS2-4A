@@ -8,7 +8,7 @@
       <p class="intro-text">Des produits de qualité pour des moments inoubliables</p>
     </section>
     <section class="products-section">
-      <ProductCardComponent v-for="product in activeProducts" :key="product.id" :product="product" />
+      <ProductCardComponent v-for="product in products" :key="product.id" :product="product" />
     </section>
     <section class="family-meal-section">
       <div class="family-meal-wrapper">
@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import ProductCardComponent from '../components/ProductCardComponent.vue';
 
@@ -34,17 +34,12 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 const fetchProducts = async () => {
   try {
-    const response = await axios.get(`${apiUrl}/product`);
+    const response = await axios.get(`${apiUrl}/product?frontend=true`);
     products.value = response.data;
   } catch (error) {
     console.error('Error fetching products:', error);
   }
 };
-
-// Définir une propriété calculée pour obtenir les produits actifs
-const activeProducts = computed(() => {
-  return products.value.filter(product => product.is_active);
-});
 
 onMounted(() => {
   fetchProducts();

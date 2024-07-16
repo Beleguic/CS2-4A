@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 interface Product {
@@ -7,7 +6,7 @@ interface Product {
   image: string;
   price: number;
   reference: string;
-  tva: string;
+  tva: number;
   is_adult: boolean;
 }
 
@@ -18,7 +17,7 @@ interface CartProduct {
   quantity: number;
   price: number;
   reference: string;
-  tva: string;
+  tva: number;
   is_adult: boolean;
 }
 
@@ -33,6 +32,7 @@ interface Stock {
   product_id: string;
   quantity: number;
   status: string;
+  difference: string;
 }
 
 export async function useAddToCartFormValidation(
@@ -45,22 +45,31 @@ export async function useAddToCartFormValidation(
   const apiUrl = import.meta.env.VITE_API_URL;
 
   if (!userId) {
+    console.error("User is not logged in");
     return { message: { error: "Veuillez vous connecter" } };
   }
 
   if (!item) {
-    return { message: { error: "Veuillez choisir un produit" } };
+    console.error("Item is not provided");
+    return { message: { error: "Item is required" } };
   }
 
   if (isNaN(quantity) || quantity <= 0 || quantity >= 11) {
-    return { message: { error: "Quantity must be between 1 and 10" } };
+    console.error("Invalid quantity", quantity);
+    return { message: { error: "La quantité ne doit pas excéder 10 !" } };
   }
+
+  const calculateDifference = (oldQuantity: number, newQuantity: number): string => {
+    const difference = newQuantity - oldQuantity;
+    return difference > 0 ? `+${difference}` : `${difference}`;
+  };
 
   try {
     const productResponse = await axios.get<Product>(`${apiUrl}/product/${item}`);
     const product = productResponse.data;
     if (!product) {
-      return { message: { error: "Product must be valid" } };
+      console.error("Invalid product", item);
+      return { message: { error: "Veuillez choisir un produit valide" } };
     }
 
     const stockResponse = await axios.get<Stock[]>(`${apiUrl}/stock`, {
@@ -70,6 +79,7 @@ export async function useAddToCartFormValidation(
     const latestStock = stockData[stockData.length - 1];
 
     if (!latestStock || latestStock.quantity < quantity) {
+      console.error("Insufficient stock", latestStock);
       return { message: { error: "Stock indisponible" } };
     }
 
@@ -80,17 +90,30 @@ export async function useAddToCartFormValidation(
 
     let activeCart: Cart;
     if (!cartData || cartData.length === 0) {
-      const cartProductsData: CartProduct[] = [{ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image, reference: product.reference, tva: product.tva, is_adult: product.is_adult }];
-      const newCartResponse = await axios.post<Cart>(`${apiUrl}/cart/new`, {
+      const cartProductsData: CartProduct[] = [{
+        product_id: item,
+        name: product.name,
+        quantity: quantity,
+        price: product.price,
+        image: product.image,
+        reference: product.reference,
+        tva: product.tva,
+        is_adult: product.is_adult
+      }];
+
+      axios.post(`${apiUrl}/cart/new`, {
         user_id: userId,
         cartProductsData: cartProductsData,
       });
-      activeCart = newCartResponse.data;
 
-      await axios.post(`${apiUrl}/stock/new`, {
+      const newQuantity = latestStock.quantity - quantity;
+      const difference = calculateDifference(latestStock.quantity, newQuantity);
+
+      axios.post(`${apiUrl}/stock/new`, {
         product_id: item,
-        quantity: latestStock.quantity - quantity,
-        status: 'remove'
+        quantity: newQuantity,
+        status: 'remove',
+        difference: difference,
       });
 
       return { message: { success: "Produit ajouté au panier" } };
@@ -108,7 +131,16 @@ export async function useAddToCartFormValidation(
         if (quantity < 1 || quantity > 10) {
           return { message: { error: "La quantité ne doit pas excéder 10 !" } };
         }
-        activeCart.cartProductsData.push({ product_id: item, name: product.name, quantity: quantity, price: product.price, image: product.image, reference: product.reference, tva: product.tva, is_adult: product.is_adult });
+        activeCart.cartProductsData.push({
+          product_id: item,
+          name: product.name,
+          quantity: quantity,
+          price: product.price,
+          image: product.image,
+          reference: product.reference,
+          tva: product.tva,
+          is_adult: product.is_adult
+        });
       }
 
       await axios.patch<Cart>(`${apiUrl}/cart/${activeCart.id}`, {
@@ -117,14 +149,23 @@ export async function useAddToCartFormValidation(
       });
     }
 
-    await axios.post(`${apiUrl}/stock/new`, {
-      product_id: item,
-      quantity: latestStock.quantity - quantity,
-      status: 'remove'
-    });
+    const newStockQuantity = latestStock.quantity - quantity;
+    const stockDifference = calculateDifference(latestStock.quantity, newStockQuantity);
 
-    return { message: { success: "Produit ajouté au panier" } };
+    const updatedStock = await axios.post<Stock>(`${apiUrl}/stock/new`, {
+      product_id: item,
+      quantity: newStockQuantity,
+      status: 'remove',
+      difference: stockDifference,
+    }).then(response => response.data);
+
+    if (!updatedStock || !updatedStock.id) {
+      throw new Error("Stock update failed");
+    }
+
+    return { message: { success: "Produit ajouté au panier !" } };
   } catch (error) {
-    return { message: { error: "Un problème est survenu, veuillez recommencer !" } };
+    console.error("An error has occurred", error);
+    return { message: { error: "An error has occurred" } };
   }
 }

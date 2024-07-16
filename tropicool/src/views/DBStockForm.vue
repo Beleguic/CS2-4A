@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
@@ -47,6 +47,7 @@ interface Stock {
   product_id: string;
   quantity: number;
   status: string;
+  difference: string;
 }
 
 interface Product {
@@ -60,8 +61,10 @@ const stock = ref<Stock>({
   product_id: '',
   quantity: 0,
   status: 'add',
+  difference: '+0',
 });
 const products = ref<Product[]>([]);
+const latestStock = ref<Stock | null>(null);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
 
@@ -76,19 +79,65 @@ onMounted(async () => {
     }
   }
   try {
-    const productResponse = await axios.get<Product[]>(`${apiUrl}/product`);
-    products.value = productResponse.data;
+    const productResponse = await axios.get<{ products: Product[] }>(`${apiUrl}/product`);
+    products.value = productResponse.data.products;
   } catch (error) {
     console.error('Error fetching products:', error);
   }
 });
 
+watch(
+  () => stock.value.product_id,
+  async (newProductId) => {
+    if (newProductId) {
+      try {
+        const stockResponse = await axios.get<Stock[]>(`${apiUrl}/stock`, {
+          params: { product_id: newProductId },
+        });
+        const stockData = stockResponse.data;
+        latestStock.value = stockData.length ? stockData[stockData.length - 1] : null;
+      } catch (error) {
+        console.error('Error fetching latest stock:', error);
+      }
+    }
+  }
+);
+
+watch(
+  () => [stock.value.quantity, stock.value.status],
+  ([newQuantity, newStatus]) => {
+    const quantity = parseInt(newQuantity.toString(), 10);
+    stock.value.difference = newStatus === 'add' ? `+${quantity}` : `-${quantity}`;
+  }
+);
+
 const submitForm = async () => {
   try {
+    if (latestStock.value) {
+      if (stock.value.status === 'remove' && stock.value.quantity > latestStock.value.quantity) {
+        alert('La quantité à supprimer ne peut pas dépasser la quantité en stock');
+        return;
+      }
+    } else {
+      if (stock.value.status === 'remove') {
+        alert('Impossible de supprimer des stocks qui n\'existent pas');
+        return;
+      }
+    }
+
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/stock/new` : `${apiUrl}/stock/${route.params.id}`;
 
     const { id, product, created_at, ...payload } = stock.value;  // Exclure product et created_at des données
+
+    if (latestStock.value) {
+      const newTotalQuantity = stock.value.status === 'add'
+        ? latestStock.value.quantity + stock.value.quantity
+        : latestStock.value.quantity - stock.value.quantity;
+      
+      payload.quantity = newTotalQuantity;
+      payload.difference = stock.value.status === 'add' ? `+${stock.value.quantity}` : `-${stock.value.quantity}`;
+    }
 
     const response = await axios({
       method,

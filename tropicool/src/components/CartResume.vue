@@ -20,7 +20,7 @@
       </form>
       <div v-if="reduction > 0">
         <button @click="handleRemovePromoCode" class="text-white bg-main hover:bg-secondary flex gap-4 px-2 py-1 items-center">
-          <span>{{ localPromoCode }}</span>
+          <span>{{ appliedPromoCode }}</span>
           <component :is="iconCross" class="w-full max-w-5" />
         </button>
       </div>
@@ -87,8 +87,15 @@
   const emit = defineEmits(['update:promoCode', 'update:reduction', 'update:promoMessage']);
 
   const localPromoCode = ref(props.promoCode);
+  const appliedPromoCode = ref(props.promoCode);
 
   const handleApplyPromoCode = async () => {
+    if (!localPromoCode.value) {
+      emit('update:promoMessage', 'Code promo invalide');
+      emit('update:reduction', 0);
+      return;
+    }
+
     const apiUrl = import.meta.env.VITE_API_URL as string;
     try {
       const response = await axios.get<PromotionCode[]>(`${apiUrl}/promotion_code`, {
@@ -98,6 +105,7 @@
       if (response.data.length === 1 && typeof response.data[0].reduction === 'number') {
         emit('update:reduction', response.data[0].reduction);
         emit('update:promoMessage', `Code promo appliqué avec succès : réduction de ${response.data[0].reduction}%`);
+        appliedPromoCode.value = localPromoCode.value;
       } else {
         emit('update:reduction', 0);
         emit('update:promoMessage', 'Code promo invalide');
@@ -111,7 +119,7 @@
   const handleRemovePromoCode = () => {
     emit('update:reduction', 0);
     emit('update:promoMessage', 'Code promo supprimé');
-    localPromoCode.value = '';
+    appliedPromoCode.value = '';
     emit('update:promoCode', '');
     setTimeout(() => {
       emit('update:promoMessage', '');
@@ -136,7 +144,6 @@
       return acc + (discountedPrice * product.quantity * (product.tva / 100));
     }, 0);
   });
-
 </script>
 
 <style scoped>

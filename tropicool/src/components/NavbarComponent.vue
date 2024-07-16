@@ -6,16 +6,32 @@
       </router-link>
     </div>
     <div class="flex space-x-16 text-lg font-medium w-2/6 justify-center">
-        <router-link to="/" class="hover:text-white hover:bg-main px-5 py-3 rounded-full" active-class="text-white bg-main">Accueil</router-link>
-        <router-link to="/product" class="hover:text-white hover:bg-main px-5 py-3 rounded-full" active-class="text-white bg-main">Produit</router-link>
-        <router-link to="/merch" class="hover:text-white hover:bg-main px-5 py-3 rounded-full" active-class="text-white bg-main">Merch</router-link>
+      <nav>
+        <ul class="flex gap-4">
+          <li v-for="(route, index) in routes" :key="index">
+            <router-link :to="{ name: route.path }" active-class="text-white bg-main" class="text-main hover:text-white hover:bg-main px-5 py-3 rounded-full">
+              {{ route.text }}
+            </router-link>
+          </li>
+          <li v-if="isAdmin">
+            <router-link :to="{ name: 'DashboardIndex' }" active-class="text-white bg-main" class="text-main hover:text-white hover:bg-main px-5 py-3 rounded-full">
+              Dashboard
+            </router-link>
+          </li>
+        </ul>
+      </nav>
     </div>
     <div class="flex items-center space-x-6 text-lg font-medium w-2/6 justify-end">
       <nav>
         <ul class="flex gap-4">
+          <li>
+            <button v-if="auth.isLoggedIn" @click="logout" class="flex items-center gap-2 px-4 py-2 text-main hover:bg-main hover:text-white rounded-full w-full">
+              <component :is="iconLogout" class="w-full max-w-5" />
+              <span class="text-sm">Se Déconnecter</span>
+            </button>
+          </li>
           <li v-for="(route, index) in routesIcon" :key="index">
             <router-link
-              v-if="route.path !== 'Profile' || !isAuthenticated"
               :to="{ name: route.path }"
               active-class="text-white bg-main"
               class="inline-block px-4 py-2 text-main hover:bg-main hover:text-white rounded-full w-full"
@@ -24,46 +40,6 @@
                 <component :is="route.icon" class="w-full max-w-5" />
               </div>
             </router-link>
-            <div v-else class="relative inline-block">
-              <button
-                @click="toggleProfileMenu"
-                class="inline-block px-4 py-2 text-main hover:bg-main hover:text-white rounded-full w-full"
-              >
-                <div class="flex gap-4 items-center relative">
-                  <component :is="route.icon" class="w-full max-w-5" />
-                </div>
-              </button>
-              <div v-if="showProfileMenu" class="absolute top-full -left-full bg-white shadow-lg rounded-md mt-2">
-                <ul>
-                  <li>
-                    <router-link
-                      :to="{ name: 'Profile' }"
-                      active-class="text-white bg-main"
-                      class="whitespace-nowrap block px-4 py-2 text-main hover:bg-main hover:text-white rounded-t-md"
-                      @click="closeProfileMenu"
-                    >
-                      Profile
-                    </router-link>
-                  </li>
-                  <li v-if="isAuthenticated">
-                    <router-link
-                      :to="{ name: 'Logout' }"
-                      class="whitespace-nowrap block px-4 py-2 text-main hover:bg-main hover:text-white rounded-b-md w-full text-left"
-                    >
-                      <span>Se déconnecter</span>
-                    </router-link>
-                  </li>
-                  <li v-else>
-                    <router-link
-                      :to="{ name: 'Login' }"
-                      class="whitespace-nowrap block px-4 py-2 text-main hover:bg-main hover:text-white rounded-b-md w-full text-left"
-                    >
-                      <span>Se déconnecter</span>
-                    </router-link>
-                  </li>
-                </ul>
-              </div>
-            </div>
           </li>
         </ul>
       </nav>
@@ -72,19 +48,38 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed } from 'vue';
 import { useAuthStore } from '../stores/authStore';
 
-    const auth = useAuthStore();
+import iconSearch from '@/assets/icons/search.svg';
+import iconProfile from '@/assets/icons/profile.svg';
+import iconCart from '@/assets/icons/cart.svg';
+import iconLogout from '@/assets/icons/logout.svg';
 
-    function logout() {
-        auth.logout();
-    }
+interface RouteIcon {
+  path: string;
+  icon: string;
+}
 
-  interface Route {
-    path: string;
-    icon: string;
-  }
+const routesIcon: RouteIcon[] = [
+  {
+    path: 'Search',
+    icon: iconSearch
+  },
+  {
+    path: 'Profile',
+    icon: iconProfile
+  },
+  {
+    path: 'Cart',
+    icon: iconCart
+  },
+];
+
+interface Route {
+  text: string;
+  path: string;
+}
 
 const routes: Route[] = [
   {
@@ -101,31 +96,11 @@ const routes: Route[] = [
   },
 ];
 
-const isAuthenticated = ref(false);
-const showProfileMenu = ref(false);
+const auth = useAuthStore();
 
-const authStore = useAuthStore();
-const router = useRouter();
+const isAdmin = computed(() => auth.userRole === 'admin');
 
-onMounted(() => {
-  isAuthenticated.value = authStore.isLoggedIn;
-});
-
-authStore.$subscribe(() => {
-  isAuthenticated.value = authStore.isLoggedIn;
-});
-
-const toggleProfileMenu = () => {
-  showProfileMenu.value = !showProfileMenu.value;
-};
-
-const closeProfileMenu = () => {
-  showProfileMenu.value = false;
-};
-
-const logout = async () => {
-  await authStore.logout();
-  closeProfileMenu();
-  router.push({ name: 'Login' });
-};
+function logout() {
+    auth.logout();
+}
 </script>

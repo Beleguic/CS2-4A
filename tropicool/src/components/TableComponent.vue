@@ -22,6 +22,11 @@
               <template v-else-if="column.key === 'createdAt' || column.key === 'updatedAt'">
                 {{ formatDateTime(data[column.key]) }}
               </template>
+              <template v-else-if="column.label === 'Image'">
+                <a :href="data[column.key]" target="_blank" class="flex items-center justify-center p-2 rounded-full hover:bg-main hover:text-white">
+                  <component :is="iconEye" class="w-full max-w-6" />
+                </a>
+              </template>
               <template v-else>
                 {{ data[column.key] }}
               </template>
@@ -50,6 +55,7 @@
 <script setup lang="ts">
 import { defineProps, ref, onMounted, onBeforeUnmount } from 'vue';
 import DashboardTableHead from '../components/DashboardTableHead.vue';
+import iconEye from '@/assets/icons/eye.svg';
 
 interface Column {
   key: string;

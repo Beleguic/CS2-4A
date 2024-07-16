@@ -18,6 +18,11 @@ export default function useCartCheck() {
   const apiUrl = import.meta.env.VITE_API_URL;
   const router = useRouter();
 
+  const calculateDifference = (oldQuantity: number, newQuantity: number) => {
+    const difference = newQuantity - oldQuantity;
+    return difference > 0 ? `${difference}` : `${difference}`;
+  };
+
   const checkCart = async () => {
     const userId = localStorage.getItem('userId');
     if (!userId) return;
@@ -42,10 +47,13 @@ export default function useCartCheck() {
             const stockResponse = await axios.get<{ quantity: number }>(`${apiUrl}/stock?product_id=${product.product_id}`);
             const currentStock = stockResponse.data.quantity;
             const newQuantity = currentStock + product.quantity;
+            const difference = calculateDifference(currentStock, newQuantity);
+
             await axios.post(`${apiUrl}/stock/new`, {
               product_id: product.product_id,
               quantity: newQuantity,
-              status: 'add'
+              status: 'add',
+              difference: difference
             });
           } catch (stockError) {
             console.error(`Erreur lors de la mise à jour du stock pour le produit ${product.product_id}`, stockError);

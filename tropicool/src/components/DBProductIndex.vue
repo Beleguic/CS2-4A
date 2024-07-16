@@ -1,5 +1,5 @@
 <template>
-  <section class="h-full min-h-screen"> <!-- Ajout de min-h-screen pour augmenter la hauteur -->
+  <section class="h-full min-h-screen">
     <div class="py-8 px-6">
       <div class="flex items-center justify-between mb-8">
         <h1 class="text-4xl font-bold text-black">Liste des produits</h1>
@@ -63,16 +63,15 @@ const truncate = (text: string, maxLength: number) => {
 
 const fetchProducts = async (page = 1) => {
   try {
-    const response = await axios.get(`${apiUrl}/product`, {
+    const response = await axios.get<{ products: Product[]; currentPage: number; totalPages: number }>(`${apiUrl}/product`, {
       params: {
         page: page,
         limit: 10
       }
     });
-    datas.value = response.data.products.map(product => ({
+    datas.value = response.data.products.map((product: Product) => ({
       ...product,
       description: truncate(product.description, 30),
-      image: truncate(product.image, 15),
       created_at: dayjs(product.created_at).format('DD/MM/YYYY HH:mm'),
       updated_at: dayjs(product.updated_at).format('DD/MM/YYYY HH:mm'),
     }));

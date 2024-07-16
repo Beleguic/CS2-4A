@@ -7,6 +7,7 @@ const stockSchema = Joi.object({
   product_id: Joi.string().uuid().required(),
   stock: Joi.number().integer(),
   status: Joi.string().required(),
+  difference: Joi.string().required(),
 });
 
 // Filtrer les champs non autorisés
