@@ -5,7 +5,7 @@
       <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer le produit</h1>
       <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer le produit</h1>
 
-      <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
+      <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6" enctype="multipart/form-data">
         <div class="grid gap-1">
           <label for="name" class="block text-sm font-medium text-gray-700">Nom</label>
           <input type="text" id="name" v-model="product.name" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
@@ -20,7 +20,7 @@
         </div>
         <div class="grid gap-1">
           <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
-          <input type="url" id="image" v-model="product.image" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          <input type="file" id="image" @change="handleFileUpload" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
         </div>
         <div class="grid gap-1">
           <label for="is_active" class="block text-sm font-medium text-gray-700">Actif</label>
@@ -54,7 +54,7 @@ interface Product {
   name: string;
   price: number;
   description: string;
-  image: string;
+  image?: File; // Modifier pour gérer les fichiers
   is_active?: boolean;
   is_adult?: boolean;
 }
@@ -65,7 +65,7 @@ const product = ref<Product>({
   name: '',
   price: 0,
   description: '',
-  image: '',
+  image: undefined,
   is_active: true,
   is_adult: false,
 });
@@ -83,20 +83,35 @@ onMounted(async () => {
   }
 });
 
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files?.length) {
+    product.value.image = target.files[0];
+  }
+};
+
 const submitForm = async () => {
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/product/new` : `${apiUrl}/product/${route.params.id}`;
 
-    const { id, ...payload } = product.value;
+    const formData = new FormData();
+    formData.append('name', product.value.name);
+    formData.append('price', product.value.price.toString());
+    formData.append('description', product.value.description);
+    if (product.value.image) {
+      formData.append('image', product.value.image);
+    }
+    formData.append('is_active', product.value.is_active ? 'true' : 'false');
+    formData.append('is_adult', product.value.is_adult ? 'true' : 'false');
 
     const response = await axios({
       method,
       url,
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'multipart/form-data',
       },
-      data: payload,
+      data: formData,
     });
 
     if (response.status === 200 || response.status === 201) {
