@@ -27,6 +27,11 @@ const getImageUrl = (path) => {
   const baseUrl = import.meta.env.VITE_API_URL;
   let relativePath = path;
 
+  if (!path) {
+    console.error('Path is undefined or null');
+    return '';
+  }
+
   // Enlever le chemin de base s'il est déjà présent
   if (path.startsWith(baseUrl)) {
     relativePath = path.replace(baseUrl, '');
@@ -63,7 +68,8 @@ const getImageUrl = (path) => {
 
 .product-image {
   width: 100%;
-  height: auto;
+  height: 200px; /* Ajustez cette valeur selon vos besoins */
+  object-fit: contain; /* Cette propriété permet de réduire l'image sans la couper */
   border-radius: 10px;
 }
 
