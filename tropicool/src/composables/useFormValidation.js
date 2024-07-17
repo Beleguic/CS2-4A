@@ -2,29 +2,48 @@ import { reactive } from 'vue';
 import { z } from 'zod';
 
 export function useFormValidation(fields) {
+  console.log("fields", fields);
   const formData = reactive({});
   const errors = reactive({});
 
-  fields.forEach(field => {
-    formData[field.name] = '';
+  fields.forEach(fieldGroup => {
+    fieldGroup.field.forEach(subFieldArray => {
+      subFieldArray.forEach(subField => {
+        console.log("field name:", subField.name);
+        if (subField.type === 'checkbox') {
+          formData[subField.name] = false;
+        } else {
+          formData[subField.name] = '';
+        }
+      });
+    });
   });
 
   const schema = z.object(
-    fields.reduce((acc, field) => {
-      let fieldSchema = z.string();
-      if (field.required) {
-        fieldSchema = fieldSchema.nonempty(`${field.label} est requis`);
-      }
-      if (field.type === 'email') {
-        fieldSchema = fieldSchema.email(`${field.label} doit être une adresse email valide`);
-      }
-      if (field.name === 'password') {
-        fieldSchema = fieldSchema.min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\\\-])[A-Za-z\d@$!%*?&_\\\-]{12,}$/,
-          'Le mot de passe doit contenir des majuscules, des minuscules, des chiffres et des symboles'
-        );
-      }
-      acc[field.name] = fieldSchema;
+    fields.reduce((acc, fieldGroup) => {
+      fieldGroup.field.forEach(subFieldArray => {
+        subFieldArray.forEach(subField => {
+          let fieldSchema;
+          if (subField.type === 'checkbox') {
+            fieldSchema = z.boolean();
+          } else {
+            fieldSchema = z.string();
+            if (subField.required) {
+              fieldSchema = fieldSchema.nonempty(`${subField.label} est requis`);
+            }
+            if (subField.type === 'email') {
+              fieldSchema = fieldSchema.email(`${subField.label} doit être une adresse email valide`);
+            }
+            if (subField.name === 'password') {
+              fieldSchema = fieldSchema.min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\\-])[A-Za-z\d@$!%*?&_\\-]{12,}$/,
+                'Le mot de passe doit contenir des majuscules, des minuscules, des chiffres et des symboles'
+              );
+            }
+          }
+          acc[subField.name] = fieldSchema;
+        });
+      });
       return acc;
     }, {})
   );
