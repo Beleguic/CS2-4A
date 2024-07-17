@@ -31,8 +31,8 @@ interface Category {
   description: string;
   image: string;
   is_active: boolean;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const datas = ref<Category[]>([]);
@@ -41,8 +41,8 @@ const columns = [
   { key: 'id', label: 'ID' },
   { key: 'name', label: 'Nom' },
   { key: 'is_active', label: 'Status' },
-  { key: 'createdAt', label: 'Crée le' },
-  { key: 'updatedAt', label: 'Modifié le' },
+  { key: 'created_at', label: 'Crée le' },
+  { key: 'updated_at', label: 'Modifié le' },
   { key: 'actions', label: 'Actions' },
 ];
 
@@ -56,9 +56,11 @@ const fetchCategories = async () => {
     // Map data to format dates
     datas.value = response.data.map(category => ({
       ...category,
-      createdAt: dayjs(category.createdAt).format('DD/MM/YYYY HH:mm'), // Format the createdAt date
-      updatedAt: dayjs(category.updatedAt).format('DD/MM/YYYY HH:mm')  // Format the updatedAt date
+      created_at: dayjs(category.created_at).format('DD/MM/YYYY HH:mm'), // Format the createdAt date
+      updated_at: dayjs(category.updated_at).format('DD/MM/YYYY HH:mm')  // Format the updatedAt date
     }));
+
+    console.log('datasss', datas);
 
     console.log('Mapped Categories:', datas.value);
   } catch (error) {

@@ -8,7 +8,7 @@
                     <label :for="field.name" class="block mb-1" :style="{color: field.color}">{{ field.label }}</label>
                     <select
                     :name="field.name"
-                    v-model="formData[field.name]"
+                    v-model="localFormData[field.name]"
                     :required="field.required"
                     class="w-full px-3 py-2 border border-gray-300 rounded"
                     >
@@ -26,7 +26,7 @@
                     <label :for="field.name" class="block mb-1" :style="{color: field.color}">{{ field.label }}</label>
                     <textarea
                     :name="field.name"
-                    v-model="formData[field.name]"
+                    v-model="localFormData[field.name]"
                     :required="field.required"
                     :placeholder="field.placeholder || field.label"
                     :style="{resize: field.resize || 'none'}"
@@ -39,14 +39,14 @@
                     :type="field.type"
                     :name="field.name"
                     :checked="field.checked !== undefined ? field.checked : false"
-                    v-model="formData[field.name]"
+                    v-model="localFormData[field.name]"
                     :required="field.required"
                     :placeholder="field.placeholder || field.label"
                     :id="field.name"
                     class="w-6 h-6 px-3 py-2 border border-gray-300 cursor-pointer"
                     />
                     <label :for="field.name" class="block mb-1 ml-2 cursor-pointer" :style="{color: field.color}">
-                      {{ field.label }} - {{ formData[field.name] ? field.textOn : field.textOff }}
+                      {{ field.label }} - {{ localFormData[field.name] ? field.textOn : field.textOff }}
                     </label>
                     <span v-if="errors[field.name]" class="text-red-500">{{ errors[field.name] }}</span>
                 </div>
@@ -55,7 +55,7 @@
                     <input
                     :type="field.type"
                     :name="field.name"
-                    v-model="formData[field.name]"
+                    v-model="localFormData[field.name]"
                     :required="field.required"
                     :placeholder="field.placeholder || field.label"
                     class="w-full px-3 py-2 border border-gray-300 rounded"
@@ -72,12 +72,16 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, reactive } from 'vue';
+import { defineProps, defineEmits, reactive, watch } from 'vue';
 import { useFormValidation } from '../composables/useFormValidation';
 
 const props = defineProps({
   fields: {
     type: Array,
+    required: true,
+  },
+  formData: {
+    type: Object,
     required: true,
   },
   submitButtonText: {
@@ -90,19 +94,31 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['submit']);
-const { formData, errors, validateForm, resetErrors } = useFormValidation(props.fields);
+const emit = defineEmits(['submit', 'update:formData']);
+
+const { formData: localFormData, errors, validateForm, resetErrors } = useFormValidation(props.fields);
+
+watch(
+  () => props.formData,
+  (newVal) => {
+    Object.assign(localFormData, newVal);
+  },
+  { deep: true }
+);
 
 const handleSubmit = () => {
   resetErrors();
   const validationErrors = validateForm();
+  console.log('formData', localFormData);
   if (Object.keys(validationErrors).length === 0) {
+    emit('update:formData', localFormData);
     if (props.onSubmit && typeof props.onSubmit === 'function') {
-      props.onSubmit(formData);
+      props.onSubmit(localFormData);
     } else {
-      emit('submit', formData);
+      emit('submit', localFormData);
     }
   } else {
+    console.log('Validation errors:', validationErrors);
     // Assign validation errors to errors object
     for (const key in validationErrors) {
       errors[key] = validationErrors[key];
