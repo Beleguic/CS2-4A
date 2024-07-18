@@ -109,7 +109,6 @@ watch(
 const handleSubmit = () => {
   resetErrors();
   const validationErrors = validateForm();
-  console.log('formData', localFormData);
   if (Object.keys(validationErrors).length === 0) {
     emit('update:formData', localFormData);
     if (props.onSubmit && typeof props.onSubmit === 'function') {
@@ -118,7 +117,6 @@ const handleSubmit = () => {
       emit('submit', localFormData);
     }
   } else {
-    console.log('Validation errors:', validationErrors);
     // Assign validation errors to errors object
     for (const key in validationErrors) {
       errors[key] = validationErrors[key];
