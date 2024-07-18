@@ -35,13 +35,26 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const fetchProducts = async () => {
   try {
     const response = await axios.get(`${apiUrl}/product`);
-    products.value = response.data;
+    console.log('API Response:', response.data); // Log pour inspecter la réponse
+
+    // Supposons que la structure de la réponse est { products: [...] }
+    if (Array.isArray(response.data.products)) {
+      products.value = response.data.products.map(product => ({
+        ...product,
+        image: getImageUrl(product.image),
+      }));
+    } else {
+      console.error('API did not return an array of products');
+    }
   } catch (error) {
     console.error('Error fetching products:', error);
   }
 };
 
-// Définir une propriété calculée pour obtenir les produits actifs
+const getImageUrl = (path) => {
+  return path.startsWith('http') ? path : `${apiUrl}/${path}`;
+};
+
 const activeProducts = computed(() => {
   return products.value.filter(product => product.is_active);
 });
@@ -110,7 +123,7 @@ onMounted(() => {
 
   .products-section {
     display: flex;
-    flex-wrap: wrap;  /* Ajout de flex-wrap pour gérer plusieurs cartes */
+    flex-wrap: wrap;
     justify-content: center;
     background-color: #FEFEF6; 
     padding: 20px;
