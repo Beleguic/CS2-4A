@@ -77,13 +77,13 @@ onMounted(async () => {
   }
 });
 
-const submitForm = async (formData) => {
+const submitForm = async (formData: Category) => {
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/category/new` : `${apiUrl}/category/${route.params.id}`;
-    console.log(formData);
+
     const { id, createdAt, updatedAt, created_at, updated_at, ...payload } = formData;
-    console.log(payload);
+
     const response = await fetch(url, {
       method,
       headers: {

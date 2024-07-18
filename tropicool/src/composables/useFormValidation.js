@@ -2,14 +2,12 @@ import { reactive } from 'vue';
 import { z } from 'zod';
 
 export function useFormValidation(fields) {
-  console.log("fields", fields);
   const formData = reactive({});
   const errors = reactive({});
 
   fields.forEach(fieldGroup => {
     fieldGroup.field.forEach(subFieldArray => {
       subFieldArray.forEach(subField => {
-        console.log("field name:", subField.name);
         if (subField.type === 'checkbox') {
           formData[subField.name] = false;
         } else {

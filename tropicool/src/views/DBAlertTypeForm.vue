@@ -5,13 +5,12 @@
       <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Édition du type d'alerte : <span class="capitalize">{{ alertType?.type }}</span></h1>
       <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Suppression du type d'alerte</h1>
 
-      <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
-        <div class="grid gap-1">
-          <label for="type" class="block text-sm font-medium text-gray-700">Type d'alerte</label>
-          <input type="text" id="type" v-model="alertType.type" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="3" max="255" />
-        </div>
-        <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
-      </form>
+      <FormComponent
+          :fields="fields"
+          v-model:formData="alertType"
+          submitButtonText="Envoyer"
+          @submit="submitForm"
+        />
 
       <div v-if="mode === 'delete'" class="grid gap-4">
         <p>Êtes-vous sûr de vouloir supprimer ce type d'alerte ?</p>
@@ -27,6 +26,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import FormComponent from '../components/FormComponent.vue';
 
 interface AlertType {
   id?: string;
@@ -40,6 +40,14 @@ const alertType = ref<AlertType>({
 });
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+
+const fields = [
+  {  
+    field: [
+      [{name: 'type', label: 'Type d\'alerte', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255}], 
+    ],
+  },
+];
 
 onMounted(async () => {
   if (mode.value === 'edit' || mode.value === 'delete') {
@@ -55,12 +63,12 @@ onMounted(async () => {
   }
 });
 
-const submitForm = async () => {
+const submitForm = async (formData: AlertType) => {
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/alert_types/new` : `${apiUrl}/alert_types/${route.params.id}`;
 
-    const { id, ...payload } = alertType.value;
+    const { id, ...payload } = formData;
 
     const response = await fetch(url, {
       method,
