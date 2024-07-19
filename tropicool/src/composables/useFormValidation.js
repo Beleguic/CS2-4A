@@ -24,6 +24,9 @@ export function useFormValidation(fields) {
           let fieldSchema;
           if (subField.type === 'checkbox') {
             fieldSchema = z.boolean();
+          }
+          else if (subField.type === 'number') {
+            fieldSchema = z.number();
           } else {
             fieldSchema = z.string();
             if (subField.required) {
@@ -48,8 +51,12 @@ export function useFormValidation(fields) {
 
   const validateForm = () => {
     const result = schema.safeParse(formData);
+    console.log(result);
     if (!result.success) {
       result.error.errors.forEach(err => {
+        console.log(err.path[0], err.message);
+        console.log(errors);
+        console.log(formData);
         errors[err.path[0]] = err.message;
       });
       return errors;
