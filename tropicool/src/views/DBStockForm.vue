@@ -4,27 +4,13 @@
       <h1 v-if="mode === 'new'" class="text-4xl font-bold mb-8 text-black">Ajouter un stock</h1>
       <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer le stock</h1>
       <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer le stock</h1>
-
-      <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
-        <div class="grid gap-1">
-          <label for="product_id" class="block text-sm font-medium text-gray-700">Produit</label>
-          <select id="product_id" v-model="stock.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
-            <option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }}</option>
-          </select>
-        </div>
-        <div class="grid gap-1">
-          <label for="quantity" class="block text-sm font-medium text-gray-700">Quantité</label>
-          <input type="number" id="quantity" v-model="stock.quantity" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" />
-        </div>
-        <div class="grid gap-1">
-          <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-          <select id="status" v-model="stock.status" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
-            <option value="add">Ajout</option>
-            <option value="remove">Suppression</option>
-          </select>
-        </div>
-        <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
-      </form>
+      
+      <FormComponent
+        :fields="fields"
+        v-model:formData="stock"
+        submitButtonText="Envoyer"
+        @submit="submitForm"
+      />
 
       <div v-if="mode === 'delete'" class="grid gap-4">
         <p>Êtes-vous sûr de vouloir supprimer ce stock ?</p>
@@ -40,7 +26,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import FormComponent from '../components/FormComponent.vue';
 
 interface Stock {
   id?: string;
@@ -67,20 +53,52 @@ const products = ref<Product[]>([]);
 const latestStock = ref<Stock | null>(null);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const fields = ref<any[]>([]);
+
+
+const fetchProducts = async () => {
+  try {
+    const response = await fetch(`${apiUrl}/product/list`);
+    if (response.ok) {
+      const data = await response.json();
+      products.value = data.map((product: Product) => ({ value: product.id, label: product.name }));
+    } else {
+      console.error('Error fetching products');
+    }
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  }
+};
+
+
+const generateFields = () => [
+  {  
+    field: [
+      [{name: 'product_id', label: 'Produit', type: 'select', required: true, placeholder: '', color: 'gray-700', options: products.value}],
+      [{name: 'quantity', label: 'Quantité', type: 'number', required: true, placeholder: '', color: 'gray-700', min: 0}]
+    ]
+  }
+];
 
 onMounted(async () => {
+  await fetchProducts();
+
+  fields.value = generateFields();
+
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
-      const response = await axios.get<Stock>(`${apiUrl}/stock/${route.params.id}`);
-      const { product, created_at, ...rest } = response.data;  // Exclure product et created_at des données
-      stock.value = rest;
+      const response = await fetch(`${apiUrl}/stock/${route.params.id}`);
+      if (!response.ok) {
+        throw new Error('Error fetching alert');
+      }
+      stock.value = await response.json();
     } catch (error) {
-      console.error('Error fetching stock:', error);
+      console.error('Error fetching alert:', error);
     }
   }
   try {
-    const productResponse = await axios.get<{ products: Product[] }>(`${apiUrl}/product`);
-    products.value = productResponse.data.products;
+    const productResponse = await axios.get<Product[]>(`${apiUrl}/product`);
+    products.value = productResponse.data;
   } catch (error) {
     console.error('Error fetching products:', error);
   }
@@ -128,7 +146,7 @@ const submitForm = async () => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/stock/new` : `${apiUrl}/stock/${route.params.id}`;
 
-    const { id, product, created_at, ...payload } = stock.value;  // Exclure product et created_at des données
+    const { id, created_at, ...payload } = formData; // Exclure product et created_at des données
 
     if (latestStock.value) {
       const newTotalQuantity = stock.value.status === 'add'
@@ -139,16 +157,15 @@ const submitForm = async () => {
       payload.difference = stock.value.status === 'add' ? `+${stock.value.quantity}` : `-${stock.value.quantity}`;
     }
 
-    const response = await axios({
+    const response = await fetch(url, {
       method,
-      url,
       headers: {
         'Content-Type': 'application/json',
       },
-      data: payload,
+      body: JSON.stringify(payload),
     });
 
-    if (response.status === 200 || response.status === 201) {
+    if (response.ok) {
       window.dispatchEvent(new CustomEvent(`stock-${mode.value === 'new' ? 'added' : 'updated'}`));
       setTimeout(() => {
         router.push({ name: 'DBStockIndex' });
@@ -163,7 +180,10 @@ const submitForm = async () => {
 
 const deleteStock = async () => {
   try {
-    const response = await axios.delete(`${apiUrl}/stock/${route.params.id}`);
+    const response = await fetch(`${apiUrl}/stock/${route.params.id}`, {
+      method: 'DELETE',
+    });
+
     if (response.status === 204) {
       window.dispatchEvent(new CustomEvent('stock-deleted'));
       setTimeout(() => {
@@ -176,6 +196,7 @@ const deleteStock = async () => {
     console.error('Error deleting stock:', error);
   }
 };
+
 
 const goBack = () => {
   router.push({ name: 'DBStockIndex' });
