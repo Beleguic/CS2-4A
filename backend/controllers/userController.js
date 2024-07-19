@@ -5,12 +5,13 @@ const Joi = require('joi');
 const userSchema = Joi.object({
   email: Joi.string().email().required(),
   dateOfBirth: Joi.date().required(),
-  password: Joi.string().required(),
-  role: Joi.string().required(),
-  is_verified: Joi.boolean().required(),
+  password: Joi.string().optional(),
+  role: Joi.string().optional(),
+  is_verified: Joi.boolean().optional(),
   username: Joi.string().required(),
   firstName: Joi.string().required(),
   lastName: Joi.string().required(),
+  alertPreferences: Joi.array().items(Joi.string()).optional()
 }).options({ stripUnknown: true }); // This will strip out any unknown fields
 
 // Filter out fields that should not be updated by users
@@ -18,6 +19,13 @@ const filterUserFields = (user) => {
   const { created_at, updated_at, verification_token, reset_password_token, reset_password_expires, login_attempts, lock_until, password_last_changed, ...filteredUser } = user;
   return filteredUser;
 };
+
+const filterUserResponse = (user) => {
+  const { email, firstName, lastName, username, dateOfBirth, alertPreferences } = user;
+  return { email, firstName, lastName, username, dateOfBirth, alertPreferences };
+};
+
+const isAdmin = (user) => user.role === 'admin';
 
 const getAllUsers = async (req, res, next) => {
   try {
@@ -33,9 +41,14 @@ const getUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
     const user = await User.findByPk(id);
+    const requestingUser = await User.findByPk(req.userData.userId);
 
     if (user) {
-      res.json(user);
+      if (isAdmin(requestingUser)) {
+        res.json(user);
+      } else {
+        res.json(filterUserResponse(user));
+      }
     } else {
       res.sendStatus(404);
     }
