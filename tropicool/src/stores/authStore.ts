@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia';
-import axios, { AxiosError } from 'axios';
 import router from '../router';
 
 export const useAuthStore = defineStore('auth', {
@@ -11,31 +10,41 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async login(email: string, password: string) {
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, { email, password });
-        if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('userId', response.data.userId);
-          localStorage.setItem('userRole', response.data.role);
-          this.isLoggedIn = true;
-          this.userId = response.data.userId;
-          this.userRole = response.data.role;
-          console.log("Connexion réussie");
-          router.push({ name: 'Home' });
-        }
-      } catch (error: unknown) {
-        if (error instanceof AxiosError && error.response) {
-          const serverError = error.response.data.message || 'Une erreur de réseau est survenue';
-          const loginAttempts = error.response.data.loginAttempts || 0;
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          const serverError = errorData.message || 'Une erreur de réseau est survenue';
+          const loginAttempts = errorData.loginAttempts || 0;
           console.log(`Tentatives de connexion échouées: ${loginAttempts}`);
 
-          if (error.response.data.forcePasswordChange) {
+          if (errorData.forcePasswordChange) {
             alert("Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser.");
           }
 
           throw new Error('Login failed: ' + serverError);
-        } else {
-          throw new Error('Login failed: An unexpected error occurred');
         }
+
+        const data = await response.json();
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('userId', data.userId);
+          localStorage.setItem('userRole', data.role);
+          this.isLoggedIn = true;
+          this.userId = data.userId;
+          this.userRole = data.role;
+          console.log("Connexion réussie");
+          router.push({ name: 'Home' });
+        }
+      } catch (error) {
+        console.error('Error during login:', error);
+        throw new Error('Login failed: An unexpected error occurred');
       }
     },
     logout() {

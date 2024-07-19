@@ -133,6 +133,10 @@ module.exports = (sequelize) => {
         }
       }
     },
+    alertPreferences: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

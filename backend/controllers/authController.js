@@ -19,61 +19,65 @@ const transporter = nodemailer.createTransport({
 
 const login = async (req, res) => {
     const { email, password } = req.body;
-
+  
     try {
-        const user = await User.findOne({ where: { email } });
-
-        if (!user) {
-            return res.status(401).json({ message: 'Authentication failed', loginAttempts: 0 });
+      const user = await User.findOne({ where: { email } });
+  
+      if (!user) {
+        return res.status(401).json({ message: 'Authentication failed', loginAttempts: 0 });
+      }
+  
+      if (user.lockUntil && user.lockUntil > new Date()) {
+        const daysSinceLastChange = (new Date() - user.passwordLastChanged) / (1000 * 60 * 60 * 24);
+  
+        if (daysSinceLastChange > 60) {
+          user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          await sendPasswordResetEmail(user);
+          return res.status(403).json({
+            message: 'Password needs to be renewed. An email has been sent.',
+            forcePasswordChange: true
+          });
         }
-
-        if (user.lockUntil && user.lockUntil > new Date()) {
-            const daysSinceLastChange = (new Date() - user.passwordLastChanged) / (1000 * 60 * 60 * 24);
-
-            if (daysSinceLastChange > 60) {
-                user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-                await sendPasswordResetEmail(user);
-                return res.status(403).json({
-                    message: 'Password needs to be renewed. An email has been sent.',
-                    forcePasswordChange: true
-                });
-            }
-            return res.status(401).json({ message: 'Account temporarily locked. Try again later.', loginAttempts: user.loginAttempts });
+        return res.status(401).json({ message: 'Account temporarily locked. Try again later.', loginAttempts: user.loginAttempts });
+      }
+  
+      const isMatch = await bcrypt.compare(password, user.password);
+  
+      if (!isMatch) {
+        user.loginAttempts = (user.loginAttempts || 0) + 1;
+        if (user.loginAttempts >= 3) {
+          user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
+          user.loginAttempts = 0;
+          await user.save();
+          await sendAccountLockedEmail(user);
+          return res.status(401).json({
+            message: 'Account temporarily locked. Try again later.',
+            loginAttempts: user.loginAttempts,
+            lockUntil: user.lockUntil
+          });
         }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            user.loginAttempts = (user.loginAttempts || 0) + 1;
-            if (user.loginAttempts >= 3) {
-                user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
-                user.loginAttempts = 0;
-                await user.save();
-                await sendAccountLockedEmail(user);
-                return res.status(401).json({
-                    message: 'Account temporarily locked. Try again later.',
-                    loginAttempts: user.loginAttempts,
-                    lockUntil: user.lockUntil
-                });
-            }
-
-            await user.save();
-            return res.status(401).json({ message: 'Authentication failed', loginAttempts: user.loginAttempts });
-        }
-
-        user.loginAttempts = 0;
-        user.lockUntil = null;
+  
         await user.save();
-
-        const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        res.json({ message: 'Login successful', token, userId: user.id, role: user.role });
+        return res.status(401).json({ message: 'Authentication failed', loginAttempts: user.loginAttempts });
+      }
+  
+      user.loginAttempts = 0;
+      user.lockUntil = null;
+      await user.save();
+  
+      const token = jwt.sign(
+        { userId: user.id, email: user.email, role: user.role, isVerified: user.is_verified },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+  
+      res.json({ message: 'Login successful', token, userId: user.id, role: user.role });
     } catch (error) {
-        console.error('Error during login:', error);
-        res.status(500).json({ message: 'An error occurred during login.' });
+      console.error('Error during login:', error);
+      res.status(500).json({ message: 'An error occurred during login.' });
     }
-};
-
+  };
+  
 const sendAccountLockedEmail = async (user) => {
     const lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
     const formattedLockUntil = lockUntil.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
