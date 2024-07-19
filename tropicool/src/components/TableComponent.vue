@@ -1,14 +1,14 @@
 <template>
-  <div class="max-h-[500px] overflow-auto">
-    <table class="w-full text-left">
-      <thead>
+  <div :style="{ maxWidth: dynamicMaxWidth, maxHeight: dynamicMaxHeight }" class="overflow-auto">
+    <table class="w-full text-left table-auto relative">
+      <thead class="w-full sticky left-0 top-0">
         <tr>
           <DashboardTableHead v-for="(column, index) in columns" :key="index" :column="column" />
         </tr>
       </thead>
       <tbody>
         <tr v-for="data in datas" :key="data.id" class="hover:bg-slate-200 even:bg-slate-100">
-          <td v-for="(column, index) in columns" :key="index" class="py-2 px-4 text-base text-black">
+          <td v-for="(column, index) in columns" :key="index" class="py-2 px-4 text-base text-black whitespace-nowrap">
             <template v-if="column.key !== 'actions'">
               <template v-if="isBoolean(data[column.key]) && (column.label === 'status' || column.label === 'Status') && column.key === 'is_active'">
                 {{ data[column.key] ? 'Activé' : 'Désactivé' }}
@@ -21,6 +21,11 @@
               </template>
               <template v-else-if="column.key === 'createdAt' || column.key === 'updatedAt'">
                 {{ formatDateTime(data[column.key]) }}
+              </template>
+              <template v-else-if="column.label === 'Image'">
+                <a :href="data[column.key]" target="_blank" class="flex items-center justify-center p-2 rounded-full hover:bg-main hover:text-white">
+                  <component :is="iconEye" class="w-full max-w-6" />
+                </a>
               </template>
               <template v-else>
                 {{ data[column.key] }}
@@ -48,8 +53,9 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue';
+import { defineProps, ref, onMounted, onBeforeUnmount } from 'vue';
 import DashboardTableHead from '../components/DashboardTableHead.vue';
+import iconEye from '@/assets/icons/eye.svg';
 
 interface Column {
   key: string;
@@ -66,6 +72,24 @@ interface TableProps {
 const props = defineProps<TableProps>();
 const { datas, columns, editLink, deleteLink } = props;
 
+const dynamicMaxWidth = ref('calc(100vw - 50px)');
+const dynamicMaxHeight = ref('calc(100vh - 215px)');
+
+const updateDimensions = () => {
+  const leftPartWidth = 20 * 16;
+  dynamicMaxWidth.value = `calc(100vw - ${leftPartWidth}px - 50px)`;
+  dynamicMaxHeight.value = `calc(100vh - 215px)`;
+};
+
+onMounted(() => {
+  window.addEventListener('resize', updateDimensions);
+  updateDimensions();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateDimensions);
+});
+
 const isBoolean = (value: any): boolean => {
   return typeof value === 'boolean';
 };
@@ -81,3 +105,7 @@ const formatDateTime = (dateTimeString: string): string => {
   return `${formattedDate} à ${formattedTime}`;
 };
 </script>
+
+<style scoped>
+/* Si nécessaire, ajoutez des styles supplémentaires ici */
+</style>

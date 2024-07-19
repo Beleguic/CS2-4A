@@ -5,6 +5,9 @@ const Joi = require('joi');
 const stockSchema = Joi.object({
   quantity: Joi.number().integer().min(0).required(),
   product_id: Joi.string().uuid().required(),
+  stock: Joi.number().integer(),
+  status: Joi.string().required(),
+  difference: Joi.string().required(),
 });
 
 // Filtrer les champs non autorisés
@@ -15,10 +18,24 @@ const filterStockFields = (stock) => {
 
 const getAllStocks = async (req, res, next) => {
   try {
-    const stocks = await Stock.findAll({
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }]
-    });
-    res.json(stocks);
+    const { product_id } = req.query;
+
+    const queryOptions = {
+      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
+      order: [['created_at', 'ASC']], // Ajoutez cette ligne pour trier par created_at asc
+    };
+
+    if (product_id) {
+      queryOptions.where = { product_id };
+    }
+
+    const stocks = await Stock.findAll(queryOptions);
+
+    if (!stocks) {
+      return res.status(404).json({ message: 'Stocks not found' });
+    } else {
+      return res.json(stocks);
+    }
   } catch (e) {
     console.error('Error fetching stocks:', e);
     next(e);

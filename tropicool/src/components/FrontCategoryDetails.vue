@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="max-w-7xl w-full py-4 mx-auto">
     <h1>Category Details</h1>
     <section v-if="category">
       <div>
@@ -7,9 +7,6 @@
         <p>Description: {{ category.description }}</p>
       </div>
       <hr class="my-8">
-      <div>
-        Tous les produits
-      </div>
     </section>
     <section v-else>
       <p>Loading...</p>

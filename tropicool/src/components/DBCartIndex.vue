@@ -34,7 +34,7 @@ const datas = ref<Cart[]>([]);
 
 const columns = [
   { key: 'id', label: 'ID' },
-  { key: 'user.username', label: 'Utilisateur' },
+  { key: 'username', label: 'Utilisateur' },
   { key: 'products', label: 'Produits' },
   { key: 'created_at', label: 'Créé le' },
   { key: 'expire_at', label: 'Expire le' },

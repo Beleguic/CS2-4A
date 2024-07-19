@@ -23,8 +23,14 @@ const getAllCategoriesForSelection = async (req, res, next) => {
 };
 
 const getAllCategories = async (req, res, next) => {
+  const isFrontend = req.query.frontend === 'true';
+  const whereCondition = isFrontend ? { is_active: true } : {};
   try {
-    const categories = await Category.findAll();
+    const categories = await Category.findAll({
+      where: {
+        ...whereCondition
+      }
+    });
     res.json(categories);
   } catch (e) {
     console.error('Error fetching categories:', e);
@@ -35,7 +41,14 @@ const getAllCategories = async (req, res, next) => {
 const getCategoryById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const category = await Category.findByPk(id);
+    const isFrontend = req.query.frontend === 'true';
+    const whereCondition = isFrontend
+      ? { is_active: true, name: id }
+      : { id: id };
+
+    const category = await Category.findOne({
+      where: whereCondition,
+    });
 
     if (category) {
       res.json(category);

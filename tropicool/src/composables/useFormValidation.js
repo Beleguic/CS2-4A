@@ -20,7 +20,7 @@ export function useFormValidation(fields) {
       }
       if (field.name === 'password') {
         fieldSchema = fieldSchema.min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\\-])[A-Za-z\d@$!%*?&_\\-]{12,}$/,
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\\\-])[A-Za-z\d@$!%*?&_\\\-]{12,}$/,
           'Le mot de passe doit contenir des majuscules, des minuscules, des chiffres et des symboles'
         );
       }

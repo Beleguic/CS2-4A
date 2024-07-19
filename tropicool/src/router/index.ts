@@ -9,7 +9,8 @@ import ResetPassword from '../views/ResetPassword.vue';
 import Profile from '../views/Profile.vue';
 import Product from '../views/Product.vue';
 import PrivacyPolicy from '../views/PrivacyPolicy.vue';
-import { verifyAdmin } from '../router/authGuard';
+import { verifyAdmin, isAuthenticated } from '../router/authGuard';
+import { useAuthStore } from '../stores/authStore';
 import DBIndex from '../components/DBIndex.vue';
 import FrontCategory from '../components/FrontCategory.vue';
 import FrontCategoryDetails from '../components/FrontCategoryDetails.vue';
@@ -38,10 +39,12 @@ import DBStockIndex from '../components/DBStockIndex.vue';
 import DBStockForm from '../views/DBStockForm.vue';
 import DBUserIndex from '../components/DBUserIndex.vue';
 import DBUserForm from '../views/DBUserForm.vue';
+import FrontProduct from '../components/FrontProduct.vue';
 import ProductDetail from '../views/ProductDetail.vue';
 import ConditionGeneralDutilisation from '../views/ConditionGeneralDutilisation.vue';
 import VenteAlcool from '../views/VenteAlcool.vue';
-
+import Cart from '../views/Cart.vue';
+import Search from '../views/Search.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -88,11 +91,25 @@ const routes: Array<RouteRecordRaw> = [
     path: '/profile',
     name: 'Profile',
     component: Profile,
+    beforeEnter: isAuthenticated,
   },
   {
     path: '/product',
     name: 'Product',
     component: Product,
+    children: [
+      {
+        path: '',
+        name: 'FrontProduct',
+        component: FrontProduct
+      },
+      {
+        path: ':id',
+        name: 'ProductPage',
+        component: ProductDetail,
+        props: true,
+      },
+    ],
   },
   {
     path: '/privacy-policy',
@@ -117,7 +134,7 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: verifyAdmin,
     children: [
       {
-        path: '/',
+        path: '',
         name: 'DashboardIndex',
         component: DBIndex,
       },
@@ -431,9 +448,14 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
-    path: '/product/:id',
-    name: 'ProductPage',
-    component: ProductDetail,
+    path: '/cart',
+    name: 'Cart',
+    component: Cart,
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: Search,
   },
 ];
 

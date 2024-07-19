@@ -29,11 +29,15 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: [],
     },
+    updated_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
-    expire_at: {
+    expired_at: {
       type: DataTypes.DATE,
       defaultValue: Sequelize.literal("CURRENT_TIMESTAMP + INTERVAL '15 MINUTES'"),
     }
