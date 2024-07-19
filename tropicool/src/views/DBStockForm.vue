@@ -4,11 +4,12 @@
       <h1 v-if="mode === 'new'" class="text-4xl font-bold mb-8 text-black">Ajouter un stock</h1>
       <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer le stock</h1>
       <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer le stock</h1>
-      
-      <FormComponent
-        :fields="fields"
-        v-model:formData="stock"
-        submitButtonText="Envoyer"
+
+      <MyFormComponent
+        v-if="mode !== 'delete'"
+        v-model="stock"
+        :fields="formFields"
+        :submitButtonText="mode === 'new' ? 'Ajouter' : 'Mettre à jour'"
         @submit="submitForm"
       />
 
@@ -26,7 +27,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import FormComponent from '../components/FormComponent.vue';
+import axios from 'axios';
+import MyFormComponent from '../components/FormComponent.vue';
 
 interface Stock {
   id?: string;
@@ -53,52 +55,60 @@ const products = ref<Product[]>([]);
 const latestStock = ref<Stock | null>(null);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
-const fields = ref<any[]>([]);
 
-
-const fetchProducts = async () => {
-  try {
-    const response = await fetch(`${apiUrl}/product/list`);
-    if (response.ok) {
-      const data = await response.json();
-      products.value = data.map((product: Product) => ({ value: product.id, label: product.name }));
-    } else {
-      console.error('Error fetching products');
-    }
-  } catch (error) {
-    console.error('Error fetching products:', error);
-  }
-};
-
-
-const generateFields = () => [
-  {  
+// Définir les champs du formulaire pour MyFormComponent
+const formFields = ref([
+  {
+    header: '',
     field: [
-      [{name: 'product_id', label: 'Produit', type: 'select', required: true, placeholder: '', color: 'gray-700', options: products.value}],
-      [{name: 'quantity', label: 'Quantité', type: 'number', required: true, placeholder: '', color: 'gray-700', min: 0}]
-    ]
-  }
-];
+      [
+        {
+          type: 'select',
+          name: 'product_id',
+          label: 'Produit',
+          options: products.value.map(product => ({ value: product.id, label: product.name })),
+          required: true,
+        },
+      ],
+      [
+        {
+          type: 'number',
+          name: 'quantity',
+          label: 'Quantité',
+          placeholder: 'Entrez la quantité',
+          required: true,
+        },
+      ],
+      [
+        {
+          type: 'select',
+          name: 'status',
+          label: 'Status',
+          options: [
+            { value: 'add', label: 'Ajout' },
+            { value: 'remove', label: 'Suppression' },
+          ],
+          required: true,
+        },
+      ],
+    ],
+  },
+]);
 
 onMounted(async () => {
-  await fetchProducts();
-
-  fields.value = generateFields();
-
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
-      const response = await fetch(`${apiUrl}/stock/${route.params.id}`);
-      if (!response.ok) {
-        throw new Error('Error fetching alert');
-      }
-      stock.value = await response.json();
+      const response = await axios.get<Stock>(`${apiUrl}/stock/${route.params.id}`);
+      const { product, created_at, ...rest } = response.data;  // Exclure product et created_at des données
+      stock.value = rest;
     } catch (error) {
-      console.error('Error fetching alert:', error);
+      console.error('Error fetching stock:', error);
     }
   }
   try {
-    const productResponse = await axios.get<Product[]>(`${apiUrl}/product`);
-    products.value = productResponse.data;
+    const productResponse = await axios.get<{ products: Product[] }>(`${apiUrl}/product`);
+    products.value = productResponse.data.products;
+    formFields.value[0].field[0][0].options = products.value.map(product => ({ value: product.id, label: product.name }));  // Mettre à jour les options du select
   } catch (error) {
     console.error('Error fetching products:', error);
   }
@@ -114,6 +124,7 @@ watch(
         });
         const stockData = stockResponse.data;
         latestStock.value = stockData.length ? stockData[stockData.length - 1] : null;
+        console.log('Fetched latest stock:', latestStock.value);
       } catch (error) {
         console.error('Error fetching latest stock:', error);
       }
@@ -146,7 +157,7 @@ const submitForm = async () => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/stock/new` : `${apiUrl}/stock/${route.params.id}`;
 
-    const { id, created_at, ...payload } = formData; // Exclure product et created_at des données
+    const { id, product, created_at, ...payload } = stock.value;  // Exclure product et created_at des données
 
     if (latestStock.value) {
       const newTotalQuantity = stock.value.status === 'add'
@@ -157,15 +168,16 @@ const submitForm = async () => {
       payload.difference = stock.value.status === 'add' ? `+${stock.value.quantity}` : `-${stock.value.quantity}`;
     }
 
-    const response = await fetch(url, {
+    const response = await axios({
       method,
+      url,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      data: payload,
     });
 
-    if (response.ok) {
+    if (response.status === 200 || response.status === 201) {
       window.dispatchEvent(new CustomEvent(`stock-${mode.value === 'new' ? 'added' : 'updated'}`));
       setTimeout(() => {
         router.push({ name: 'DBStockIndex' });
@@ -180,10 +192,7 @@ const submitForm = async () => {
 
 const deleteStock = async () => {
   try {
-    const response = await fetch(`${apiUrl}/stock/${route.params.id}`, {
-      method: 'DELETE',
-    });
-
+    const response = await axios.delete(`${apiUrl}/stock/${route.params.id}`);
     if (response.status === 204) {
       window.dispatchEvent(new CustomEvent('stock-deleted'));
       setTimeout(() => {
@@ -196,7 +205,6 @@ const deleteStock = async () => {
     console.error('Error deleting stock:', error);
   }
 };
-
 
 const goBack = () => {
   router.push({ name: 'DBStockIndex' });
