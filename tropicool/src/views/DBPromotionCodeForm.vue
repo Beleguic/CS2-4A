@@ -5,25 +5,12 @@
       <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer le code promotionnel</h1>
       <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer le code promotionnel</h1>
 
-      <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
-        <div class="grid gap-1">
-          <label for="code" class="block text-sm font-medium text-gray-700">Code</label>
-          <input type="text" id="code" v-model="promotionCode.code" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
-        </div>
-        <div class="grid gap-1">
-          <label for="reduction" class="block text-sm font-medium text-gray-700">Réduction (% du panier)</label>
-          <input type="number" min="1" max="100" id="reduction" v-model="promotionCode.reduction" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
-        </div>
-        <div class="grid gap-1">
-          <label for="start_at" class="block text-sm font-medium text-gray-700">Début</label>
-          <input type="datetime-local" id="start_at" v-model="promotionCode.start_at" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm"/>
-        </div>
-        <div class="grid gap-1">
-          <label for="end_at" class="block text-sm font-medium text-gray-700">Fin</label>
-          <input type="datetime-local" id="end_at" v-model="promotionCode.end_at" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm"/>
-        </div>
-        <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
-      </form>
+      <FormComponent
+        :fields="fields"
+        v-model:formData="promotionCode"
+        submitButtonText="Envoyer"
+        @submit="submitForm"
+      />
 
       <div v-if="mode === 'delete'" class="grid gap-4">
         <p>Êtes-vous sûr de vouloir supprimer ce code promotionnel ?</p>
@@ -39,6 +26,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import FormComponent from '../components/FormComponent.vue';
 
 interface PromotionCode {
   id?: string;
@@ -58,8 +46,54 @@ const promotionCode = ref<PromotionCode>({
 });
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const fields = ref<any[]>([]);
+
+const fetchProducts = async () => {
+  try {
+    const response = await fetch(`${apiUrl}/product/list`);
+    if (response.ok) {
+      const data = await response.json();
+      products.value = data.map((product: Product) => ({ value: product.id, label: product.name }));
+    } else {
+      console.error('Error fetching products');
+    }
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  }
+};
+
+const fetchCategories = async () => {
+  try {
+    const response = await fetch(`${apiUrl}/category/list`);
+    if (response.ok) {
+      const data = await response.json();
+      categories.value = data.map((category: Category) => ({ value: category.id, label: category.name }));
+    } else {
+      console.error('Error fetching categories');
+    }
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+  }
+};
+
+const generateFields = () => [
+  {  
+    field: [
+      [{name: 'product_id', label: 'Produit', type: 'select', required: true, placeholder: '', color: 'gray-700', options: products.value,}],
+      [{name: 'category_id', label: 'Catégorie', type: 'select', required: true, placeholder: '', color: 'gray-700', options: categories.value,}],
+      [{name: 'code', label: 'Code', type: 'text', required: true, placeholder: '', color: 'gray-700',}],
+      [{name: 'start_at',label: 'Début',type: 'datetime-local',required: true,placeholder: '',color: 'gray-700',}],
+      [{name: 'end_at',label: 'Fin',type: 'datetime-local',required: true,placeholder: '',color: 'gray-700',}]
+    ]
+  }
+];
 
 onMounted(async () => {
+  await fetchProducts();
+  await fetchCategories();
+
+  fields.value = generateFields();
+
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
       const response = await fetch(`${apiUrl}/promotion_code/${route.params.id}`);
@@ -68,22 +102,17 @@ onMounted(async () => {
       }
       promotionCode.value = await response.json();
     } catch (error) {
-      console.error('Error fetching promotion code:', error);
+      console.error('Error fetching alert:', error);
     }
   }
 });
 
-const submitForm = async () => {
+const submitForm = async (formData: PromotionCode) => {
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/promotion_code/new` : `${apiUrl}/promotion_code/${route.params.id}`;
 
-    const payload = {
-      code: promotionCode.value.code,
-      reduction: promotionCode.value.reduction,
-      start_at: promotionCode.value.start_at || null,
-      end_at: promotionCode.value.end_at || null
-    };
+    const { id, updated_at, created_at, ...payload } = formData;
 
     const response = await fetch(url, {
       method,
