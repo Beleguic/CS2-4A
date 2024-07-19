@@ -1,15 +1,18 @@
 <template>
   <div class="relative w-full bg-custom">
-    <!-- Formulaire d'inscription -->
     <div class="flex flex-col items-center gap-4">
       <img src="/logo-troupicool.png" class="w-40">
-      <div class="w-full max-w-md bg-[rgb(105,107,226)] p-8 rounded-3xl shadow-lg mb-16">
+      <div class="w-full max-w-md bg-main p-8 rounded-3xl shadow-lg mb-16 grid gap-8">
         <h2 class="text-2xl font-bold mb-1 text-center text-white">Inscription</h2>
         <FormComponent
           :fields="fields"
           submitButtonText="Envoyer"
           @submit="register"
         />
+        <div class="flex items-center justify-between">
+          <router-link :to="{ name : 'Login' } ">Se connecter</router-link>
+          <router-link :to="{ name : 'ResetPassword' }">Mot de passe oublié ?</router-link>
+        </div>
       </div>
     </div>
   </div>
@@ -81,7 +84,7 @@ body {
 }
 
 .bg-custom {
-  background: url('image-background.svg') repeat center center;
+  background: url('image-background.jpg') repeat center center;
   background-size: cover;
 }
 

@@ -40,9 +40,9 @@ const datas = ref<User[]>([]);
 const columns = [
   { key: 'id', label: 'ID' },
   { key: 'email', label: 'Email' },
-  { key: 'username', label: 'Nom d\'utilisateur' },
+  { key: 'username', label: 'Login' },
   { key: 'firstName', label: 'Prénom' },
-  { key: 'lastName', label: 'Nom de famille' },
+  { key: 'lastName', label: 'Nom' },
   { key: 'role', label: 'Rôle' },
   { key: 'is_verified', label: 'Vérifié' },
   { key: 'login_attempts', label: 'Tentatives de connexion' },

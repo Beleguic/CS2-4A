@@ -1,24 +1,27 @@
-const { PromotionCode, Product, Category } = require('../models');
+const { PromotionCode } = require('../models');
 const Joi = require('joi');
 
 // PromotionCode schema validation
 const promotionCodeSchema = Joi.object({
-  product_id: Joi.string().uuid().allow(null),
-  category_id: Joi.string().uuid().allow(null),
   code: Joi.string().required(),
-  start_at: Joi.date().required(),
-  end_at: Joi.date().required(),
+  reduction: Joi.number().required().min(1).max(100),
+  start_at: Joi.date().allow(null),
+  end_at: Joi.date().allow(null),
 });
 
 const getAllPromotionCodes = async (req, res, next) => {
   try {
-    const promotionCodes = await PromotionCode.findAll({
-      include: [
-        { model: Product, as: 'product', attributes: ['id', 'name'] },
-        { model: Category, as: 'category', attributes: ['id', 'name'] },
-      ],
-    });
-    res.json(promotionCodes);
+    const { code } = req.query;
+
+    let queryOptions = {};
+
+    if (code) {
+      queryOptions.where = { code: code };
+    }
+
+    const codes = await PromotionCode.findAll(queryOptions);
+
+    res.json(codes);
   } catch (e) {
     console.error('Error fetching promotion codes:', e);
     next(e);
@@ -28,13 +31,7 @@ const getAllPromotionCodes = async (req, res, next) => {
 const getPromotionCodeById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const promotionCode = await PromotionCode.findByPk(id, {
-      include: [
-        { model: Product, as: 'product', attributes: ['id', 'name'] },
-        { model: Category, as: 'category', attributes: ['id', 'name'] },
-      ],
-    });
-
+    const promotionCode = await PromotionCode.findByPk(id);
     if (promotionCode) {
       res.json(promotionCode);
     } else {
@@ -48,8 +45,10 @@ const getPromotionCodeById = async (req, res, next) => {
 
 const createPromotionCode = async (req, res, next) => {
   try {
+    console.log("reqbody :", req.body);
     const { error } = promotionCodeSchema.validate(req.body);
     if (error) {
+      console.log('Validation error:', error.details);
       return res.status(400).json({ error: error.details[0].message });
     }
 

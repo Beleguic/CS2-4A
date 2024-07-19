@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import axios, { AxiosError } from 'axios';
+import router from '../router';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -19,6 +20,7 @@ export const useAuthStore = defineStore('auth', {
           this.userId = response.data.userId;
           this.userRole = response.data.role;
           console.log("Connexion réussie");
+          router.push({ name: 'Home' });
         }
       } catch (error: unknown) {
         if (error instanceof AxiosError && error.response) {
@@ -44,6 +46,7 @@ export const useAuthStore = defineStore('auth', {
       this.userId = null;
       this.userRole = null;
       console.log("Déconnexion réussie");
+      router.push({ name: 'Login' });
     }
   }
 });

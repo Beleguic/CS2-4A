@@ -1,3 +1,4 @@
+const { number } = require('joi');
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = function (sequelize) {
@@ -72,6 +73,14 @@ module.exports = function (sequelize) {
     updated_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+    },
+    reference: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    tva: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
     }
   }, {
     sequelize,
