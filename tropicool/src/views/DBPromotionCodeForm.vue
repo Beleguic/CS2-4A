@@ -36,6 +36,16 @@ interface PromotionCode {
   end_at: string | null;
 }
 
+interface Product {
+  id: string;
+  name: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
+
 const route = useRoute();
 const router = useRouter();
 const promotionCode = ref<PromotionCode>({
@@ -44,6 +54,8 @@ const promotionCode = ref<PromotionCode>({
   start_at: null,
   end_at: null,
 });
+const products = ref<Product[]>([]);
+const categories = ref<Category[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
 const fields = ref<any[]>([]);

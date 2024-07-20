@@ -41,6 +41,7 @@ interface Product {
   name: string;
 }
 
+
 const route = useRoute();
 const router = useRouter();
 const productPromotion = ref<ProductPromotion>({
