@@ -21,6 +21,14 @@ const PromotionRouter = require('./routes/promotionCode');
 const cors = require("cors");
 const nodemailer = require('nodemailer');
 const app = express();
+// const cron = require('node-cron');
+const alertService = require('./services/alertService');
+
+// Planifiez la vérification des alertes toutes les heures
+// cron.schedule('0 * * * *', () => {
+//   console.log('Checking and sending alerts...');
+//   alertService.checkAndSendAlerts();
+// });
 
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,

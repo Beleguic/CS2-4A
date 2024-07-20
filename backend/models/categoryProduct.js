@@ -3,14 +3,11 @@ const { Model, DataTypes } = require('sequelize');
 module.exports = function (sequelize) {
   class CategoryProduct extends Model {
     static associate(models) {
-      // Association with Category
       CategoryProduct.belongsTo(models.Category, {
         foreignKey: 'category_id',
         as: 'category',
         onDelete: 'CASCADE'
       });
-
-      // Association with Product
       CategoryProduct.belongsTo(models.Product, {
         foreignKey: 'product_id',
         as: 'product',

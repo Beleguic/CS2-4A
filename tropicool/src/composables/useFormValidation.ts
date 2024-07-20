@@ -1,39 +1,77 @@
 import { reactive } from 'vue';
-import { z } from 'zod';
+import { z, ZodIssue, ZodObject } from 'zod';
 
-export function useFormValidation(fields) {
-  const formData = reactive({});
-  const errors = reactive({});
+interface Field {
+  type: string;
+  name: string;
+  label: string;
+  required?: boolean;
+}
 
-  fields.forEach(field => {
-    formData[field.name] = field.type === 'select' ? [] : '';
+interface FieldGroup {
+  field: Field[][];
+}
+
+interface FormData {
+  [key: string]: string | boolean;
+}
+
+interface Errors {
+  [key: string]: string;
+}
+
+export function useFormValidation(fields: FieldGroup[]) {
+  const formData: FormData = reactive({});
+  const errors: Errors = reactive({});
+
+  fields.forEach(fieldGroup => {
+    fieldGroup.field.forEach(subFieldArray => {
+      subFieldArray.forEach(subField => {
+        if (subField.type === 'checkbox') {
+          formData[subField.name] = false;
+        } else {
+          formData[subField.name] = '';
+        }
+      });
+    });
   });
 
-  const schema = z.object(
-    fields.reduce((acc, field) => {
-      let fieldSchema = field.type === 'select' ? z.array(z.string()) : z.string();
-      if (field.required) {
-        fieldSchema = fieldSchema.nonempty(`${field.label} est requis`);
-      }
-      if (field.type === 'email') {
-        fieldSchema = fieldSchema.email(`${field.label} doit être une adresse email valide`);
-      }
-      if (field.name === 'password') {
-        fieldSchema = fieldSchema.min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\\-])[A-Za-z\d@$!%*?&_\\-]{12,}$/,
-          'Le mot de passe doit contenir des majuscules, des minuscules, des chiffres et des symboles'
-        );
-      }
-      acc[field.name] = fieldSchema;
+  const schema: ZodObject<any> = z.object(
+    fields.reduce((acc, fieldGroup) => {
+      fieldGroup.field.forEach(subFieldArray => {
+        subFieldArray.forEach(subField => {
+          let fieldSchema;
+          if (subField.type === 'checkbox') {
+            fieldSchema = z.boolean();
+          } else if (subField.type === 'number') {
+            fieldSchema = z.number();
+          } else {
+            fieldSchema = z.string();
+            if (subField.required) {
+              fieldSchema = fieldSchema.nonempty(`${subField.label} est requis`);
+            }
+            if (subField.type === 'email') {
+              fieldSchema = fieldSchema.email(`${subField.label} doit être une adresse email valide`);
+            }
+            if (subField.name === 'password') {
+              fieldSchema = fieldSchema.min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\\-])[A-Za-z\d@$!%*?&_\\-]{12,}$/,
+                'Le mot de passe doit contenir des majuscules, des minuscules, des chiffres et des symboles'
+              );
+            }
+          }
+          acc[subField.name] = fieldSchema;
+        });
+      });
       return acc;
-    }, {})
+    }, {} as { [key: string]: any })
   );
 
-  const validateForm = (data) => {
-    const result = schema.safeParse(data);
+  const validateForm = () => {
+    const result = schema.safeParse(formData);
     if (!result.success) {
-      result.error.errors.forEach(err => {
-        errors[err.path[0]] = err.message;
+      result.error.errors.forEach((err: ZodIssue) => {
+        errors[err.path[0] as string] = err.message;
       });
       return errors;
     }

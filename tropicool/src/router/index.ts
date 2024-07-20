@@ -45,6 +45,7 @@ import ConditionGeneralDutilisation from '../views/ConditionGeneralDutilisation.
 import VenteAlcool from '../views/VenteAlcool.vue';
 import Cart from '../views/Cart.vue';
 import Search from '../views/Search.vue';
+import AddAlert from '../views/AddAlert.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -456,6 +457,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/search',
     name: 'Search',
     component: Search,
+  },
+  {
+    path: '/add-alert',
+    name: 'AddAlert',
+    component: AddAlert,
   },
 ];
 
