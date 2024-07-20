@@ -36,6 +36,11 @@ interface Stock {
   difference: string;
 }
 
+interface CartProductCount {
+  product_id: string;
+  total_count: number;
+}
+
 export async function useAddToCartFormValidation(
   item: string,
   quantity: number,
@@ -82,14 +87,14 @@ export async function useAddToCartFormValidation(
     const latestStock = stockData[stockData.length - 1];
     console.log('latestStock', latestStock);
 
-    const cartResponseProduct = await axios.get<Cart[]>(`${apiUrl}/cart/product/count`, {
+    const cartResponseProduct = await axios.get<CartProductCount[]>(`${apiUrl}/cart/product/count`, {
         params: { product_id: item }
       });
-    const kjl = cartResponseProduct.data;
-    console.log('lalala', kjl);
+    const numberProductOnCart = cartResponseProduct.data;
 
 
-    if (!latestStock || latestStock.quantity < quantity) {
+
+    if (!latestStock || (latestStock.quantity - numberProductOnCart.total_count) < quantity) { // 
       console.error("Insufficient stock", latestStock);
       return { message: { error: "Stock indisponible" } };
     }
@@ -117,16 +122,6 @@ export async function useAddToCartFormValidation(
       axios.post(`${apiUrl}/cart/new`, {
         user_id: userId,
         cartProductsData: cartProductsData,
-      });
-
-      const newQuantity = latestStock.quantity - quantity;
-      const difference = calculateDifference(latestStock.quantity, newQuantity);
-
-      axios.post(`${apiUrl}/stock/new`, {
-        product_id: item,
-        quantity: newQuantity,
-        status: 'remove',
-        difference: difference,
       });
 
       return { message: { success: "Produit ajouté au panier" } };
@@ -161,20 +156,6 @@ export async function useAddToCartFormValidation(
         cartProductsData: activeCart.cartProductsData,
       });
     }
-
-    const newStockQuantity = latestStock.quantity - quantity;
-    const stockDifference = calculateDifference(latestStock.quantity, newStockQuantity);
-
-    /*const updatedStock = await axios.post<Stock>(`${apiUrl}/stock/new`, {
-      product_id: item,
-      quantity: newStockQuantity,
-      status: 'remove',
-      difference: stockDifference,
-    }).then(response => response.data);
-
-    if (!updatedStock || !updatedStock.id) {
-      throw new Error("Stock update failed");
-    }*/
 
     return { message: { success: "Produit ajouté au panier !" } };
   } catch (error) {
