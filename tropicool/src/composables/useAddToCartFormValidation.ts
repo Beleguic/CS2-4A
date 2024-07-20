@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { forEachChild } from 'typescript';
 
 interface Product {
   id: string;
@@ -59,6 +60,7 @@ export async function useAddToCartFormValidation(
     return { message: { error: "La quantité ne doit pas excéder 10 !" } };
   }
 
+// Fonction de calcul de différence pour le stock
   const calculateDifference = (oldQuantity: number, newQuantity: number): string => {
     const difference = newQuantity - oldQuantity;
     return difference > 0 ? `+${difference}` : `${difference}`;
@@ -76,7 +78,16 @@ export async function useAddToCartFormValidation(
       params: { product_id: item }
     });
     const stockData = stockResponse.data;
+    console.log('stockData', stockData);
     const latestStock = stockData[stockData.length - 1];
+    console.log('latestStock', latestStock);
+
+    const cartResponseProduct = await axios.get<Cart[]>(`${apiUrl}/cart/product/count`, {
+        params: { product_id: item }
+      });
+    const kjl = cartResponseProduct.data;
+    console.log('lalala', kjl);
+
 
     if (!latestStock || latestStock.quantity < quantity) {
       console.error("Insufficient stock", latestStock);
@@ -87,8 +98,10 @@ export async function useAddToCartFormValidation(
       params: { user_id: userId }
     });
     const cartData = cartResponse.data;
+    console.log(cartData);
 
     let activeCart: Cart;
+    // Création d'un nouveau panier si l'utilisateur n'en a pas
     if (!cartData || cartData.length === 0) {
       const cartProductsData: CartProduct[] = [{
         product_id: item,
@@ -132,14 +145,14 @@ export async function useAddToCartFormValidation(
           return { message: { error: "La quantité ne doit pas excéder 10 !" } };
         }
         activeCart.cartProductsData.push({
-          product_id: item,
-          name: product.name,
-          quantity: quantity,
-          price: product.price,
-          image: product.image,
-          reference: product.reference,
-          tva: product.tva,
-          is_adult: product.is_adult
+            product_id: item,
+            name: product.name,
+            quantity: quantity,
+            price: product.price,
+            image: product.image,
+            reference: product.reference,
+            tva: product.tva,
+            is_adult: product.is_adult
         });
       }
 
@@ -152,7 +165,7 @@ export async function useAddToCartFormValidation(
     const newStockQuantity = latestStock.quantity - quantity;
     const stockDifference = calculateDifference(latestStock.quantity, newStockQuantity);
 
-    const updatedStock = await axios.post<Stock>(`${apiUrl}/stock/new`, {
+    /*const updatedStock = await axios.post<Stock>(`${apiUrl}/stock/new`, {
       product_id: item,
       quantity: newStockQuantity,
       status: 'remove',
@@ -161,7 +174,7 @@ export async function useAddToCartFormValidation(
 
     if (!updatedStock || !updatedStock.id) {
       throw new Error("Stock update failed");
-    }
+    }*/
 
     return { message: { success: "Produit ajouté au panier !" } };
   } catch (error) {
