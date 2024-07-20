@@ -12,8 +12,8 @@
     </section>
 
     <!-- Section Recherche et Tri -->
-    <section class="search-sort-section">
-      <input type="text" v-model="searchQuery" placeholder="Rechercher un produit..." @input="fetchProducts" class="search-input" />
+    <section id="search" class="search-sort-section">
+      <input ref="searchInput" type="text" v-model="searchQuery" placeholder="Rechercher un produit..." @input="fetchProducts" class="search-input" />
       <select v-model="sortOption" @change="fetchProducts" class="sort-select">
         <option value="">Trier par</option>
         <option value="price_asc">Prix croissant</option>
@@ -24,6 +24,11 @@
         <option value="0-10">Moins de 10€</option>
         <option value="10-25">Entre 10€ et 25€</option>
         <option value="25+">Plus de 25€</option>
+      </select>
+      <select v-model="alcoholFilter" @change="fetchProducts" class="alcohol-select">
+        <option value="">Tous les produits</option>
+        <option value="withAlcohol">Avec alcool</option>
+        <option value="withoutAlcohol">Sans alcool</option>
       </select>
     </section>
 
@@ -49,6 +54,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
 import ProductCardComponent from '../components/ProductCardComponent.vue';
 
@@ -56,7 +62,9 @@ const products = ref([]);
 const searchQuery = ref('');
 const sortOption = ref('');
 const priceRange = ref('');
+const alcoholFilter = ref(''); // Nouveau filtre pour l'alcool
 const apiUrl = import.meta.env.VITE_API_URL;
+const searchInput = ref(null);
 
 const fetchProducts = async () => {
   try {
@@ -65,6 +73,7 @@ const fetchProducts = async () => {
       search: searchQuery.value,
       sort: sortOption.value,
       priceRange: priceRange.value,
+      alcohol: alcoholFilter.value, // Ajout du filtre alcool aux paramètres de requête
     });
     const response = await axios.get(`${apiUrl}/product`, { params });
     products.value = response.data;
@@ -77,6 +86,7 @@ const filteredProducts = computed(() => {
   return products.value.filter(product => {
     let matchesSearch = true;
     let matchesPrice = true;
+    let matchesAlcohol = true; // Nouveau filtre pour l'alcool
 
     if (searchQuery.value) {
       matchesSearch = product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -93,7 +103,15 @@ const filteredProducts = computed(() => {
       }
     }
 
-    return matchesSearch && matchesPrice;
+    if (alcoholFilter.value) {
+      if (alcoholFilter.value === 'withAlcohol') {
+        matchesAlcohol = product.description.includes("Contient de l'alcool. À consommer avec modération.") || product.is_adult;
+      } else if (alcoholFilter.value === 'withoutAlcohol') {
+        matchesAlcohol = !product.description.includes("Contient de l'alcool. À consommer avec modération.") && !product.is_adult;
+      }
+    }
+
+    return matchesSearch && matchesPrice && matchesAlcohol;
   }).sort((a, b) => {
     if (sortOption.value === 'price_asc') {
       return a.price - b.price;
@@ -103,6 +121,8 @@ const filteredProducts = computed(() => {
     return 0;
   });
 });
+
+const route = useRoute();
 
 onMounted(() => {
   fetchProducts();
@@ -114,6 +134,10 @@ onMounted(() => {
   window.addEventListener('product-added', handleProductAdded);
   window.addEventListener('product-updated', handleProductUpdated);
   window.addEventListener('product-deleted', handleProductDeleted);
+
+  if (route.query.focus === 'search') {
+    searchInput.value.focus();
+  }
 
   onUnmounted(() => {
     window.removeEventListener('product-added', handleProductAdded);
@@ -175,7 +199,7 @@ onMounted(() => {
   border-bottom: 1px solid #ccc; /* Pour séparer visuellement de l'image */
 }
 
-.search-input, .sort-select, .price-select {
+.search-input, .sort-select, .price-select, .alcohol-select { /* Ajout du style pour le nouveau filtre */
   padding: 10px;
   font-size: 16px;
   background-color: #f0f0f0; /* Couleur de fond plus claire */
