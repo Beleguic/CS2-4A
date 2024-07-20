@@ -55,7 +55,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
 import dayjs from 'dayjs';
 
 interface User {
@@ -88,8 +87,24 @@ const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' 
 onMounted(async () => {
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
-      const response = await axios.get<User>(`${apiUrl}/users/${route.params.id}`);
-      const userData = response.data;
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found in localStorage');
+      }
+
+      const response = await fetch(`${apiUrl}/users/${route.params.id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error fetching user');
+      }
+
+      const userData = await response.json();
       userData.dateOfBirth = dayjs(userData.dateOfBirth).format('YYYY-MM-DD');
       user.value = userData;
     } catch (error) {
@@ -100,29 +115,34 @@ onMounted(async () => {
 
 const submitForm = async () => {
   try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found in localStorage');
+    }
+
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/users/new` : `${apiUrl}/users/${route.params.id}`;
 
     // Create a payload without sensitive and automatically managed fields
     const { id, created_at, updated_at, verification_token, reset_password_token, reset_password_expires, login_attempts, lock_until, password_last_changed, ...payload } = user.value;
 
-    const response = await axios({
+    const response = await fetch(url, {
       method,
-      url,
       headers: {
-        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       },
-      data: payload,
+      body: JSON.stringify(payload)
     });
 
-    if (response.status === 200 || response.status === 201) {
-      window.dispatchEvent(new CustomEvent(`user-${mode.value === 'new' ? 'added' : 'updated'}`));
-      setTimeout(() => {
-        router.push({ name: 'DBUserIndex' }); // Utilisation du bon nom de route
-      }, 100);
-    } else {
+    if (!response.ok) {
       throw new Error('Error saving user');
     }
+
+    window.dispatchEvent(new CustomEvent(`user-${mode.value === 'new' ? 'added' : 'updated'}`));
+    setTimeout(() => {
+      router.push({ name: 'DBUserIndex' }); // Utilisation du bon nom de route
+    }, 100);
   } catch (error) {
     console.error('Error saving user:', error);
   }
@@ -130,15 +150,27 @@ const submitForm = async () => {
 
 const deleteUser = async () => {
   try {
-    const response = await axios.delete(`${apiUrl}/users/${route.params.id}`);
-    if (response.status === 204) {
-      window.dispatchEvent(new CustomEvent('user-deleted'));
-      setTimeout(() => {
-        router.push({ name: 'DBUserIndex' }); // Utilisation du bon nom de route
-      }, 100);
-    } else {
-      console.error('Failed to delete user');
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found in localStorage');
     }
+
+    const response = await fetch(`${apiUrl}/users/${route.params.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete user');
+    }
+
+    window.dispatchEvent(new CustomEvent('user-deleted'));
+    setTimeout(() => {
+      router.push({ name: 'DBUserIndex' }); // Utilisation du bon nom de route
+    }, 100);
   } catch (error) {
     console.error('Error deleting user:', error);
   }
