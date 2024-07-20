@@ -28,8 +28,13 @@ const router = useRouter();
 const auth = useAuthStore();
 
 const fields = [
-  { name: 'email', label: 'Email', type: 'email', required: true },
-  { name: 'password', label: 'Mot de passe', type: 'password', required: true },
+  {
+    field: [
+        [{ name: 'email', label: 'Email', type: 'email', required: true, color: 'white' }],
+        [{ name: 'password', label: 'Mot de passe', type: 'password', required: true, color: 'white' }],
+    ],
+  },
+  
 ];
 
 const login = async (formData: { email: string, password: string }) => {

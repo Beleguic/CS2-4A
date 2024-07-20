@@ -5,23 +5,12 @@
       <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer la promotion de produit</h1>
       <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer la promotion de produit</h1>
 
-      <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
-        <div class="grid gap-1">
-          <label for="product_id" class="block text-sm font-medium text-gray-700">Produit</label>
-          <select id="product_id" v-model="productPromotion.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
-            <option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }}</option>
-          </select>
-        </div>
-        <div class="grid gap-1">
-          <label for="start_at" class="block text-sm font-medium text-gray-700">Début de la promotion</label>
-          <input type="datetime-local" id="start_at" v-model="productPromotion.start_at" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
-        </div>
-        <div class="grid gap-1">
-          <label for="end_at" class="block text-sm font-medium text-gray-700">Fin de la promotion</label>
-          <input type="datetime-local" id="end_at" v-model="productPromotion.end_at" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
-        </div>
-        <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
-      </form>
+      <FormComponent
+        :fields="fields"
+        v-model:formData="productPromotion"
+        submitButtonText="Envoyer"
+        @submit="submitForm"
+      />
 
       <div v-if="mode === 'delete'" class="grid gap-4">
         <p>Êtes-vous sûr de vouloir supprimer cette promotion de produit ?</p>
@@ -37,7 +26,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import FormComponent from '../components/FormComponent.vue';
 import dayjs from 'dayjs';
 
 interface ProductPromotion {
@@ -52,6 +41,7 @@ interface Product {
   name: string;
 }
 
+
 const route = useRoute();
 const router = useRouter();
 const productPromotion = ref<ProductPromotion>({
@@ -62,12 +52,46 @@ const productPromotion = ref<ProductPromotion>({
 const products = ref<Product[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const fields = ref<any[]>([]);
+
+const fetchProducts = async () => {
+  try {
+    const response = await fetch(`${apiUrl}/product/list`);
+    if (response.ok) {
+      const data = await response.json();
+      products.value = data.map((product: Product) => ({ value: product.id, label: product.name }));
+    } else {
+      console.error('Error fetching products');
+    }
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  }
+};
+
+const generateFields = () => [
+  {  
+    field: [
+      [{name: 'product_id', label: 'Produit', type: 'select', required: true, placeholder: '', color: 'gray-700', options: products.value,}],
+      [{name: 'start_at', label: 'Début de la promotion', type: 'datetime-local', required: true, placeholder: '', color: 'gray-700',}],
+      [{name: 'end_at', label: 'Fin de la promotion', type: 'datetime-local', required: true, placeholder: '', color: 'gray-700',}]
+    ]
+  }
+];
 
 onMounted(async () => {
+
+  await fetchProducts();
+
+  fields.value = generateFields();
+
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
-      const response = await axios.get<ProductPromotion>(`${apiUrl}/product_promotion/${route.params.id}`);
-      const { product, start_at, end_at, ...rest } = response.data; // Exclude product from data
+      const response = await fetch(`${apiUrl}/product_promotion/${route.params.id}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      const { product, start_at, end_at, ...rest } = data; // Exclude product from data
       productPromotion.value = {
         ...rest,
         start_at: dayjs(start_at).format('YYYY-MM-DDTHH:mm'),
@@ -78,30 +102,34 @@ onMounted(async () => {
     }
   }
   try {
-    const productResponse = await axios.get<Product[]>(`${apiUrl}/product`);
-    products.value = productResponse.data;
+    const productResponse = await fetch(`${apiUrl}/product`);
+    if (!productResponse.ok) {
+      throw new Error('Network response was not ok');
+    }
+    products.value = await productResponse.json();
   } catch (error) {
     console.error('Error fetching products:', error);
   }
 });
 
-const submitForm = async () => {
+
+const submitForm = async (formData: ProductPromotion) => {
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/product_promotion/new` : `${apiUrl}/product_promotion/${route.params.id}`;
 
-    const { id, product, ...payload } = productPromotion.value; // Exclude product from data
+    const { id, product, ...payload } = formData // Exclude product from data
 
-    const response = await axios({
+    const response = await fetch(url, {
       method,
-      url,
       headers: {
         'Content-Type': 'application/json',
       },
-      data: payload,
+      body: JSON.stringify(payload),
     });
 
-    console.log('Response:', response); // Log the response
+    const responseData = await response.json();
+    console.log('Response:', responseData); // Log the response
 
     if (![200, 201].includes(response.status)) {
       throw new Error('Error saving product promotion');
@@ -118,7 +146,10 @@ const submitForm = async () => {
 
 const deleteProductPromotion = async () => {
   try {
-    const response = await axios.delete(`${apiUrl}/product_promotion/${route.params.id}`);
+    const response = await fetch(`${apiUrl}/product_promotion/${route.params.id}`, {
+      method: 'DELETE',
+    });
+
     if (response.status === 204) {
       window.dispatchEvent(new CustomEvent('product-promotion-deleted'));
       setTimeout(() => {
@@ -131,6 +162,7 @@ const deleteProductPromotion = async () => {
     console.error('Error deleting product promotion:', error);
   }
 };
+
 
 const goBack = () => {
   router.push({ name: 'DBProductPromotionIndex' });

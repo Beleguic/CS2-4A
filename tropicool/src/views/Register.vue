@@ -27,13 +27,16 @@ const router = useRouter();
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const fields = [
-  { name: 'lastName', label: 'Nom', type: 'text', required: true },
-  { name: 'firstName', label: 'Prénom', type: 'text', required: true },
-  { name: 'username', label: 'Nom d\'utilisateur', type: 'text', required: true },
-  { name: 'email', label: 'Adresse mail', type: 'email', required: true },
-  { name: 'password', label: 'Mot de passe', type: 'password', required: true },
-  { name: 'confirmPassword', label: 'Confirmez le mot de passe', type: 'password', required: true },
-  { name: 'birthday', label: 'Date de naissance', type: 'date', required: true },
+    {  
+    field: [
+        [{ name: 'lastName', label: 'Nom', type: 'text', required: true, placeholder: 'lala', color: 'white' },{ name: 'firstName', label: 'Prénom', type: 'text', required: true, color: 'white' }],
+        [{ name: 'username', label: 'Nom d\'utilisateur', type: 'text', required: true, color: 'white' }],
+        [{ name: 'email', label: 'Adresse mail', type: 'email', required: true, color: 'white' }],
+        [{ name: 'password', label: 'Mot de passe', type: 'password', required: true, color: 'white' }],
+        [{ name: 'confirmPassword', label: 'Confirmez le mot de passe', type: 'password', required: true, color: 'white' }],
+        [{ name: 'birthday', label: 'Date de naissance', type: 'date', required: true, color: 'white' }],
+    ],
+    },
 ];
 
 const register = async (formData) => {
