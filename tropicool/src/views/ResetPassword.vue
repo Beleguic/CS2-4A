@@ -1,22 +1,36 @@
 <template>
-    <div class="reset-password">
-        <h1>Réinitialiser le mot de passe</h1>
-        <form @submit.prevent="submit">
-        <div>
-            <label for="password">Nouveau mot de passe:</label>
-            <input type="password" id="password" v-model="password" required>
+    <div class="relative w-full bg-custom">
+        <!-- Formulaire de reinistialisation de MDP -->
+        <div class="flex flex-col items-center gap-4">
+            <img src="/logo-troupicool.png" class="w-40">
+            <div class="w-full max-w-2xl bg-[rgb(105,107,226)] p-8 rounded-3xl shadow-lg mb-16">
+                <h2 class="text-2xl font-bold mb-1 text-center text-white">Réinitialiser le mot de passe</h2>
+                <FormComponent
+                    :fields="fields"
+                    submitButtonText="Réinitialiser"
+                    @submit.prevent="submit"
+                />
+            </div>
         </div>
-        <button type="submit">Réinitialiser</button>
-        </form>
     </div>
 </template>
       
 <script setup>
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
+import FormComponent from '../components/FormComponent.vue';
 
 const password = ref('');
 const route = useRoute();
+
+const fields = [
+    {  
+    field: [
+        [{ name: 'password', label: 'Mot de passe', type: 'password', required: true, color: 'white' }],
+        [{ name: 'confirmPassword', label: 'Confirmez le mot de passe', type: 'password', required: true, color: 'white' }],
+      ],
+    },
+];
 
 const submit = async () => {
   try {

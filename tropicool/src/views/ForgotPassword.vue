@@ -1,20 +1,33 @@
 <template>
-    <div class="forgot-password">
-        <h1>Mot de passe oublié</h1>
-        <form @submit.prevent="submit">
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" v-model="email" required>
+    <div class="relative w-full bg-custom">
+        <!-- Formulaire de reinistialisation de MDP -->
+        <div class="flex flex-col items-center gap-4">
+            <img src="/logo-troupicool.png" class="w-40">
+            <div class="w-full max-w-2xl bg-[rgb(105,107,226)] p-8 rounded-3xl shadow-lg mb-16">
+                <h2 class="text-2xl font-bold mb-1 text-center text-white">Mot de passe oublié</h2>
+                <FormComponent
+                    :fields="fields"
+                    submitButtonText="Envoyer le lien de réinitialisation"
+                    @submit.prevent="submit"
+                />
+            </div>
         </div>
-        <button type="submit">Envoyer le lien de réinitialisation</button>
-        </form>
     </div>
 </template>
       
 <script setup>
 import { ref } from 'vue';
+import FormComponent from '../components/FormComponent.vue';
 
 const email = ref('');
+
+const fields = [
+    {  
+    field: [
+        [{ name: 'email', label: 'Adresse mail', type: 'email', required: true, color: 'white' }],
+      ],
+    },
+];
 
 const submit = async () => {
   try {

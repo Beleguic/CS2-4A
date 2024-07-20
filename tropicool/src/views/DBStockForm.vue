@@ -5,26 +5,13 @@
       <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer le stock</h1>
       <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer le stock</h1>
 
-      <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
-        <div class="grid gap-1">
-          <label for="product_id" class="block text-sm font-medium text-gray-700">Produit</label>
-          <select id="product_id" v-model="stock.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
-            <option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }}</option>
-          </select>
-        </div>
-        <div class="grid gap-1">
-          <label for="quantity" class="block text-sm font-medium text-gray-700">Quantité</label>
-          <input type="number" id="quantity" v-model="stock.quantity" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required min="0" />
-        </div>
-        <div class="grid gap-1">
-          <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-          <select id="status" v-model="stock.status" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
-            <option value="add">Ajout</option>
-            <option value="remove">Suppression</option>
-          </select>
-        </div>
-        <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
-      </form>
+      <MyFormComponent
+        v-if="mode !== 'delete'"
+        v-model="stock"
+        :fields="formFields"
+        :submitButtonText="mode === 'new' ? 'Ajouter' : 'Mettre à jour'"
+        @submit="submitForm"
+      />
 
       <div v-if="mode === 'delete'" class="grid gap-4">
         <p>Êtes-vous sûr de vouloir supprimer ce stock ?</p>
@@ -41,6 +28,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import MyFormComponent from '../components/FormComponent.vue';
 
 interface Stock {
   id?: string;
@@ -68,6 +56,45 @@ const latestStock = ref<Stock | null>(null);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
 
+// Définir les champs du formulaire pour MyFormComponent
+const formFields = ref([
+  {
+    header: '',
+    field: [
+      [
+        {
+          type: 'select',
+          name: 'product_id',
+          label: 'Produit',
+          options: products.value.map(product => ({ value: product.id, label: product.name })),
+          required: true,
+        },
+      ],
+      [
+        {
+          type: 'number',
+          name: 'quantity',
+          label: 'Quantité',
+          placeholder: 'Entrez la quantité',
+          required: true,
+        },
+      ],
+      [
+        {
+          type: 'select',
+          name: 'status',
+          label: 'Status',
+          options: [
+            { value: 'add', label: 'Ajout' },
+            { value: 'remove', label: 'Suppression' },
+          ],
+          required: true,
+        },
+      ],
+    ],
+  },
+]);
+
 onMounted(async () => {
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
@@ -81,6 +108,7 @@ onMounted(async () => {
   try {
     const productResponse = await axios.get<{ products: Product[] }>(`${apiUrl}/product`);
     products.value = productResponse.data.products;
+    formFields.value[0].field[0][0].options = products.value.map(product => ({ value: product.id, label: product.name }));  // Mettre à jour les options du select
   } catch (error) {
     console.error('Error fetching products:', error);
   }
@@ -96,6 +124,7 @@ watch(
         });
         const stockData = stockResponse.data;
         latestStock.value = stockData.length ? stockData[stockData.length - 1] : null;
+        console.log('Fetched latest stock:', latestStock.value);
       } catch (error) {
         console.error('Error fetching latest stock:', error);
       }

@@ -9,6 +9,9 @@
       <tbody>
         <tr v-for="data in datas" :key="data.id" class="hover:bg-slate-200 even:bg-slate-100">
           <td v-for="(column, index) in columns" :key="index" class="py-2 px-4 text-base text-black whitespace-nowrap">
+            {{ console.log('index', index) }}
+            {{ console.log('column', column) }}
+            {{ console.log('data', data) }}
             <template v-if="column.key !== 'actions'">
               <template v-if="isBoolean(data[column.key]) && (column.label === 'status' || column.label === 'Status') && column.key === 'is_active'">
                 {{ data[column.key] ? 'Activé' : 'Désactivé' }}
@@ -19,7 +22,7 @@
               <template v-else-if="column.key === 'id'">
                 <span :title="data[column.key]">{{ isString(data[column.key]) ? data[column.key].substring(0, 8) : data[column.key] }}</span>
               </template>
-              <template v-else-if="column.key === 'createdAt' || column.key === 'updatedAt'">
+              <template v-else-if="column.key === 'created_at' || column.key === 'updated_at'">
                 {{ formatDateTime(data[column.key]) }}
               </template>
               <template v-else-if="column.label === 'Image'">
@@ -99,9 +102,18 @@ const isString = (value: any): boolean => {
 };
 
 const formatDateTime = (dateTimeString: string): string => {
-  const date = new Date(dateTimeString);
+  const [datePart, timePart] = dateTimeString.split(' ');
+  const [day, month, year] = datePart.split('/');
+  const reformattedDateString = `${year}-${month}-${day}T${timePart}:00`;
+
+  const date = new Date(reformattedDateString);
+  if (isNaN(date.getTime())) {
+    throw new Error("Date invalide");
+  }
+
   const formattedDate = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const formattedTime = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
   return `${formattedDate} à ${formattedTime}`;
 };
 </script>
