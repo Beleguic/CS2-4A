@@ -29,6 +29,11 @@ module.exports = (sequelize) => {
         as: 'carts',
         onDelete: 'CASCADE'
       });
+      User.hasMany(models.Alert, {
+        foreignKey: 'user_id',
+        as: 'alerts',
+        onDelete: 'CASCADE'
+      });
     }
   }
 
@@ -133,9 +138,9 @@ module.exports = (sequelize) => {
         }
       }
     },
-    alertPreferences: {
-      type: DataTypes.JSON,
-      allowNull: true,
+    isSubscribedToNewsletter: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     },
     created_at: {
       type: DataTypes.DATE,

@@ -1,31 +1,26 @@
-const { number } = require('joi');
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = function (sequelize) {
   class Product extends Model {
     static associate(models) {
-      // Association with CategoryProduct
       Product.hasMany(models.CategoryProduct, {
         foreignKey: 'product_id',
         as: 'categoryProducts',
         onDelete: 'CASCADE'
       });
 
-      // Association with Stock
       Product.hasMany(models.Stock, {
         foreignKey: 'product_id',
         as: 'stocks',
         onDelete: 'CASCADE'
       });
 
-      // Association with ProductPromotion
       Product.hasMany(models.ProductPromotion, {
         foreignKey: 'product_id',
         as: 'productPromotions',
         onDelete: 'CASCADE'
       });
 
-      // Association with PromotionCode
       Product.hasMany(models.PromotionCode, {
         foreignKey: 'product_id',
         as: 'promotionCodes',

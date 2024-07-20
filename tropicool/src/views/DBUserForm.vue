@@ -28,7 +28,7 @@
         </div>
         <div class="grid gap-1">
           <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-          <input type="password" id="password" v-model="user.password" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          <input type="password" id="password" v-model="user.password" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" :required="mode === 'new'" />
         </div>
         <div class="grid gap-1">
           <label for="role" class="block text-sm font-medium text-gray-700">Rôle</label>
@@ -51,6 +51,7 @@
     </div>
   </section>
 </template>
+
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
@@ -75,7 +76,7 @@ const user = ref<User>({
   email: '',
   dateOfBirth: '',
   password: '',
-  role: 'user',
+  role: '',
   is_verified: false,
   username: '',
   firstName: '',
@@ -99,19 +100,22 @@ onMounted(async () => {
           'Content-Type': 'application/json'
         }
       });
-
       if (!response.ok) {
         throw new Error('Error fetching user');
       }
 
       const userData = await response.json();
       userData.dateOfBirth = dayjs(userData.dateOfBirth).format('YYYY-MM-DD');
-      user.value = userData;
+      
+      // Mise à jour de l'état utilisateur avec toutes les données nécessaires
+      user.value = { ...user.value, ...userData }; 
+      console.log('use', userData);
     } catch (error) {
       console.error('Error fetching user:', error);
     }
   }
 });
+
 
 const submitForm = async () => {
   try {
@@ -123,7 +127,7 @@ const submitForm = async () => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/users/new` : `${apiUrl}/users/${route.params.id}`;
 
-    // Create a payload without sensitive and automatically managed fields
+    // Crée un payload sans les champs sensibles et automatiquement gérés
     const { id, created_at, updated_at, verification_token, reset_password_token, reset_password_expires, login_attempts, lock_until, password_last_changed, ...payload } = user.value;
 
     const response = await fetch(url, {
@@ -141,7 +145,7 @@ const submitForm = async () => {
 
     window.dispatchEvent(new CustomEvent(`user-${mode.value === 'new' ? 'added' : 'updated'}`));
     setTimeout(() => {
-      router.push({ name: 'DBUserIndex' }); // Utilisation du bon nom de route
+      router.push({ name: 'DBUserIndex' });
     }, 100);
   } catch (error) {
     console.error('Error saving user:', error);
@@ -169,7 +173,7 @@ const deleteUser = async () => {
 
     window.dispatchEvent(new CustomEvent('user-deleted'));
     setTimeout(() => {
-      router.push({ name: 'DBUserIndex' }); // Utilisation du bon nom de route
+      router.push({ name: 'DBUserIndex' });
     }, 100);
   } catch (error) {
     console.error('Error deleting user:', error);
