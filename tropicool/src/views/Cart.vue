@@ -107,7 +107,7 @@
           cartItems.value = [];
           cartId.value = null;
         }
-
+        /*
         const stockResponse = await axios.get<Stock[]>(`${apiUrl}/stock`, {
           params: { product_id: productId }
         });
@@ -133,7 +133,7 @@
             status: 'add',
             difference: difference
           });
-        }
+        }*/
 
       } catch (error) {
         console.error("Failed to remove item from cart:", error);
