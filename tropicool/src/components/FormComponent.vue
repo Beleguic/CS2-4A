@@ -12,7 +12,6 @@
               :required="field.required"
               :disabled="showEditButton && !editableFields.includes(field.name)"
               class="w-full px-3 py-2 border border-gray-300 rounded"
-              multiple="f"
             >
               <option
                 v-for="(option, indexOption) in field.options"
