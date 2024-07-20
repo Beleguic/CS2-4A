@@ -17,7 +17,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import axios from 'axios';
 import dayjs from 'dayjs';
 import Table from '../components/TableComponent.vue';
 
@@ -56,11 +55,28 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 
 const fetchUsers = async () => {
   try {
-    const response = await axios.get<User[]>(`${apiUrl}/users/`);
-    console.log('Fetched Users:', response.data);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found in localStorage');
+    }
+
+    const response = await fetch(`${apiUrl}/users/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch users');
+    }
+
+    const data: User[] = await response.json();
+    console.log('Fetched Users:', data);
 
     // Flatten the data and format the dates
-    datas.value = response.data.map(user => ({
+    datas.value = data.map(user => ({
       ...user,
       dateOfBirth: dayjs(user.dateOfBirth).format('DD/MM/YYYY'),
       created_at: dayjs(user.created_at).format('DD/MM/YYYY HH:mm'),

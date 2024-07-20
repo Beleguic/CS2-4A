@@ -6,6 +6,7 @@ export const useAuthStore = defineStore('auth', {
     isLoggedIn: !!localStorage.getItem('token'),
     userId: localStorage.getItem('userId') || null,
     userRole: localStorage.getItem('userRole') || null,
+    isVerified: localStorage.getItem('isVerified') || null,
   }),
   actions: {
     async login(email: string, password: string) {
@@ -36,9 +37,11 @@ export const useAuthStore = defineStore('auth', {
           localStorage.setItem('token', data.token);
           localStorage.setItem('userId', data.userId);
           localStorage.setItem('userRole', data.role);
+          localStorage.setItem('isVerified', data.isVerified);
           this.isLoggedIn = true;
           this.userId = data.userId;
           this.userRole = data.role;
+          this.isVerified = data.isVerified;
           console.log("Connexion réussie");
           router.push({ name: 'Home' });
         }
@@ -51,9 +54,11 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
       localStorage.removeItem('userRole');
+      localStorage.removeItem('isVerified');
       this.isLoggedIn = false;
       this.userId = null;
       this.userRole = null;
+      this.isVerified = null;
       console.log("Déconnexion réussie");
       router.push({ name: 'Login' });
     }

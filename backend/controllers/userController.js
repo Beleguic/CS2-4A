@@ -1,4 +1,5 @@
 const { User } = require('../models');
+const { Op } = require('sequelize');
 const Joi = require('joi');
 
 // User schema validation (backend)
@@ -29,7 +30,23 @@ const isAdmin = (user) => user.role === 'admin';
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.findAll();
+    const requestingUser = await User.findByPk(req.userData.userId);
+    let users;
+
+    if (isAdmin(requestingUser)) {
+      // Admins can see all users except other admins (excluding themselves)
+      users = await User.findAll({
+        where: {
+          [Op.or]: [
+            { role: { [Op.ne]: 'admin' } },
+            { id: requestingUser.id }
+          ]
+        }
+      });
+    } else {
+      users = await User.findAll();
+    }
+
     res.json(users);
   } catch (e) {
     console.error('Error fetching users:', e);
@@ -44,11 +61,11 @@ const getUserById = async (req, res, next) => {
     const requestingUser = await User.findByPk(req.userData.userId);
 
     if (user) {
-      if (isAdmin(requestingUser)) {
-        res.json(user);
-      } else {
-        res.json(filterUserResponse(user));
+      if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
+        return res.status(403).json({ message: "You cannot view other admin accounts." });
       }
+
+      res.json(filterUserResponse(user));
     } else {
       res.sendStatus(404);
     }
@@ -83,8 +100,13 @@ const updateUser = async (req, res, next) => {
     }
 
     const user = await User.findByPk(req.params.id);
+    const requestingUser = await User.findByPk(req.userData.userId);
 
     if (user) {
+      if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
+        return res.status(403).json({ message: "You cannot edit other admin accounts." });
+      }
+
       await user.update(filteredBody);
       res.json(user);
     } else {
@@ -98,13 +120,24 @@ const updateUser = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   try {
-    const nbDeleted = await User.destroy({
-      where: {
-        id: req.params.id,
-      },
-    });
-    if (nbDeleted === 1) {
-      res.sendStatus(204);
+    const user = await User.findByPk(req.params.id);
+    const requestingUser = await User.findByPk(req.userData.userId);
+
+    if (user) {
+      if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
+        return res.status(403).json({ message: "You cannot delete other admin accounts." });
+      }
+
+      const nbDeleted = await User.destroy({
+        where: {
+          id: req.params.id,
+        },
+      });
+      if (nbDeleted === 1) {
+        res.sendStatus(204);
+      } else {
+        res.sendStatus(404);
+      }
     } else {
       res.sendStatus(404);
     }
