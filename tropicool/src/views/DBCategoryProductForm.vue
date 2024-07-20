@@ -5,21 +5,12 @@
       <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Édition du produit de la catégorie</h1>
       <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Suppression du produit de la catégorie</h1>
 
-      <form v-if="mode !== 'delete'" @submit.prevent="submitForm" class="grid gap-6">
-        <div class="grid gap-1">
-          <label for="category_id" class="block text-sm font-medium text-gray-700">Catégorie</label>
-          <select id="category_id" v-model="categoryProduct.category_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
-            <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
-          </select>
-        </div>
-        <div class="grid gap-1">
-          <label for="product_id" class="block text-sm font-medium text-gray-700">Produit</label>
-          <select id="product_id" v-model="categoryProduct.product_id" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" required>
-            <option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }}</option>
-          </select>
-        </div>
-        <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
-      </form>
+      <FormComponent
+        :fields="fields"
+        v-model:formData="categoryProduct"
+        submitButtonText="Envoyer"
+        @submit="submitForm"
+      />
 
       <div v-if="mode === 'delete'" class="grid gap-4">
         <p>Êtes-vous sûr de vouloir supprimer ce produit de la catégorie ?</p>
@@ -35,6 +26,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import FormComponent from '../components/FormComponent.vue';
 import axios from 'axios';
 
 interface CategoryProduct {
@@ -63,8 +55,53 @@ const categories = ref<Category[]>([]);
 const products = ref<Product[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const fields = ref<any[]>([]);
+
+const generateFields = () => [
+  {
+    header: "Formulaire",
+    field: [
+      [{type: "select",name: "category_id",label: "Catégorie",required: true,options: categories.value,color: "#000000"}],
+      [{type: "select",name: "product_id",label: "Produit",required: true,options: products.value,color: "#000000"}]
+    ]
+  }
+];
+
+const fetchProducts = async () => {
+  try {
+    const response = await fetch(`${apiUrl}/product/list`);
+    if (response.ok) {
+      const data = await response.json();
+      products.value = data.map((product: Product) => ({ value: product.id, label: product.name }));
+    } else {
+      console.error('Error fetching products');
+    }
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  }
+};
+
+const fetchCategories = async () => {
+  try {
+    const response = await fetch(`${apiUrl}/category/list`);
+    if (response.ok) {
+      const data = await response.json();
+      categories.value = data.map((category: Category) => ({ value: category.id, label: category.name }));
+    } else {
+      console.error('Error fetching categories');
+    }
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+  }
+};
 
 onMounted(async () => {
+
+  await fetchProducts();
+  await fetchCategories();
+
+  fields.value = generateFields();
+
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
       const response = await axios.get<CategoryProduct>(`${apiUrl}/category_product/${route.params.id}`);
@@ -84,13 +121,13 @@ onMounted(async () => {
   }
 });
 
-const submitForm = async () => {
+const submitForm = async (formData: CategoryProduct) => {
   console.log(categoryProduct.value);
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/category_product/new` : `${apiUrl}/category_product/${route.params.id}`;
 
-    const { id, category, product, ...payload } = categoryProduct.value; // Exclude category and product from the data
+    const { id, category, product, ...payload } = formData;
 
     const response = await axios({
       method,
