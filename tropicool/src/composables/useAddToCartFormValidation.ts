@@ -65,12 +65,6 @@ export async function useAddToCartFormValidation(
     return { message: { error: "La quantité ne doit pas excéder 10 !" } };
   }
 
-// Fonction de calcul de différence pour le stock
-  const calculateDifference = (oldQuantity: number, newQuantity: number): string => {
-    const difference = newQuantity - oldQuantity;
-    return difference > 0 ? `+${difference}` : `${difference}`;
-  };
-
   try {
     const productResponse = await axios.get<Product>(`${apiUrl}/product/${item}`);
     const product = productResponse.data;
@@ -91,8 +85,6 @@ export async function useAddToCartFormValidation(
         params: { product_id: item }
       });
     const numberProductOnCart = cartResponseProduct.data;
-
-
 
     if (!latestStock || (latestStock.quantity - numberProductOnCart.total_count) < quantity) { // 
       console.error("Insufficient stock", latestStock);
