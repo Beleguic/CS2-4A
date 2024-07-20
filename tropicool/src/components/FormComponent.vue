@@ -10,7 +10,29 @@
               :name="field.name"
               v-model="localFormData[field.name]"
               :required="field.required"
+              :disabled="showEditButton && !editableFields.includes(field.name)"
               class="w-full px-3 py-2 border border-gray-300 rounded"
+              multiple="f"
+            >
+              <option
+                v-for="(option, indexOption) in field.options"
+                :key="indexOption"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+            <span v-if="errors[field.name]" class="text-red-500">{{ errors[field.name] }}</span>
+          </div>
+          <div v-else-if="field.type == 'multiSelect'">
+            <label :for="field.name" class="block mb-1" :style="{color: field.color}">{{ field.label }}</label>
+            <select
+              :name="field.name"
+              v-model="localFormData[field.name]"
+              :required="field.required"
+              :disabled="showEditButton && !editableFields.includes(field.name)"
+              class="w-full px-3 py-2 border border-gray-300 rounded"
+              multiple="f"
             >
               <option
                 v-for="(option, indexOption) in field.options"
@@ -28,6 +50,7 @@
               :name="field.name"
               v-model="localFormData[field.name]"
               :required="field.required"
+              :disabled="showEditButton && !editableFields.includes(field.name)"
               :placeholder="field.placeholder || field.label"
               :style="{resize: field.resize || 'none'}"
               class="w-full px-3 py-2 border border-gray-300 rounded"
@@ -41,6 +64,7 @@
               :checked="field.checked !== undefined ? field.checked : false"
               v-model="localFormData[field.name]"
               :required="field.required"
+              :disabled="showEditButton && !editableFields.includes(field.name)"
               :placeholder="field.placeholder || field.label"
               :id="field.name"
               class="w-6 h-6 px-3 py-2 border border-gray-300 cursor-pointer"
