@@ -38,7 +38,7 @@ useCartCheck();
 
 onMounted(() => {
   // Afficher le toast de bienvenue lorsque l'utilisateur arrive sur le site
-  toastManager.value.addToast('Bienvenue sur Troupicool !', 'success');
+  toastManager.value.addToast('Bienvenue sur notre site !', 'success');
 });
 </script>
 
