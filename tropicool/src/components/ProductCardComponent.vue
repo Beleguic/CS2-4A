@@ -1,16 +1,22 @@
 <template>
-  <div class="product-card">
-    <img :src="getImageUrl(product.image)" alt="Product Image" class="product-image" />
-    <h3 class="product-name">{{ product.name }}</h3>
-    <p class="product-price">{{ product.price }} €</p>
-    <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
-    <div class="button-container">
-      <router-link :to="{ name: 'ProductPage', params: { id: product.name } }" class="add-to-cart-button">
-        <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
-        Voir le produit
-      </router-link>  
-    </div>
-  </div>
+  <li class="bg-white border border-main rounded-sm p-5 w-full transition-all">
+    <article class="flex flex-col justify-between gap-4 h-full">
+      <section class="grid gap-2">
+        <figure>
+          <img :src="getImageUrl(product.image)" alt="Product Image" class="w-full h-full object-cover" />
+        </figure>
+        <h3 class="text-2xl text-main font-bold">{{ product.name }}</h3>
+        <p class="text-xl text-secondary font-medium">{{ product.price }} €</p>
+        <p v-if="product.is_adult" class="text-red-500 text-xs">Contient de l'alcool. À consommer avec modération.</p>
+      </section>
+      <footer class="button-container">
+        <router-link :to="{ name: 'ProductPage', params: { id: product.name } }" class="add-to-cart-button">
+          <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
+          Voir le produit
+        </router-link>  
+      </footer>
+    </article>
+  </li>
 </template>
 
 <script setup>
@@ -47,20 +53,18 @@ const getImageUrl = (path) => {
 
   // Construire l'URL complète
   const imageUrl = `${baseUrl}${relativePath}`;
-  
-  console.log('Image URL:', imageUrl); // Log de l'URL de l'image
   return imageUrl;
 };
 </script>
 
 <style scoped>
 .product-card {
-  background-color: #FEFEF6;
+  background-color: #ffffff;
   border: 1px solid #696BE2;
   border-radius: 10px;
   padding: 20px;
   text-align: center;
-  width: 300px;
+  width: 100%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -99,7 +103,7 @@ const getImageUrl = (path) => {
 
 .add-to-cart-button {
   background-color: #696BE2;
-  color: #FEFEF6;
+  color: #ffffff;
   font-size: 18px;
   font-weight: 500;
   padding: 10px 20px;

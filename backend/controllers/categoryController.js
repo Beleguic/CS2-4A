@@ -1,4 +1,4 @@
-const { Category } = require('../models');
+const { Category, Product } = require('../models');
 const Joi = require('joi');
 
 // Category schema validation
@@ -24,12 +24,33 @@ const getAllCategoriesForSelection = async (req, res, next) => {
 
 const getAllCategories = async (req, res, next) => {
   const isFrontend = req.query.frontend === 'true';
-  const whereCondition = isFrontend ? { is_active: true } : {};
+  const isSorting = req.query.sorting === 'true';
+  const url = req.query.url;
+  
+  let whereCondition = {};
+
+  if (isFrontend) {
+    whereCondition.is_active = true;
+    if (url) {
+      whereCondition.url = url;
+    }
+  }
+
+  const attributesCondition = isFrontend && isSorting ? ['name'] : undefined;
+
   try {
     const categories = await Category.findAll({
       where: {
         ...whereCondition
-      }
+      },
+      attributes: attributesCondition,
+      include: isFrontend ? [
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: [] }
+        }
+      ] : []
     });
     res.json(categories);
   } catch (e) {
