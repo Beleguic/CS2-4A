@@ -18,6 +18,7 @@ const UserHistoryRouter = require('./routes/userHistory');
 const PasswordHistoryRouter = require('./routes/passwordHistory');
 const ProductPromotionRouter = require('./routes/productPromotion');
 const PromotionRouter = require('./routes/promotionCode');
+const StripeRooter = require('./routes/stripe');
 const cors = require("cors");
 const nodemailer = require('nodemailer');
 const app = express();
@@ -70,6 +71,7 @@ app.use('/user_history', UserHistoryRouter);
 app.use('/password_history', PasswordHistoryRouter);
 app.use('/product_promotion', ProductPromotionRouter);
 app.use('/promotion_code', PromotionRouter);
+app.use('/stripe', StripeRooter);
 
 
 app.listen(process.env.PORT, () => {
