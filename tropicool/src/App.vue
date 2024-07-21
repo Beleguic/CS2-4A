@@ -12,12 +12,13 @@
     <router-view></router-view>
   </main>
   <FooterComponent v-if="!isDashboardRoute" />
-  
+
+  <ToastManager ref="toastManager" />
   <ScrollToTopButton />
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import useCartCheck from './composables/useCartCheck';
 
@@ -26,12 +27,19 @@ import FooterComponent from './components/FooterComponent.vue';
 import DashboardSidebar from './components/DashboardSidebar.vue';
 import DashboardNavbar from './components/DashboardNavbar.vue';
 import ScrollToTopButton from './components/ScrollToTopButton.vue';
+import ToastManager from './components/ToastManager.vue';
 
 const route = useRoute();
+const toastManager = ref(null);
 
 const isDashboardRoute = computed(() => route.path.startsWith('/dashboard'));
 
 useCartCheck();
+
+onMounted(() => {
+  // Afficher le toast de bienvenue lorsque l'utilisateur arrive sur le site
+  toastManager.value.addToast('Bienvenue sur Troupicool !', 'success');
+});
 </script>
 
 <style>
