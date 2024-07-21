@@ -3,8 +3,7 @@
     <!-- Formulaire d'inscription -->
         <div class="flex flex-col items-center gap-4 min-h-screen">
             <div class="w-8/12">
-                <h2 class="text-2xl font-bold mb-1 text-left text-main mb-4">Panier Paiement</h2>
-                <p class="flex flex-row justify-between"><span>Vous n'etes pas connecter ?</span><RouterLink to="/login">Se conncter</RouterLink></p>
+                <h2 class="text-2xl font-bold mb-1 text-left text-main mb-4">Procéder au paiement</h2>
                 <FormComponent
                     :fields="fields"
                     submitButtonText="Procéder au paiement"
@@ -46,19 +45,7 @@
       ];
 
 
-    const payment = 'allaoua';
-    //async (formData: ) => {
-    /*try {
-      await auth.login(formData.email, formData.password);
-      router.push('/');
-    } catch (error: unknown) {
-      console.error('Erreur lors de la connexion:', (error as Error).message);
-      if ((error as Error).message.includes("expiré")) {
-        alert("Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser.");
-      } else {
-        alert((error as Error).message);
-      }*/
-    //}
+  
 </script>
 
 <style scoped>

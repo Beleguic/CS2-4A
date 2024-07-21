@@ -17,6 +17,7 @@
             @update:promoCode="promoCode = $event"
             @update:reduction="reduction = $event"
             @update:promoMessage="promoMessage = $event"
+            :user_id="userId"
           />
         </div>
       </div>
@@ -144,6 +145,8 @@
   onMounted(() => {
     fetchCart();
   });
+
+
 
   const total = computed(() => {
     return cartItems.value.reduce((acc, item) => acc + item.price * item.quantity, 0);
