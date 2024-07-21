@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^4.1.0",
     "axios": "^1.6.8",
     "chart.js": "^4.4.3",
     "dayjs": "^1.11.11",
