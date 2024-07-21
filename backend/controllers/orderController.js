@@ -4,10 +4,18 @@ const Joi = require('joi');
 // Order schema validation
 const orderSchema = Joi.object({
   user_id: Joi.string().uuid().required(),
-  products: Joi.array().items(Joi.object({
-    product_id: Joi.string().uuid().required(),
-    quantity: Joi.number().integer().min(1).required(),
-  })).required(),
+  products: Joi.array().items(
+    Joi.object({
+      product_id: Joi.string().uuid().required(),
+      name: Joi.string().required(),
+      quantity: Joi.number().integer().min(1).required(),
+      price: Joi.number().required(),
+      image: Joi.string().required(),
+      reference: Joi.string().required(),
+      is_adult: Joi.bool().required(),
+      tva: Joi.number().required(),
+    })
+  ).required(),
 });
 
 const getAllOrders = async (req, res, next) => {

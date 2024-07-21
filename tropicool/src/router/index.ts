@@ -50,6 +50,7 @@ import DBStockGraph from "../views/DBStockGraph.vue";
 import AddAlert from '../views/AddAlert.vue';
 import NotFound from '../views/NotFound.vue';  // Import the NotFound component
 
+import Payment from '../components/Payment.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -548,6 +549,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/:pathMatch(.*)*',  // Catch all route for 404
     name: 'NotFound',
     component: NotFound,
+  },
+  {
+    path: '/payment',
+    name: 'Payment',
+    component: Payment,
   },
 ];
 
