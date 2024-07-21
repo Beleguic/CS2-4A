@@ -1,0 +1,8 @@
+PORT=3000
+JWT_SECRET=challenge4IWS2
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USER="team.tropicool@outlook.com"
+SMTP_PASSWORD="XMN9nhTSDcPKfqJm"
+FRONT_END_URL=http://localhost:8000
+MONGO_URL=mongodb://root:password@localhost:27017/backend/mongo?authSource=admin

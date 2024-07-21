@@ -9,6 +9,13 @@ module.exports = function (sequelize) {
         onDelete: 'CASCADE'
       });
 
+      Category.belongsToMany(models.Product, {
+        through: models.CategoryProduct,
+        foreignKey: 'category_id',
+        otherKey: 'product_id',
+        as: 'products'
+      });
+
       Category.hasMany(models.PromotionCode, {
         foreignKey: 'category_id',
         as: 'promotionCodes',

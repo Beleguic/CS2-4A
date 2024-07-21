@@ -10,6 +10,7 @@ import Profile from '../views/Profile.vue';
 import Product from '../views/Product.vue';
 import PrivacyPolicy from '../views/PrivacyPolicy.vue';
 import { verifyRole, isAuthenticated } from './authGuard';
+import { useAuthStore } from '../stores/authStore';
 import DBIndex from '../components/DBIndex.vue';
 import FrontCategory from '../components/FrontCategory.vue';
 import FrontCategoryDetails from '../components/FrontCategoryDetails.vue';
