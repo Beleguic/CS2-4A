@@ -2,7 +2,8 @@
   <section class="h-full">
     <div class="py-8 px-6">
       <div class="flex items-center justify-between mb-8">
-        <h1 class="text-4xl font-bold text-black">Liste des stocks</h1>
+        <h1 class="text-4xl font-bold text-black">Liste des produits en stocks</h1>
+        <p> (Si un produit n'apparaît pas, c'est qu'il n'y a jamais eu de stock. Ajoutez-en avec le bouton 'Ajouter'. ->)</p>
         <router-link :to="{ name: 'DBStockNew' }" class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
       <template v-if="datas.length > 0">
@@ -38,7 +39,7 @@ const datas = ref<Stock[]>([]);
 const columns = [
   { key: 'productName', label: 'Produit' }, // Use a flattened key
   { key: 'quantity', label: 'Quantité' },
-  { key: 'created_at', label: "Date d'ajout" },
+  { key: 'created_at', label: "Dernier ajout le" },
   { key: 'actions', label: 'Actions' },
 ];
 
