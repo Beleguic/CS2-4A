@@ -165,7 +165,6 @@ const deleteStock = async (req, res, next) => {
 };
 
 const getStockByIdForStoreKeeper = async (req, res, next) => {
-  console.log('getStockByIdForStoreKeeper');
   try {
     const productId = req.params.product_id;
     const stock = await Stock.findAll({
@@ -185,6 +184,52 @@ const getStockByIdForStoreKeeper = async (req, res, next) => {
   }
 };
 
+const getStockByDay = async (req, res, next) => {
+  try {
+    const productId = req.params.product_id;
+
+    const query = `
+      SELECT 
+        DATE(s.created_at) AS date, quantity, p.name AS product_name
+      FROM 
+        stocks s
+      INNER JOIN 
+        (
+          SELECT 
+            DATE(created_at) AS date,
+            MAX(created_at) AS max_created_at
+          FROM 
+            stocks
+          WHERE 
+            product_id = :productId
+          GROUP BY 
+            DATE(created_at)
+        ) subquery 
+      ON 
+        DATE(s.created_at) = subquery.date
+        AND s.created_at = subquery.max_created_at
+      ORDER BY 
+        s.created_at ASC;
+    `;
+
+    const stock = await sequelize.query(query, {
+      replacements: { productId },
+      type: sequelize.QueryTypes.SELECT,
+      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
+    });
+
+    if (stock.length > 0) {
+      res.json(stock);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (e) {
+    console.error('Error fetching stock by day:', e);
+    next(e);
+  }
+};
+
+
 module.exports = {
   getAllStocks,
   getStockById,
@@ -193,4 +238,5 @@ module.exports = {
   deleteStock,
   getAllStocksForStoreKeeper,
   getStockByIdForStoreKeeper,
+  getStockByDay,
 };

@@ -7,7 +7,7 @@
         <router-link :to="{ name: 'DBStockNew' }" class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
       <template v-if="datas.length > 0">
-        <Table :columns="columns" :datas="datas" newLink="DBStockRestock" editLink="" deleteLink="" viewLink="DBStockView"/>
+        <Table :columns="columns" :datas="datas" newLink="DBStockRestock" editLink="" deleteLink="" viewLink="DBStockView" graphLink="DBStockGraph"/>
       </template>
       <template v-else>
         <p class="text-center text-gray-500">Pas de stock trouvé</p>

@@ -11,7 +11,7 @@
                 </div>
             </div>
             <template v-if="datas.length > 0">
-                <Table :columns="columns" :datas="datas" newLink="" editLink="" deleteLink="" viewLink=""/>
+                <Table :columns="columns" :datas="datas" newLink="" editLink="" deleteLink="" viewLink="" graphLink=""/>
             </template>
             <template v-else>
                 <p class="text-center text-gray-500">Pas de stock trouvé</p>
