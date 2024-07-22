@@ -29,6 +29,11 @@ module.exports = (sequelize) => {
         as: 'carts',
         onDelete: 'CASCADE'
       });
+      User.hasMany(models.Alert, {
+        foreignKey: 'user_id',
+        as: 'alerts',
+        onDelete: 'CASCADE'
+      });
     }
   }
 
@@ -132,6 +137,10 @@ module.exports = (sequelize) => {
           msg: 'Last name cannot be null'
         }
       }
+    },
+    isSubscribedToNewsletter: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     },
     created_at: {
       type: DataTypes.DATE,

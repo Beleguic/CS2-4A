@@ -6,12 +6,18 @@
           <DashboardTableHead v-for="(column, index) in columns" :key="index" :column="column" />
         </tr>
       </thead>
-      <tbody>
-        <tr v-for="data in datas" :key="data.id" class="hover:bg-slate-200 even:bg-slate-100">
-          <td v-for="(column, index) in columns" :key="index" class="py-2 px-4 text-base text-black whitespace-nowrap">
-            {{ console.log('index', index) }}
-            {{ console.log('column', column) }}
-            {{ console.log('data', data) }}
+      <tbody ref="tbodyRef">
+        <tr v-for="(data, rowIndex) in datas" :key="data.id" :ref="el => trRefs[rowIndex] = el"
+          :class="{
+            'hover:bg-slate-200 even:bg-slate-100 odd:bg-white relative': true,
+            'hovered-row': hoveredRow === rowIndex
+          }"
+          @mouseover="hoveredRow = rowIndex" @mouseleave="hoveredRow = null">
+          <td v-for="(column, index) in columns" :key="index"
+            :class="{
+              'py-2 px-4 text-base text-black whitespace-nowrap': true,
+              'sticky right-0 z-10 custom-bg bg-opacity-80' : column.key === 'actions'
+            }" :style="column.key === 'actions' ? { '--custom-bg': getBackgroundColor(rowIndex) } : {}">
             <template v-if="column.key !== 'actions'">
               <template v-if="isBoolean(data[column.key]) && (column.label === 'status' || column.label === 'Status') && column.key === 'is_active'">
                 {{ data[column.key] ? 'Activé' : 'Désactivé' }}
@@ -20,10 +26,17 @@
                 {{ data[column.key] ? 'Vrai' : 'Faux' }}
               </template>
               <template v-else-if="column.key === 'id'">
-                <span :title="data[column.key]">{{ isString(data[column.key]) ? data[column.key].substring(0, 8) : data[column.key] }}</span>
-              </template>
-              <template v-else-if="column.key === 'created_at' || column.key === 'updated_at'">
-                {{ formatDateTime(data[column.key]) }}
+                <div class="flex gap-4 group items-center">
+                  <span :title="data[column.key]">{{ isString(data[column.key]) ? data[column.key].substring(0, 10) : data[column.key] }}</span>
+                  <button v-if="copiedId !== data[column.key]" class="opacity-0 group-hover:opacity-100 flex gap-2 text-black items-center" @click="copyToClipboard(data[column.key])">
+                    <component :is="iconCopy" />
+                    <span>Copier</span>
+                  </button>
+                  <span v-else class="flex gap-2 text-black items-center">
+                    <component :is="iconCheck" />
+                    <span>Copié</span>
+                  </span>
+                </div>
               </template>
               <template v-else-if="column.label === 'Image'">
                 <a :href="data[column.key]" target="_blank" class="flex items-center justify-center p-2 rounded-full hover:bg-main hover:text-white">
@@ -36,15 +49,11 @@
             </template>
             <template v-else>
               <div class="grid grid-cols-2 gap-4">
-                <router-link :to="{ name: editLink, params: { id: data.id } }" class="p-4 bg-blue-500 hover:bg-blue-800 rounded-md flex flex-col justify-center items-center">
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0.895998 6.68001L3.15749 9.058L0 10L0.895998 6.68001ZM6.10249 1.20602L8.36349 3.58351L3.38299 8.82L1.1215 6.44301L6.10249 1.20602ZM7.82099 0.174018L9.30898 1.73852C9.71248 2.16251 9.35198 2.54501 9.35198 2.54501L8.59149 3.34501L6.32949 0.966517L7.08999 0.167018L7.09999 0.157518C7.15949 0.101518 7.48749 -0.176481 7.82099 0.174018Z" fill="white" />
-                  </svg>
+                <router-link :to="{ name: editLink, params: { id: data.id } }" class="p-4 bg-blue-500 hover:bg-blue-800 rounded-md flex flex-col justify-center items-center text-white">
+                  <component :is="iconPen" />
                 </router-link>
-                <router-link :to="{ name: deleteLink, params: { id: data.id } }" class="p-4 bg-red-500 hover:bg-red-800 rounded-md flex flex-col justify-center items-center">
-                  <svg width="8" height="10" viewBox="0 0 8 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.77778 0.555556H5.83333L5.27778 0H2.5L1.94444 0.555556H0V1.66667H7.77778M0.555556 8.88889C0.555556 9.18357 0.672619 9.46619 0.880992 9.67456C1.08937 9.88294 1.37198 10 1.66667 10H6.11111C6.4058 10 6.68841 9.88294 6.89678 9.67456C7.10516 9.46619 7.22222 9.18357 7.22222 8.88889V2.22222H0.555556V8.88889Z" fill="white" />
-                  </svg>
+                <router-link :to="{ name: deleteLink, params: { id: data.id } }" class="p-4 bg-red-500 hover:bg-red-800 rounded-md flex flex-col justify-center items-center text-white">
+                  <component :is="iconTrash" />
                 </router-link>
               </div>
             </template>
@@ -56,68 +65,100 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, onMounted, onBeforeUnmount } from 'vue';
-import DashboardTableHead from '../components/DashboardTableHead.vue';
-import iconEye from '@/assets/icons/eye.svg';
+  import { defineProps, ref, onMounted, onBeforeUnmount, watch } from 'vue';
+  import DashboardTableHead from '../components/DashboardTableHead.vue';
+  import iconEye from '../assets/icons/eye.svg';
+  import iconPen from '../assets/icons/pen.svg';
+  import iconTrash from '../assets/icons/trash.svg';
+  import iconCopy from '../assets/icons/copy.svg';
+  import iconCheck from '../assets/icons/check.svg';
 
-interface Column {
-  key: string;
-  label: string;
-}
-
-interface TableProps {
-  datas: Array<Record<string, any>>;
-  columns: Array<Column>;
-  editLink: string;
-  deleteLink: string;
-}
-
-const props = defineProps<TableProps>();
-const { datas, columns, editLink, deleteLink } = props;
-
-const dynamicMaxWidth = ref('calc(100vw - 50px)');
-const dynamicMaxHeight = ref('calc(100vh - 215px)');
-
-const updateDimensions = () => {
-  const leftPartWidth = 20 * 16;
-  dynamicMaxWidth.value = `calc(100vw - ${leftPartWidth}px - 50px)`;
-  dynamicMaxHeight.value = `calc(100vh - 215px)`;
-};
-
-onMounted(() => {
-  window.addEventListener('resize', updateDimensions);
-  updateDimensions();
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateDimensions);
-});
-
-const isBoolean = (value: any): boolean => {
-  return typeof value === 'boolean';
-};
-
-const isString = (value: any): boolean => {
-  return typeof value === 'string';
-};
-
-const formatDateTime = (dateTimeString: string): string => {
-  const [datePart, timePart] = dateTimeString.split(' ');
-  const [day, month, year] = datePart.split('/');
-  const reformattedDateString = `${year}-${month}-${day}T${timePart}:00`;
-
-  const date = new Date(reformattedDateString);
-  if (isNaN(date.getTime())) {
-    throw new Error("Date invalide");
+  interface Column {
+    key: string;
+    label: string;
   }
 
-  const formattedDate = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const formattedTime = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  interface TableProps {
+    datas: Array<Record<string, any>>;
+    columns: Array<Column>;
+    editLink: string;
+    deleteLink: string;
+  }
 
-  return `${formattedDate} à ${formattedTime}`;
-};
+  const props = defineProps<TableProps>();
+  const { datas, columns, editLink, deleteLink } = props;
+
+  const dynamicMaxWidth = ref('calc(100vw - 50px)');
+  const dynamicMaxHeight = ref('calc(100vh - 215px)');
+  const trRefs = ref<(HTMLElement | any)[]>([]);
+  const rowBackgroundColors = ref<string[]>([]);
+  const hoveredRow = ref<number | null>(null);
+  const copiedId = ref<string | null>(null);
+
+  const updateDimensions = () => {
+    const leftPartWidth = 20 * 16;
+    dynamicMaxWidth.value = `calc(100vw - ${leftPartWidth}px - 50px)`;
+    dynamicMaxHeight.value = `calc(100vh - 215px)`;
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      copiedId.value = text;
+      setTimeout(() => {
+        copiedId.value = null;
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
+
+  const getBackgroundColors = () => {
+    rowBackgroundColors.value = trRefs.value.map(tr => {
+      if (tr) {
+        const computedStyle = getComputedStyle(tr);
+        const bgColor = computedStyle.backgroundColor;
+        const rgba = bgColor.match(/\d+/g);
+        return rgba ? `${rgba[0]}, ${rgba[1]}, ${rgba[2]}` : '255, 255, 255';
+      }
+      return '255, 255, 255';
+    });
+  };
+
+  const getBackgroundColor = (rowIndex: number) => {
+    if (hoveredRow.value === rowIndex) {
+      return '200, 200, 200';
+    }
+    return rowBackgroundColors.value[rowIndex] || '255, 255, 255';
+  };
+
+  watch(() => datas, getBackgroundColors, { immediate: true });
+
+  const isBoolean = (value: any): boolean => {
+    return typeof value === 'boolean';
+  };
+
+  const isString = (value: any): boolean => {
+    return typeof value === 'string';
+  };
+
+  onMounted(() => {
+    window.addEventListener('resize', updateDimensions);
+    updateDimensions();
+    getBackgroundColors();
+  });
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateDimensions);
+  });
 </script>
 
 <style scoped>
-/* Si nécessaire, ajoutez des styles supplémentaires ici */
+  .custom-bg {
+    background-color: rgba(var(--custom-bg), var(--tw-bg-opacity));
+  }
+
+  .hovered-row {
+    background-color: rgba(200, 200, 200, var(--tw-bg-opacity)) !important;
+  }
 </style>

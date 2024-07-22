@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const alertController = require('../controllers/alertController');
+const checkAuth = require('../middlewares/checkAuth');
 
-router.get('/', alertController.getAllAlerts);
-router.get('/:id', alertController.getAlertById);
-router.post('/new', alertController.createAlert);
-router.patch('/:id', alertController.updateAlert);
-router.delete('/:id', alertController.deleteAlert);
+router.get('/', checkAuth, alertController.getAllAlerts);
+router.get('/:id', checkAuth, alertController.getAlertById);
+router.post('/new', checkAuth, alertController.createAlert);
+router.patch('/:id', checkAuth, alertController.updateAlert);
+router.delete('/:id', checkAuth, alertController.deleteAlert);
 
 module.exports = router;

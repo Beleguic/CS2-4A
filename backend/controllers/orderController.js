@@ -57,7 +57,7 @@ const createOrder = async (req, res, next) => {
 
 const updateOrder = async (req, res, next) => {
   try {
-    const { created_at, updated_at, User, ...updateData } = req.body; // Strip out unwanted fields
+    const { created_at, updated_at, User, ...updateData } = req.body;
 
     const { error } = orderSchema.validate(updateData);
     if (error) {

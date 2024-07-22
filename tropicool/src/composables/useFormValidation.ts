@@ -1,9 +1,28 @@
 import { reactive } from 'vue';
-import { z } from 'zod';
+import { z, ZodIssue, ZodObject } from 'zod';
 
-export function useFormValidation(fields) {
-  const formData = reactive({});
-  const errors = reactive({});
+interface Field {
+  type: string;
+  name: string;
+  label: string;
+  required?: boolean;
+}
+
+interface FieldGroup {
+  field: Field[][];
+}
+
+interface FormData {
+  [key: string]: string | boolean;
+}
+
+interface Errors {
+  [key: string]: string;
+}
+
+export function useFormValidation(fields: FieldGroup[]) {
+  const formData: FormData = reactive({});
+  const errors: Errors = reactive({});
 
   fields.forEach(fieldGroup => {
     fieldGroup.field.forEach(subFieldArray => {
@@ -17,15 +36,14 @@ export function useFormValidation(fields) {
     });
   });
 
-  const schema = z.object(
+  const schema: ZodObject<any> = z.object(
     fields.reduce((acc, fieldGroup) => {
       fieldGroup.field.forEach(subFieldArray => {
         subFieldArray.forEach(subField => {
           let fieldSchema;
           if (subField.type === 'checkbox') {
             fieldSchema = z.boolean();
-          }
-          else if (subField.type === 'number') {
+          } else if (subField.type === 'number') {
             fieldSchema = z.number();
           } else {
             fieldSchema = z.string();
@@ -46,18 +64,14 @@ export function useFormValidation(fields) {
         });
       });
       return acc;
-    }, {})
+    }, {} as { [key: string]: any })
   );
 
   const validateForm = () => {
     const result = schema.safeParse(formData);
-    console.log(result);
     if (!result.success) {
-      result.error.errors.forEach(err => {
-        console.log(err.path[0], err.message);
-        console.log(errors);
-        console.log(formData);
-        errors[err.path[0]] = err.message;
+      result.error.errors.forEach((err: ZodIssue) => {
+        errors[err.path[0] as string] = err.message;
       });
       return errors;
     }

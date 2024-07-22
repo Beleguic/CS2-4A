@@ -3,6 +3,9 @@ backend/.env/
 backend/node_modules/
 backend/package-lock.json/
 node_modules/
+.env.production/
+.env.development/
+.env.test/
 tropicool/node_modules/
 tropicool/.npm/
 tropicool/.npm/_logs

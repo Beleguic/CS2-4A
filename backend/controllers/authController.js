@@ -18,62 +18,84 @@ const transporter = nodemailer.createTransport({
 });
 
 const login = async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-        const user = await User.findOne({ where: { email } });
+  try {
+    // Rechercher l'utilisateur par e-mail
+    const user = await User.findOne({ where: { email } });
 
-        if (!user) {
-            return res.status(401).json({ message: 'Authentication failed', loginAttempts: 0 });
-        }
-
-        if (user.lockUntil && user.lockUntil > new Date()) {
-            const daysSinceLastChange = (new Date() - user.passwordLastChanged) / (1000 * 60 * 60 * 24);
-
-            if (daysSinceLastChange > 60) {
-                user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-                await sendPasswordResetEmail(user);
-                return res.status(403).json({
-                    message: 'Password needs to be renewed. An email has been sent.',
-                    forcePasswordChange: true
-                });
-            }
-            return res.status(401).json({ message: 'Account temporarily locked. Try again later.', loginAttempts: user.loginAttempts });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            user.loginAttempts = (user.loginAttempts || 0) + 1;
-            if (user.loginAttempts >= 3) {
-                user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
-                user.loginAttempts = 0;
-                await user.save();
-                await sendAccountLockedEmail(user);
-                return res.status(401).json({
-                    message: 'Account temporarily locked. Try again later.',
-                    loginAttempts: user.loginAttempts,
-                    lockUntil: user.lockUntil
-                });
-            }
-
-            await user.save();
-            return res.status(401).json({ message: 'Authentication failed', loginAttempts: user.loginAttempts });
-        }
-
-        user.loginAttempts = 0;
-        user.lockUntil = null;
-        await user.save();
-
-        const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        res.json({ message: 'Login successful', token, userId: user.id, role: user.role });
-    } catch (error) {
-        console.error('Error during login:', error);
-        res.status(500).json({ message: 'An error occurred during login.' });
+    // Si l'utilisateur n'existe pas
+    if (!user) {
+      console.log('User not found');
+      return res.status(401).json({ message: 'Authentication failed', loginAttempts: 0 });
     }
-};
 
+    // Vérifier si le compte est vérifié
+    if (!user.is_verified) {
+      console.log('Account not verified');
+      return res.status(403).json({ message: "Votre compte n'est pas vérifié. Veuillez vérifier votre e-mail pour activer votre compte." });
+    }
+
+    // Vérifier si le compte est verrouillé
+    if (user.lockUntil && user.lockUntil > new Date()) {
+      const daysSinceLastChange = (new Date() - user.passwordLastChanged) / (1000 * 60 * 60 * 24);
+
+      if (daysSinceLastChange > 60) {
+        user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await sendPasswordResetEmail(user);
+        console.log('Password needs to be renewed. Email sent.');
+        return res.status(403).json({
+          message: 'Password needs to be renewed. An email has been sent.',
+          forcePasswordChange: true
+        });
+      }
+      console.log('Account temporarily locked. Try again later.');
+      return res.status(401).json({ message: 'Account temporarily locked. Try again later.', loginAttempts: user.loginAttempts });
+    }
+
+    // Vérifier si le mot de passe est correct
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
+      if (user.loginAttempts >= 3) {
+        user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
+        user.loginAttempts = 0;
+        await user.save();
+        await sendAccountLockedEmail(user);
+        console.log('Account temporarily locked due to failed login attempts.');
+        return res.status(401).json({
+          message: 'Account temporarily locked. Try again later.',
+          loginAttempts: user.loginAttempts,
+          lockUntil: user.lockUntil
+        });
+      }
+
+      await user.save();
+      console.log('Authentication failed. Incorrect password.');
+      return res.status(401).json({ message: 'Authentication failed', loginAttempts: user.loginAttempts });
+    }
+
+    // Réinitialiser les tentatives de connexion et déverrouiller le compte
+    user.loginAttempts = 0;
+    user.lockUntil = null;
+    await user.save();
+
+    // Générer le token JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role, isVerified: user.is_verified },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    console.log('Login successful. Token generated.');
+    res.json({ message: 'Login successful', token, userId: user.id, role: user.role, isVerified: user.is_verified });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ message: 'An error occurred during login.' });
+  }
+};
+  
 const sendAccountLockedEmail = async (user) => {
     const lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
     const formattedLockUntil = lockUntil.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });

@@ -115,7 +115,17 @@ const props = defineProps({
     type: Function,
     required: false,
   },
+  showEditButton: {
+    type: Boolean,
+    default: false,
+  },
+  editableFields: {
+    type: Array,
+    default: () => [],
+  },
 });
+
+console.log('Props received in FormComponent:', props);
 
 const emit = defineEmits(['submit', 'update:modelValue']);
 
@@ -139,7 +149,7 @@ watch(
 
 const handleSubmit = () => {
   resetErrors();
-  const validationErrors = validateForm();
+  const validationErrors = validateForm(localFormData.value);
   if (Object.keys(validationErrors).length === 0) {
     emit('update:modelValue', localFormData);
     if (props.onSubmit && typeof props.onSubmit === 'function') {
