@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <form v-if="isAvailable && isAuthenticated" @submit.prevent="addToCart">
@@ -34,178 +33,184 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue';
-  import axios from 'axios';
-  import { useAuthStore } from '../stores/authStore';
-  import { useAddToCartFormValidation } from '../composables/useAddToCartFormValidation';
+import { ref, computed, onMounted, defineEmits } from 'vue';
+import axios from 'axios';
+import { useAuthStore } from '../stores/authStore';
+import { useAddToCartFormValidation } from '../composables/useAddToCartFormValidation';
 
-  interface Props {
-    item: string;
-    price: number;
+interface Props {
+  item: string;
+  price: number;
+}
+
+const props = defineProps<Props>();
+const emit = defineEmits(['item-added']);
+
+const quantity = ref<number>(1);
+const message = ref<string>('');
+const messageType = ref<string>('');
+const availableStock = ref<number>(0);
+const isAvailable = ref<boolean>(true);
+const isAuthenticated = ref<boolean>(false);
+
+const authStore = useAuthStore();
+
+const messageClass = computed(() => {
+  return messageType.value === 'error' ? 'message error' : 'message success';
+});
+
+const totalPrice = computed(() => {
+  return (props.price * quantity.value).toFixed(2);
+});
+
+const increaseQuantity = () => {
+  if (quantity.value < 10) {
+    quantity.value += 1;
   }
+};
 
-  const props = defineProps<Props>();
+const decreaseQuantity = () => {
+  if (quantity.value > 1) {
+    quantity.value -= 1;
+  }
+};
 
-  const quantity = ref<number>(1);
-  const message = ref<string>('');
-  const messageType = ref<string>('');
-  const availableStock = ref<number>(0);
-  const isAvailable = ref<boolean>(true);
-  const isAuthenticated = ref<boolean>(false);
+const checkStock = async (productId: string): Promise<number> => {
+  const apiUrl = import.meta.env.VITE_API_URL as string;
+  try {
+    const response = await axios.get(`${apiUrl}/stock`, { params: { product_id: productId } });
+    const stockData = response.data;
+    const latestStock = stockData[stockData.length - 1];
+    return latestStock ? latestStock.quantity : 0;
+  } catch (error) {
+    console.error("Error fetching stock:", error);
+    return 0;
+  }
+};
 
-  const authStore = useAuthStore();
-
-  const messageClass = computed(() => {
-    return messageType.value === 'error' ? 'message error' : 'message success';
-  });
-
-  const totalPrice = computed(() => {
-    return (props.price * quantity.value).toFixed(2);
-  });
-
-  const increaseQuantity = () => {
-    if (quantity.value < 10) {
-      quantity.value += 1;
-    }
-  };
-
-  const decreaseQuantity = () => {
-    if (quantity.value > 1) {
-      quantity.value -= 1;
-    }
-  };
-
-  const checkStock = async (productId: string): Promise<number> => {
-    const apiUrl = import.meta.env.VITE_API_URL as string;
-    try {
-      const response = await axios.get(`${apiUrl}/stock`, { params: { product_id: productId } });
-      const stockData = response.data;
-      const latestStock = stockData[stockData.length - 1];
-      return latestStock ? latestStock.quantity : 0;
-    } catch (error) {
-      console.error("Error fetching stock:", error);
-      return 0;
-    }
-  };
-
-  const addToCart = async () => {
-    try {
-      if (quantity.value > availableStock.value) {
-        message.value = `Stock insuffisant. Disponible: ${availableStock.value}`;
-        messageType.value = 'error';
-        return;
-      }
-
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        message.value = 'Vous devez être connecté pour ajouter ce produit au panier';
-        messageType.value = 'error';
-        return;
-      }
-
-      const response = await useAddToCartFormValidation(props.item, quantity.value, userId);
-      message.value = response.message.error ?? response.message.success ?? 'Unexpected response';
-      messageType.value = response.message.error ? 'error' : 'success';
-    } catch (error) {
-      if (error instanceof Error) {
-        message.value = error.message;
-      } else {
-        message.value = 'An unexpected error occurred';
-      }
+const addToCart = async () => {
+  try {
+    if (quantity.value > availableStock.value) {
+      message.value = `Stock insuffisant. Disponible: ${availableStock.value}`;
       messageType.value = 'error';
+      return;
     }
-  };
 
-  onMounted(async () => {
-    isAuthenticated.value = authStore.isLoggedIn;
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      message.value = 'Vous devez être connecté pour ajouter ce produit au panier';
+      messageType.value = 'error';
+      return;
+    }
 
-    const stock = await checkStock(props.item);
-    availableStock.value = stock;
-    isAvailable.value = stock > 0;
-  });
+    const response = await useAddToCartFormValidation(props.item, quantity.value, userId);
+    message.value = response.message.error ?? response.message.success ?? 'Unexpected response';
+    messageType.value = response.message.error ? 'error' : 'success';
+
+    if (messageType.value === 'success') {
+      // Émettre un événement lorsque l'article est ajouté au panier avec succès
+      emit('item-added', props.item);
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      message.value = error.message;
+    } else {
+      message.value = 'An unexpected error occurred';
+    }
+    messageType.value = 'error';
+  }
+};
+
+onMounted(async () => {
+  isAuthenticated.value = authStore.isLoggedIn;
+
+  const stock = await checkStock(props.item);
+  availableStock.value = stock;
+  isAvailable.value = stock > 0;
+});
 </script>
 
 <style scoped>
-  .message.error {
-    color: #f56565;
-    border-color: #f56565;
-  }
-  .message.success {
-    color: #48bb78;
-    border-color:#48bb78;
-  }
+.message.error {
+  color: #f56565;
+  border-color: #f56565;
+}
+.message.success {
+  color: #48bb78;
+  border-color:#48bb78;
+}
 
-  .product-price {
-    font-size: 22px;
-    font-weight: 500;
-    color: #1D1F96;
-    margin-bottom: 30px;
-  }
+.product-price {
+  font-size: 22px;
+  font-weight: 500;
+  color: #1D1F96;
+  margin-bottom: 30px;
+}
 
-  .quantity-input-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.quantity-input-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .quantity-input {
-    margin: 0 10px;
-    width: 70px;
-    padding: 10px;
-    font-size: 18px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #fff;
-    color: #000;
-    text-align: center;
-    -moz-appearance: textfield;
-  }
+.quantity-input {
+  margin: 0 10px;
+  width: 70px;
+  padding: 10px;
+  font-size: 18px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff;
+  color: #000;
+  text-align: center;
+  -moz-appearance: textfield;
+}
 
-  .quantity-input::-webkit-outer-spin-button,
-  .quantity-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
-  .quantity-button {
-    width: 30px;
-    height: 30px;
-    background-color: #ccc;
-    border: none;
-    border-radius: 5px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #000;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
+.quantity-button {
+  width: 30px;
+  height: 30px;
+  background-color: #ccc;
+  border: none;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
 
-  .quantity-button:hover {
-    background-color: #bbb;
-  }
+.quantity-button:hover {
+  background-color: #bbb;
+}
 
-  .add-to-cart-button {
-    background-color: #696BE2;
-    color: #FEFEF6;
-    font-size: 20px;
-    font-weight: 500;
-    padding: 15px 30px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: background-color 0.3s;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
+.add-to-cart-button {
+  background-color: #696BE2;
+  color: #FEFEF6;
+  font-size: 20px;
+  font-weight: 500;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.3s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
-  .add-to-cart-button:hover {
-    background-color: #5756A1;
-  }
+.add-to-cart-button:hover {
+  background-color: #5756A1;
+}
 
-  .cart-icon {
-    width: 30px;
-    height: 30px;
-  }
+.cart-icon {
+  width: 30px;
+  height: 30px;
+}
 </style>
