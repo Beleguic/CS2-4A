@@ -41,6 +41,7 @@ import { useAddToCartFormValidation } from '../composables/useAddToCartFormValid
 interface Props {
   item: string;
   price: number;
+  name: string;  // Ajouter le nom du produit
 }
 
 const props = defineProps<Props>();
@@ -109,7 +110,7 @@ const addToCart = async () => {
 
     if (messageType.value === 'success') {
       // Émettre un événement lorsque l'article est ajouté au panier avec succès
-      emit('item-added', props.item);
+      emit('item-added', props.name);  // Passer le nom du produit
     }
   } catch (error) {
     if (error instanceof Error) {

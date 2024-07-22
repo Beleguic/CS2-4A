@@ -2,7 +2,7 @@
   <div class="product-page" v-if="isAllowed">
     <div class="product-container">
       <div class="product-image">
-        <img :src="getImageUrl(product.image)" alt="product image" class="product-image"/>
+        <img v-if="product.image" :src="getImageUrl(product.image)" alt="product image" class="product-image"/>
       </div>
       <div class="product-details">
         <h1 class="product-name">{{ product.name }}</h1>
@@ -10,6 +10,7 @@
         <AddToCart
           :item="product.id"
           :price="product.price"
+          :name="product.name" 
           @item-added="handleItemAdded"
         />
         <p v-if="product.is_adult" class="alcohol-warning">Contient de l'alcool. À consommer avec modération.</p>
@@ -27,12 +28,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore'; 
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import AddToCart from '../views/AddToCart.vue'; // Chemin relatif à partir de src/views
-import ToastManager from '../components/ToastManager.vue'; // Chemin relatif à partir de src/views
+import AddToCart from '../views/AddToCart.vue';
+import ToastManager from '../components/ToastManager.vue';
 
 const product = ref({
   id: '',
@@ -104,24 +105,24 @@ const getImageUrl = (path) => {
     return '';
   }
 
-  // Enlever le chemin de base s'il est déjà présent
   if (path.startsWith(baseUrl)) {
     relativePath = path.replace(baseUrl, '');
   }
 
-  // Enlever la partie spécifique au système de fichiers pour obtenir un chemin relatif
   relativePath = relativePath.replace('/home/node/app', '');
 
-  // Ajouter une barre oblique initiale si elle est absente
   if (!relativePath.startsWith('/')) {
     relativePath = `/${relativePath}`;
   }
 
-  // Construire l'URL complète
   const imageUrl = `${baseUrl}${relativePath}`;
   
-  console.log('Image URL:', imageUrl); // Log de l'URL de l'image
+  console.log('Image URL:', imageUrl);
   return imageUrl;
+};
+
+const handleItemAdded = (productName) => {
+  toastManager.value.addToast(`Produit ajouté au panier : ${productName}`, 'success');
 };
 
 onMounted(() => {
@@ -160,7 +161,7 @@ body {
   border-radius: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 1200px;
-  width: 80%; /* Ajustez cette valeur pour augmenter la largeur */
+  width: 80%;
   min-height: 600px;
   box-sizing: border-box;
 }
