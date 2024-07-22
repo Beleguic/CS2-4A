@@ -432,24 +432,36 @@ const routes: Array<RouteRecordRaw> = [
         path: 'stock',
         name: 'DBStockIndex',
         component: DBStockIndex,
+        props: true,
+        beforeEnter: verifyRole(['admin', 'store-keeper']),
       },
       {
         path: 'stock/new',
         name: 'DBStockNew',
         component: DBStockForm,
         props: true,
+        beforeEnter: verifyRole(['admin', 'store-keeper']),
       },
       {
         path: 'stock/edit/:id',
         name: 'DBStockEdit',
         component: DBStockForm,
         props: true,
+        beforeEnter: verifyRole(['admin', 'store-keeper']),
       },
       {
         path: 'stock/delete/:id',
         name: 'DBStockDelete',
         component: DBStockForm,
         props: true,
+        beforeEnter: verifyRole(['admin', 'store-keeper']),
+      },
+      {
+        path: 'stock/view/:id',
+        name: 'DBStockView',
+        component: DBStockForm,
+        props: true,
+        beforeEnter: verifyRole(['admin', 'store-keeper']),
       },
       // User Routes
       {
