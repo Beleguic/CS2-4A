@@ -68,7 +68,7 @@ const formFields = ref([
     header: '',
     field: [
       [{type: 'select', name: 'product_id', label: 'Produit', options: products.value.map(product => ({ value: product.id, label: product.name })), required: true,},],
-      [{type: 'number', name: 'quantity', label: 'Quantité', placeholder: 'Entrez la quantité', required: true,},],
+      [{type: 'number', name: 'quantity', label: 'Quantité', placeholder: 'Entrez la quantité', required: true, min: 1,},],
       [{type: 'select', name: 'status', label: 'Status', options: [{ value: 'add', label: 'Ajout' }, { value: 'remove', label: 'Suppression' },], required: true,},],
     ],
   },
@@ -83,6 +83,13 @@ onMounted(async () => {
         stock.value = rest;
 
       if(mode.value === 'restock') {
+        let productId = product.id;
+        const responseRestock = await axios.get<Stock>(`${apiUrl}/stock/store-keeper`, {
+          params: { product_id: productId },
+        });
+
+        const { created_at, ...restStock } = responseRestock.data[0];
+        stock.value = restStock;
         quantityText.value = stock.value.quantity.toString();
         stock.value.quantity = 0;
         stock.value.status = 'add';
@@ -112,7 +119,6 @@ watch(
         });
         const stockData = stockResponse.data;
         latestStock.value = stockData.length ? stockData[stockData.length - 1] : null;
-        console.log('Fetched latest stock:', latestStock.value);
       } catch (error) {
         console.error('Error fetching latest stock:', error);
       }
@@ -130,6 +136,11 @@ watch(
 
 const submitForm = async () => {
   try {
+    if (stock.value.quantity <= 0) {
+      alert('La quantité doit être supérieure à 0.');
+      return;
+    }
+
     if (latestStock.value) {
       if (stock.value.status === 'remove' && stock.value.quantity > latestStock.value.quantity) {
         alert('La quantité à supprimer ne peut pas dépasser la quantité en stock');
