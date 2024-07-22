@@ -1,34 +1,35 @@
 <template>
-  <section class="h-full">
-    <div class="py-8 px-6">
-      <h1 v-if="mode === 'new'" class="text-4xl font-bold mb-8 text-black">Ajouter un stock</h1>
-      <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer le stock</h1>
-      <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer le stock</h1>
+    <section class="h-full">
+        <div class="py-8 px-6">
+            <h1 v-if="mode === 'new'" class="text-4xl font-bold mb-8 text-black">Ajouter un stock</h1>
+            <h1 v-if="mode === 'edit'" class="text-4xl font-bold mb-8 text-black">Éditer le stock</h1>
+            <h1 v-if="mode === 'delete'" class="text-4xl font-bold mb-8 text-black">Supprimer le stock</h1>
+            <h1 v-if="mode === 'restock'" class="text-4xl font-bold mb-8 text-black">Restock du produit {{ productName }}</h1>
 
-      <MyFormComponent
-        v-if="mode !== 'delete'"
-        v-model="stock"
-        :fields="formFields"
-        :submitButtonText="mode === 'new' ? 'Ajouter' : 'Mettre à jour'"
-        @submit="submitForm"
-      />
+            <FormComponent
+                v-if="mode !== 'delete'"
+                v-model="stock"
+                :fields="formFields"
+                :submitButtonText="mode === 'new' ? 'Ajouter' : (mode === 'update' ? 'Mettre à jour' : `Restock du produit ${productName}`)"
+                @submit="submitForm"
+            />
 
-      <div v-if="mode === 'delete'" class="grid gap-4">
-        <p>Êtes-vous sûr de vouloir supprimer ce stock ?</p>
-        <div class="flex gap-4">
-          <button @click="goBack" class="px-6 py-4 bg-blue-500 hover:bg-blue-800 rounded-md text-white">Non</button>
-          <button @click="deleteStock" class="px-6 py-4 bg-red-500 hover:bg-red-800 rounded-md text-white">Oui</button>
+            <div v-if="mode === 'delete'" class="grid gap-4">
+                <p>Êtes-vous sûr de vouloir supprimer ce stock ?</p>
+                <div class="flex gap-4">
+                    <button @click="goBack" class="px-6 py-4 bg-blue-500 hover:bg-blue-800 rounded-md text-white">Non</button>
+                    <button @click="deleteStock" class="px-6 py-4 bg-red-500 hover:bg-red-800 rounded-md text-white">Oui</button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
+    </section>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
-import MyFormComponent from '../components/FormComponent.vue';
+import FormComponent from '../components/FormComponent.vue';
 
 interface Stock {
   id?: string;
@@ -42,7 +43,7 @@ interface Product {
   id: string;
   name: string;
 }
-
+const productName = ref<string>('');
 const route = useRoute();
 const router = useRouter();
 const stock = ref<Stock>({
@@ -54,53 +55,33 @@ const stock = ref<Stock>({
 const products = ref<Product[]>([]);
 const latestStock = ref<Stock | null>(null);
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const mode = ref<'new' | 'edit' | 'delete' | 'restock'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : route.name?.includes('Restock') ? 'restock' : 'delete');
 
 // Définir les champs du formulaire pour MyFormComponent
 const formFields = ref([
   {
     header: '',
     field: [
-      [
-        {
-          type: 'select',
-          name: 'product_id',
-          label: 'Produit',
-          options: products.value.map(product => ({ value: product.id, label: product.name })),
-          required: true,
-        },
-      ],
-      [
-        {
-          type: 'number',
-          name: 'quantity',
-          label: 'Quantité',
-          placeholder: 'Entrez la quantité',
-          required: true,
-        },
-      ],
-      [
-        {
-          type: 'select',
-          name: 'status',
-          label: 'Status',
-          options: [
-            { value: 'add', label: 'Ajout' },
-            { value: 'remove', label: 'Suppression' },
-          ],
-          required: true,
-        },
-      ],
+      [{type: 'select', name: 'product_id', label: 'Produit', options: products.value.map(product => ({ value: product.id, label: product.name })), required: true,},],
+      [{type: 'number', name: 'quantity', label: 'Quantité', placeholder: 'Entrez la quantité', required: true,},],
+      [{type: 'select', name: 'status', label: 'Status', options: [{ value: 'add', label: 'Ajout' }, { value: 'remove', label: 'Suppression' },], required: true,},],
     ],
   },
 ]);
 
 onMounted(async () => {
-  if (mode.value === 'edit' || mode.value === 'delete') {
+  if (mode.value === 'edit' || mode.value === 'delete' || mode.value === 'restock') {
     try {
       const response = await axios.get<Stock>(`${apiUrl}/stock/${route.params.id}`);
-      const { product, created_at, ...rest } = response.data;  // Exclure product et created_at des données
-      stock.value = rest;
+        productName.value = response.data.product.name;
+        const { product, created_at, ...rest } = response.data;
+        stock.value = rest;
+
+      if(mode.value === 'restock') {
+        stock.value.quantity = 0;
+        stock.value.status = 'add';
+      }
+
     } catch (error) {
       console.error('Error fetching stock:', error);
     }

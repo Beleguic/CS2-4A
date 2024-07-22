@@ -45,6 +45,7 @@ import ConditionGeneralDutilisation from '../views/ConditionGeneralDutilisation.
 import VenteAlcool from '../views/VenteAlcool.vue';
 import Cart from '../views/Cart.vue';
 import Search from '../views/Search.vue';
+import DBStockView from "../views/DBStockView.vue";
 import AddAlert from '../views/AddAlert.vue';
 
 const routes: Array<RouteRecordRaw> = [
@@ -443,6 +444,13 @@ const routes: Array<RouteRecordRaw> = [
         beforeEnter: verifyRole(['admin', 'store-keeper']),
       },
       {
+        path: 'stock/restock/:id',
+        name: 'DBStockRestock',
+        component: DBStockForm,
+        props: true,
+        beforeEnter: verifyRole(['admin', 'store-keeper']),
+      },
+      {
         path: 'stock/edit/:id',
         name: 'DBStockEdit',
         component: DBStockForm,
@@ -459,7 +467,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'stock/view/:id',
         name: 'DBStockView',
-        component: DBStockForm,
+        component: DBStockView,
         props: true,
         beforeEnter: verifyRole(['admin', 'store-keeper']),
       },
