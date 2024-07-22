@@ -1,5 +1,6 @@
-const { Stock, Product } = require('../models');
+const { Stock, Product, sequelize} = require('../models');
 const Joi = require('joi');
+const {Op} = require("sequelize");
 
 // Stock schema validation
 const stockSchema = Joi.object({
@@ -32,6 +33,53 @@ const getAllStocks = async (req, res, next) => {
     const stocks = await Stock.findAll(queryOptions);
 
     if (!stocks) {
+      return res.status(404).json({ message: 'Stocks not found' });
+    } else {
+      return res.json(stocks);
+    }
+  } catch (e) {
+    console.error('Error fetching stocks:', e);
+    next(e);
+  }
+};
+
+const getAllStocksForStoreKeeper = async (req, res, next) => {
+  try {
+    const { product_id } = req.query;
+
+    // Sous-requête pour obtenir le dernier created_at pour chaque product_id
+    const latestStocksSubQuery = await Stock.findAll({
+      attributes: [
+        [sequelize.fn('MAX', sequelize.col('created_at')), 'latest_created_at'],
+        'product_id',
+      ],
+      group: 'product_id',
+      raw: true,
+    });
+
+    // Construire un tableau des conditions pour la requête principale
+    const latestConditions = latestStocksSubQuery.map(stock => {
+      return {
+        product_id: stock.product_id,
+        created_at: stock.latest_created_at,
+      };
+    });
+
+    const queryOptions = {
+      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
+      order: [['product_id', 'ASC'], ['created_at', 'DESC']],
+      where: {
+        [Op.or]: latestConditions,
+      },
+    };
+
+    if (product_id) {
+      queryOptions.where.product_id = product_id;
+    }
+
+    const stocks = await Stock.findAll(queryOptions);
+
+    if (!stocks || stocks.length === 0) {
       return res.status(404).json({ message: 'Stocks not found' });
     } else {
       return res.json(stocks);
@@ -116,10 +164,32 @@ const deleteStock = async (req, res, next) => {
   }
 };
 
+const getStockByIdForStoreKeeper = async (req, res, next) => {
+  console.log('getStockByIdForStoreKeeper');
+  try {
+    const productId = req.params.product_id;
+    const stock = await Stock.findAll({ where: { product_id: productId } }, {
+      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
+      order: [['created_at', 'ASC']]
+    });
+
+    if (stock) {
+      res.json(stock);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (e) {
+    console.error('Error fetching stock by ID:', e);
+    next(e);
+  }
+};
+
 module.exports = {
   getAllStocks,
   getStockById,
   createStock,
   updateStock,
   deleteStock,
+  getAllStocksForStoreKeeper,
+  getStockByIdForStoreKeeper,
 };

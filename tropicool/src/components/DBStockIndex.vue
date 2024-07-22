@@ -6,7 +6,7 @@
         <router-link :to="{ name: 'DBStockNew' }" class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
       <template v-if="datas.length > 0">
-        <Table :columns="columns" :datas="datas" editLink="DBStockEdit" deleteLink="DBStockDelete" />
+        <Table :columns="columns" :datas="datas" newLink="DBStockNew" editLink="" deleteLink="" viewLink="DBStockView"/>
       </template>
       <template v-else>
         <p class="text-center text-gray-500">Pas de stock trouvé</p>
@@ -20,6 +20,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import Table from '../components/TableComponent.vue';
+import {datetimeRegex} from "zod";
 
 interface Stock {
   id: string;
@@ -36,28 +37,36 @@ interface Stock {
 const datas = ref<Stock[]>([]);
 
 const columns = [
-  { key: 'id', label: 'ID' },
   { key: 'productName', label: 'Produit' }, // Use a flattened key
   { key: 'quantity', label: 'Quantité' },
-  { key: 'status', label: 'Status' },
-  { key: 'difference', label: 'Différence' },
-  { key: 'created_at', label: 'Date' },
+  { key: 'created_at', label: "Date d'ajout" },
   { key: 'actions', label: 'Actions' },
 ];
+
+/*
+
+ { key: 'difference', label: 'Différence' },
+ */
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
 const fetchStocks = async () => {
   try {
-    const response = await axios.get<Stock[]>(`${apiUrl}/stock/`);
+    const response = await axios.get<Stock[]>(`${apiUrl}/stock/store-keeper`);
     console.log('Fetched Stocks:', response.data); // Log the response data to verify structure
 
     // Map data to include productName at the top level and format the date
-    datas.value = response.data.map(stock => ({
-      ...stock,
-      productName: stock.product.name, // Add product name to top level
-      created_at: dayjs(stock.created_at).format('DD/MM/YYYY HH:mm') // Format the date
-    }));
+      datas.value = response.data.map(stock => {
+          const {difference, status,  ...rest } = stock;  // Exclure `id` et prendre le reste des propriétés
+          return {
+              ...rest,  // Utiliser toutes les propriétés sauf `id`
+              productName: stock.product.name, // Ajouter le nom du produit au niveau supérieur
+              created_at: dayjs(stock.created_at).format('DD/MM/YYYY HH:mm') // Formater la date
+          };
+      });
+
+
+      console.log(datas);
 
     console.log('Mapped Stocks:', datas.value); // Log the mapped data
   } catch (error) {
