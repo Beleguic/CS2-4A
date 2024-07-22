@@ -46,6 +46,7 @@ import VenteAlcool from '../views/VenteAlcool.vue';
 import Cart from '../views/Cart.vue';
 import Search from '../views/Search.vue';
 import DBStockView from "../views/DBStockView.vue";
+import DBStockGraph from "../views/DBStockGraph.vue";
 import AddAlert from '../views/AddAlert.vue';
 
 const routes: Array<RouteRecordRaw> = [
@@ -468,6 +469,13 @@ const routes: Array<RouteRecordRaw> = [
         path: 'stock/view/:id',
         name: 'DBStockView',
         component: DBStockView,
+        props: true,
+        beforeEnter: verifyRole(['admin', 'store-keeper']),
+      },
+      {
+        path: 'stock/graph/:id',
+        name: 'DBStockGraph',
+        component: DBStockGraph,
         props: true,
         beforeEnter: verifyRole(['admin', 'store-keeper']),
       },
