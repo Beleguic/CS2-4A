@@ -35,6 +35,7 @@ const fields = [
         [{ name: 'password', label: 'Mot de passe', type: 'password', required: true, color: 'white' }],
         [{ name: 'confirmPassword', label: 'Confirmez le mot de passe', type: 'password', required: true, color: 'white' }],
         [{ name: 'birthday', label: 'Date de naissance', type: 'date', required: true, color: 'white' }],
+        [{ name: 'acceptTerms', label: 'Accepter les conditions générales d\'utilisation', type: 'checkbox', required: true, color: 'white', link: '/conditions-generales-dutilisation' }],
     ],
     },
 ];
@@ -44,6 +45,11 @@ const register = async (formData) => {
 
   if (formData.password !== formData.confirmPassword) {
     alert('Les mots de passe ne correspondent pas.');
+    return;
+  }
+
+  if (!formData.acceptTerms) {
+    alert('Vous devez accepter les conditions générales d\'utilisation.');
     return;
   }
 
