@@ -1,31 +1,27 @@
-const { number } = require('joi');
 const { Model, DataTypes } = require('sequelize');
+const { sendPriceChangeAlerts } = require('../services/notificationService');
 
 module.exports = function (sequelize) {
   class Product extends Model {
     static associate(models) {
-      // Association with CategoryProduct
       Product.hasMany(models.CategoryProduct, {
         foreignKey: 'product_id',
         as: 'categoryProducts',
         onDelete: 'CASCADE'
       });
 
-      // Association with Stock
       Product.hasMany(models.Stock, {
         foreignKey: 'product_id',
         as: 'stocks',
         onDelete: 'CASCADE'
       });
 
-      // Association with ProductPromotion
       Product.hasMany(models.ProductPromotion, {
         foreignKey: 'product_id',
         as: 'productPromotions',
         onDelete: 'CASCADE'
       });
 
-      // Association with PromotionCode
       Product.hasMany(models.PromotionCode, {
         foreignKey: 'product_id',
         as: 'promotionCodes',
@@ -87,6 +83,12 @@ module.exports = function (sequelize) {
     modelName: 'Product',
     tableName: 'products',
     timestamps: false,
+  });
+
+  Product.afterUpdate(async (product, options) => {
+    if (product._previousDataValues.price !== product.price) {
+      await sendPriceChangeAlerts(product);
+    }
   });
 
   return Product;

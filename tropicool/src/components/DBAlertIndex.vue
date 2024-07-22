@@ -25,9 +25,10 @@ import Table from '../components/TableComponent.vue';
 
 interface Alert {
   id: string;
-  alert_type_id: number;
+  alertType: { type: string };
   product: { id: string, name: string } | null;
   category: { id: string, name: string } | null;
+  user: { username: string };
   created_at: string;
 }
 
@@ -35,9 +36,10 @@ const datas = ref<Alert[]>([]);
 
 const columns = [
   { key: 'id', label: 'ID' },
-  { key: 'alert_type_id', label: 'Type' },
-  { key: 'product_name', label: 'Produit' },
-  { key: 'category_name', label: 'Catégorie' },
+  { key: 'alertType.type', label: 'Type d\'alerte' },
+  { key: 'product.name', label: 'Produit' },
+  { key: 'category.name', label: 'Catégorie' },
+  { key: 'user.username', label: 'Utilisateur' },
   { key: 'created_at', label: 'Crée le' },
   { key: 'actions', label: 'Actions' },
 ];
@@ -45,14 +47,22 @@ const columns = [
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
 const fetchAlerts = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.error('No token found');
+    return;
+  }
+
   try {
-    const response = await axios.get<Alert[]>(`${apiUrl}/alert/`);
+    const response = await axios.get<Alert[]>(`${apiUrl}/alerts`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     console.log('Fetched Alerts:', response.data);
 
     datas.value = response.data.map(alert => ({
       ...alert,
-      product_name: alert.product ? alert.product.name : 'N/A',
-      category_name: alert.category ? alert.category.name : 'N/A',
       created_at: dayjs(alert.created_at).format('DD/MM/YYYY HH:mm'),
     }));
 

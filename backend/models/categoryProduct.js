@@ -1,16 +1,14 @@
 const { Model, DataTypes } = require('sequelize');
+const { sendNewProductAlerts } = require('../services/notificationService');
 
 module.exports = function (sequelize) {
   class CategoryProduct extends Model {
     static associate(models) {
-      // Association with Category
       CategoryProduct.belongsTo(models.Category, {
         foreignKey: 'category_id',
         as: 'category',
         onDelete: 'CASCADE'
       });
-
-      // Association with Product
       CategoryProduct.belongsTo(models.Product, {
         foreignKey: 'product_id',
         as: 'product',
@@ -46,6 +44,10 @@ module.exports = function (sequelize) {
     modelName: 'CategoryProduct',
     tableName: 'category_products',
     timestamps: false,
+  });
+
+  CategoryProduct.afterCreate(async (categoryProduct, options) => {
+    await sendNewProductAlerts(categoryProduct);
   });
 
   return CategoryProduct;

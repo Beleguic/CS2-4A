@@ -13,6 +13,16 @@ module.exports = function (sequelize) {
         as: 'category',
         onDelete: 'CASCADE'
       });
+      Alert.belongsTo(models.User, {
+        foreignKey: 'user_id',
+        as: 'user',
+        onDelete: 'CASCADE'
+      });
+      Alert.belongsTo(models.AlertType, {
+        foreignKey: 'alert_type_id',
+        as: 'alertType',
+        onDelete: 'CASCADE'
+      });
     }
   }
 
@@ -23,7 +33,7 @@ module.exports = function (sequelize) {
       defaultValue: DataTypes.UUIDV4,
     },
     alert_type_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'alert_types',
@@ -43,6 +53,14 @@ module.exports = function (sequelize) {
       allowNull: true,
       references: {
         model: 'categories',
+        key: 'id',
+      },
+    },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'users',
         key: 'id',
       },
     },
