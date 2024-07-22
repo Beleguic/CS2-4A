@@ -40,9 +40,9 @@ const getImageUrl = (path) => {
   // Enlever la partie spécifique au système de fichiers pour obtenir un chemin relatif
   relativePath = relativePath.replace('/home/node/app', '');
 
-  // Enlever la barre oblique initiale si elle est présente
-  if (relativePath.startsWith('/')) {
-    relativePath = relativePath.substring(1);
+  // Ajouter une barre oblique initiale si elle est absente
+  if (!relativePath.startsWith('/')) {
+    relativePath = `/${relativePath}`;
   }
 
   // Construire l'URL complète
@@ -129,3 +129,4 @@ const getImageUrl = (path) => {
   margin-top: 10px;
 }
 </style>
+
