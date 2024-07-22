@@ -168,12 +168,13 @@ const getStockByIdForStoreKeeper = async (req, res, next) => {
   console.log('getStockByIdForStoreKeeper');
   try {
     const productId = req.params.product_id;
-    const stock = await Stock.findAll({ where: { product_id: productId } }, {
+    const stock = await Stock.findAll({
+      where: { product_id: productId },
       include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
-      order: [['created_at', 'ASC']]
+      order: [['created_at', 'DESC']]
     });
 
-    if (stock) {
+    if (stock.length > 0) {
       res.json(stock);
     } else {
       res.sendStatus(404);

@@ -6,7 +6,7 @@
         <router-link :to="{ name: 'DBStockNew' }" class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
       <template v-if="datas.length > 0">
-        <Table :columns="columns" :datas="datas" newLink="DBStockNew" editLink="" deleteLink="" viewLink="DBStockView"/>
+        <Table :columns="columns" :datas="datas" newLink="DBStockRestock" editLink="" deleteLink="" viewLink="DBStockView"/>
       </template>
       <template v-else>
         <p class="text-center text-gray-500">Pas de stock trouvé</p>
@@ -20,7 +20,6 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import Table from '../components/TableComponent.vue';
-import {datetimeRegex} from "zod";
 
 interface Stock {
   id: string;
@@ -57,9 +56,9 @@ const fetchStocks = async () => {
 
     // Map data to include productName at the top level and format the date
       datas.value = response.data.map(stock => {
-          const {difference, status,  ...rest } = stock;  // Exclure `id` et prendre le reste des propriétés
+          const {difference, status,  ...rest } = stock;
           return {
-              ...rest,  // Utiliser toutes les propriétés sauf `id`
+              ...rest,
               productName: stock.product.name, // Ajouter le nom du produit au niveau supérieur
               created_at: dayjs(stock.created_at).format('DD/MM/YYYY HH:mm') // Formater la date
           };
