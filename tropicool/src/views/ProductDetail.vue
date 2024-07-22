@@ -2,7 +2,7 @@
   <div class="product-page" v-if="isAllowed">
     <div class="product-container">
       <div class="product-image">
-        <img :src="product.image" alt="product image" class="product-image"/>
+        <img :src="getImageUrl(product.image)" alt="product image" class="product-image"/>
       </div>
       <div class="product-details">
         <h1 class="product-name">{{ product.name }}</h1>
@@ -20,7 +20,7 @@
   <div v-else class="access-denied">
     <p class="main-message">Vous devez être majeur pour accéder à cette page.</p>
     <p class="secondary-message">
-      Vous aurez toute la vie pour savourer et partager des moments festifs avec modération grâce à nos alcools Trôpicool !
+      Vous aurez toute la vie pour savourer et partager des moments festifs avec modération grâce à nos alcools Troupicool !
       N'hésitez pas à essayer nos produits sans alcool, car sans alcool, la fête est encore plus folle !
     </p>
   </div>
@@ -91,11 +91,37 @@ const calculateAge = (birthdate) => {
   if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthdate.getDate())) {
     age--;
   }
+  console.log('Calculated age:', age);
   return age;
 };
 
-const handleItemAdded = (itemId) => {
-  toastManager.value.addToast("L'article a été ajouté à votre panier.", 'info');
+const getImageUrl = (path) => {
+  const baseUrl = import.meta.env.VITE_API_URL;
+  let relativePath = path;
+
+  if (!path) {
+    console.error('Path is undefined or null');
+    return '';
+  }
+
+  // Enlever le chemin de base s'il est déjà présent
+  if (path.startsWith(baseUrl)) {
+    relativePath = path.replace(baseUrl, '');
+  }
+
+  // Enlever la partie spécifique au système de fichiers pour obtenir un chemin relatif
+  relativePath = relativePath.replace('/home/node/app', '');
+
+  // Ajouter une barre oblique initiale si elle est absente
+  if (!relativePath.startsWith('/')) {
+    relativePath = `/${relativePath}`;
+  }
+
+  // Construire l'URL complète
+  const imageUrl = `${baseUrl}${relativePath}`;
+  
+  console.log('Image URL:', imageUrl); // Log de l'URL de l'image
+  return imageUrl;
 };
 
 onMounted(() => {

@@ -24,18 +24,18 @@
 </script>
 
 <style scoped>
-a {
-  color: #1D1F96;
-}
+  a {
+    color: #1D1F96;
+  }
 
-.link {
-  text-decoration: none;
-  color: #1D1F96;
-}
+  .link {
+    text-decoration: none;
+    color: #1D1F96;
+  }
 
-.link:hover {
-  text-decoration: underline;
-}
+  .link:hover {
+    text-decoration: underline;
+  }
 
 .active-link {
   text-decoration: none !important;

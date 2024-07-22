@@ -5,10 +5,10 @@
   
       <section class="cgv-section mb-8">
         <h2 class="cgv-section-title text-2xl font-semibold text-blue-800 mb-4">Troupicool</h2>
-        <p>Adresse : [Votre adresse complète]</p>
+        <p>Adresse : 242 Rue du Faubourg Saint-Antoine, Paris</p>
         <p>Email : <a href="mailto:team.troupicool@outlook.fr" class="contact-email text-blue-800 underline">team.troupicool@outlook.fr</a></p>
         <p>N° SIRET : [Votre numéro SIRET]</p>
-        <p>Représenté par [Nom du représentant légal]</p>
+        <p>Représenté par Yvars Clement</p>
       </section>
   
       <section class="cgv-section mb-8">
@@ -66,7 +66,7 @@
       <section class="cgv-section mb-8">
         <h2 class="cgv-section-title text-2xl font-semibold text-blue-800 mb-4">Article 9 : Litiges</h2>
         <p>9.1 En cas de litige, les parties s'efforceront de trouver une solution amiable.</p>
-        <p>9.2 À défaut, le litige sera soumis aux tribunaux compétents de [votre ville], en France.</p>
+        <p>9.2 À défaut, le litige sera soumis aux tribunaux compétents de Paris, en France.</p>
       </section>
   
       <section class="cgv-section mb-8">
