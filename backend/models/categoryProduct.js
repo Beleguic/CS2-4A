@@ -1,4 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
+const { sendNewProductAlerts } = require('../services/notificationService');
 
 module.exports = function (sequelize) {
   class CategoryProduct extends Model {
@@ -43,6 +44,10 @@ module.exports = function (sequelize) {
     modelName: 'CategoryProduct',
     tableName: 'category_products',
     timestamps: false,
+  });
+
+  CategoryProduct.afterCreate(async (categoryProduct, options) => {
+    await sendNewProductAlerts(categoryProduct);
   });
 
   return CategoryProduct;

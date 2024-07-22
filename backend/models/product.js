@@ -1,4 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
+const { sendPriceChangeAlerts } = require('../services/notificationService');
 
 module.exports = function (sequelize) {
   class Product extends Model {
@@ -82,6 +83,12 @@ module.exports = function (sequelize) {
     modelName: 'Product',
     tableName: 'products',
     timestamps: false,
+  });
+
+  Product.afterUpdate(async (product, options) => {
+    if (product._previousDataValues.price !== product.price) {
+      await sendPriceChangeAlerts(product);
+    }
   });
 
   return Product;
