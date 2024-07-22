@@ -11,9 +11,9 @@
         </div>
         <div class="text-block">
           <p class="intro-text">
-            Bienvenue sur Tropicool, l'ultime destination pour les amateurs de saveurs exotiques et d'aventures sensorielles ! Chez Tropicool, nous croyons que chaque gorgée devrait être une escapade tropicale, une expérience qui éveille vos sens et évoque des souvenirs de paradis lointains.
+            Bienvenue sur Troupicool, l'ultime destination pour les amateurs de saveurs exotiques et d'aventures sensorielles ! Chez Troupicool, nous croyons que chaque gorgée devrait être une escapade trouuuupicale, une expérience qui éveille vos sens et évoque des souvenirs de paradis lointains.
             <br /><br />
-            Nous sommes bien plus qu'une simple marque de boissons. Nous sommes des conteurs d'histoires, des artisans de l'évasion et des créateurs de moments inoubliables. Notre passion pour l'innovation et la qualité se reflète dans chacun de nos produits, qu'il s'agisse de nos délicieux jus de fruits tropicaux rafraîchissants, de nos spiritueux soigneusement distillés comme la tequila et le whisky, ou même de nos magnifiques verres conçus pour sublimer chaque expérience de dégustation.
+            Nous sommes bien plus qu'une simple marque de boissons. Nous sommes des conteurs d'histoires, des artisans de l'évasion et des créateurs de moments inoubliables. Notre passion pour l'innovation et la qualité se reflète dans chacun de nos produits, qu'il s'agisse de nos délicieux jus de fruits tropicaux rafraîchissants, de nos spiritueux soigneusement distillés comme la tequila et le whisky.
           </p>
         </div>
       </div>
@@ -23,9 +23,9 @@
         </div>
         <div class="text-block">
           <p class="second-text">
-            Chez Tropicool, nous croyons en la magie des rencontres, en la convivialité des réunions entre amis et en la célébration de chaque instant de la vie. Que vous soyez à la recherche d'un rafraîchissement sans alcool pour une journée ensoleillée, d'un cocktail exotique pour égayer une soirée entre amis, ou d'un cadeau unique pour un amateur de spiritueux, nous avons ce qu'il vous faut.
+            Chez Troupicool, nous croyons en la magie des rencontres, en la convivialité des réunions entre amis et en la célébration de chaque instant de la vie. Que vous soyez à la recherche d'un rafraîchissement sans alcool pour une journée ensoleillée, d'un cocktail exotique pour égayer une soirée entre amis, ou d'un cadeau unique pour un amateur de spiritueux, nous avons ce qu'il vous faut.
             <br /><br />
-            Explorez notre gamme de produits, laissez-vous emporter par les saveurs envoûtantes des tropiques, et rejoignez-nous pour une aventure sensorielle incomparable avec Tropicool. Santé ! 🍹
+            Explorez notre gamme de produits, laissez-vous emporter par les saveurs envoûtantes des tropiques, et rejoignez-nous pour une aventure sensorielle incomparable avec Troupicool. Santé ! 🍹
           </p>
         </div>
       </div>

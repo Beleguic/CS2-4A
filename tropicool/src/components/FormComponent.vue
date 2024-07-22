@@ -69,7 +69,7 @@
               class="w-6 h-6 px-3 py-2 border border-gray-300 cursor-pointer"
             />
             <label :for="field.name" class="block mb-1 ml-2 cursor-pointer" :style="{color: field.color}">
-              {{ field.label }} - {{ localFormData[field.name] ? field.textOn : field.textOff }}
+              <router-link :to="field.link" class="underline text-blue-500">{{ field.label }}</router-link>
             </label>
             <span v-if="errors[field.name]" class="text-red-500">{{ errors[field.name] }}</span>
           </div>
