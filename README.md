@@ -31,3 +31,53 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 6. `docker compose run --rm node npm install`
 7. `docker compose up`
 8. `docker compose exec node npm run migrate`
+
+   **Fonctionaliter:**
+   1. [BELEGUIC Thibault - @Beleguic](https://github.com/Beleguic)
+- Paiement
+- API La poste
+- Composant Formulaire
+- Livraison
+- Gestion des stocks (Avec Willy)
+
+
+2. [HAILLOUY Matiss - @Matiss2702](https://github.com/Matiss2702)
+-  all crud 
+- connexion inscription
+- gestion mail 
+- structure back 
+- structure front
+- mise en prod
+- profile newsletter
+- forgot password reset password
+- securité front & back
+- gestion des taches du group
+- migration db 
+- test unitaire et ci cd
+- reviewer de pr
+
+
+3. [PHANG Willy - @PHANGWilly](https://github.com/PHANGWilly)
+- recherche tri produit (avec Clément)
+- tableaux dans dashboard
+- category
+- store-keeper (avec Thibault)
+- ajouter au panier
+- stocks (avec Thibault)
+
+
+4. [YVARS Clément - @clement-Yvars](https://github.com/clement-Yvars)
+- entiereter Front troupicool.fr
+- Landing page
+- Crud produit
+- RGPD
+- Filtre recherche avec Willy
+- Importation image
+- Toast alerte
+- Gestion interdiction alcool mineur
+- Suppression compte/anonyme 90jours et suppression
+   
+
+
+      
+   
