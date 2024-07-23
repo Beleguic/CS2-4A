@@ -1,5 +1,5 @@
 <template>
-    <div class="max-w-7xl w-full py-4 mx-auto">
+    <div class="px-4">
       <h1 class="text-4xl font-bold mb-8 text-black">Toutes les catégories</h1>
       <section id="categories">
         <template v-if="categories.length > 0">

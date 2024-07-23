@@ -3,7 +3,6 @@
     <div class="py-8 px-6">
       <div class="flex items-center justify-between mb-8">
         <h1 class="text-4xl font-bold text-black">Liste des produits en stocks</h1>
-        <p> (Si un produit n'apparaît pas, c'est qu'il n'y a jamais eu de stock. Ajoutez-en avec le bouton 'Ajouter'. ->)</p>
         <router-link :to="{ name: 'DBStockNew' }" class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
       <template v-if="datas.length > 0">

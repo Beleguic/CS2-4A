@@ -10,7 +10,7 @@
           @submit="login"
         />
         <div class="flex items-center justify-between">
-          <router-link :to="{ name : 'ResetPassword' }">Mot de passe oublié ?</router-link>
+          <router-link :to="{ name : 'ForgotPassword' }">Mot de passe oublié ?</router-link>
           <router-link :to="{ name : 'Register' } ">S'inscire</router-link>
         </div>
       </div>
