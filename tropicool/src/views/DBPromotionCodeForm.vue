@@ -94,7 +94,8 @@ const generateFields = () => [
       [{name: 'product_id', label: 'Produit', type: 'select', required: true, placeholder: '', color: 'gray-700', options: products.value,}],
       [{name: 'category_id', label: 'Catégorie', type: 'select', required: true, placeholder: '', color: 'gray-700', options: categories.value,}],
       [{name: 'code', label: 'Code', type: 'text', required: true, placeholder: '', color: 'gray-700',}],
-      [{name: 'start_at',label: 'Début',type: 'datetime-local',required: true,placeholder: '',color: 'gray-700',}],
+        [{name: 'reduction', label: 'Reduction %', type: 'number', required: true, placeholder: '', color: 'gray-700',}],
+        [{name: 'start_at',label: 'Début',type: 'datetime-local',required: true,placeholder: '',color: 'gray-700',}],
       [{name: 'end_at',label: 'Fin',type: 'datetime-local',required: true,placeholder: '',color: 'gray-700',}]
     ]
   }

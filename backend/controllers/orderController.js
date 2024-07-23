@@ -16,6 +16,10 @@ const orderSchema = Joi.object({
       tva: Joi.number().required(),
     })
   ).required(),
+    total: Joi.number().required(),
+    tva: Joi.number().required(),
+    isPayed: Joi.boolean().required(),
+    livraison: Joi.string().required(),
 });
 
 const getAllOrders = async (req, res, next) => {

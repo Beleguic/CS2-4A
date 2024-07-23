@@ -36,6 +36,9 @@ import {useAuthStore} from "../stores/authStore.ts";
 const authStore = useAuthStore();
 const isLoggedIn = ref(authStore.isLoggedIn);
 
+const total = ref(0);
+const tva = ref(0);
+
 const cartItems = ref<CartItem[]>([]);
 const cartId = ref<string | null>(null);
 
@@ -61,6 +64,13 @@ interface Order {
     products: CartItem[];
 }
 
+interface Stock {
+    difference: string;
+    product_id: string;
+    quantity: number;
+    status: "remove";
+}
+
 const route = useRoute();
 
 const stripePromise = loadStripe('pk_test_51Pf1JALuibZ66sl2zkolBm8QingouYyjJHBLrsfWEEnlkm3WQLWBFAew6IWuXCDsR9EHMNbS5Qc9DTgvEGcpAKiF00ZxQnWYxV');
@@ -75,6 +85,13 @@ const cart = ref<Cart>({
     id: '',
     user_id: '',
     cartProductsData: [],
+});
+
+const stock = ref<Stock>({
+    difference: '',
+    product_id: '',
+    quantity: 0,
+    status: 'remove',
 });
 
 const fields = [
@@ -112,6 +129,8 @@ const fields = [
 onMounted(() => {
 
     userId.value = route.query.user_id as string;
+    total.value = route.query.total as string;
+    tva.value = route.query.tva as string;
     const setupStripe = async () => {
         const stripe = await stripePromise;
         const elements = stripe ? stripe.elements() : null;
@@ -141,7 +160,6 @@ const handleSubmit = async () => {
             },
         });
 
-
         console.log('responseCart', responseCart);
         cart.value = responseCart.data;
 
@@ -154,6 +172,8 @@ const handleSubmit = async () => {
 
     console.log('cart', cart.value);
 
+
+
     loading.value = true;
     errorMessage.value = '';
 
@@ -163,7 +183,7 @@ const handleSubmit = async () => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ amount: 5000 }), // Montant en cents
+            body: JSON.stringify({ amount: total.value * 100 }), // Montant en cents
         });
 
         const { clientSecret } = await response.json();
@@ -185,12 +205,45 @@ const handleSubmit = async () => {
             };
 
             // Envoie la commande au serveur pour la sauvegarder
-            const apiUrl = import.meta.env.VITE_API_URL as string;
             const response = await axios.post(`${apiUrl}/order/new`, order);
 
             console.log(response.data);
 
-            // Modifier le stock pour retirer les produits achetés
+            const stocks: Stock[] = [];
+
+            for (const product of cart.value.cartProductsData) {
+                let productId = product.product_id;
+
+                try {
+                    const stockResponse = await axios.get<Stock[]>(`${apiUrl}/stock`, {
+                        params: { product_id: productId },
+                    });
+                    const stockData = stockResponse.data;
+                    const latestStock = stockData.length ? stockData[stockData.length - 1] : null;
+
+                    let newQuantity = latestStock ? latestStock.quantity - product.quantity : product.quantity;
+
+                    stock.value = {
+                        difference: `-${product.quantity}`,
+                        product_id: product.product_id,
+                        quantity: newQuantity,
+                        status: 'remove',
+                    };
+
+                    const stockResponseNew = await axios.post(`${apiUrl}/stock/new`, stock.value, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    console.log("stock move", stockResponseNew.data);
+
+                } catch (error) {
+                    console.error('Error fetching latest stock:', error);
+                }
+            }
+
+
             // Requete la poste pour recup le numero de livraison + ajouter livraison dans la poste
             // Ajouter dans le model order du numero de livraison
             console.log('Payment successful');
@@ -203,6 +256,7 @@ const handleSubmit = async () => {
         loading.value = false;
     }
 };
+
 
 /*
 

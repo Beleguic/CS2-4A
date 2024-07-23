@@ -21,6 +21,22 @@ module.exports = function (sequelize) {
       type: DataTypes.JSON,
       allowNull: false,
     },
+    total: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    tva: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+    },
+    isPayed: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    livraison: {
+      type: DataTypes.STRING,
+        allowNull: false,
+    },
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
