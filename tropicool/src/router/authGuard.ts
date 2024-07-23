@@ -1,6 +1,7 @@
+import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
-export const verifyAdmin = async (to, from, next) => {
+export const verifyRole = async (to, from, next, roles) => {
   try {
     const auth = useAuthStore();
     if (auth.isLoggedIn) {
@@ -10,7 +11,7 @@ export const verifyAdmin = async (to, from, next) => {
         }
       });
 
-      if (response.data.role === 'admin') {
+      if (roles.includes(response.data.role)) {
         next();
       } else {
         next({ name: 'Home' });
@@ -30,5 +31,6 @@ export function isAuthenticated(to, from, next) {
     next();
   } else {
     auth.logout();
+    next({ name: 'Login' });
   }
 }
