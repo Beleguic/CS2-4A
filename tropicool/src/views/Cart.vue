@@ -17,6 +17,7 @@
             @update:promoCode="promoCode = $event"
             @update:reduction="reduction = $event"
             @update:promoMessage="promoMessage = $event"
+            :user_id="userId"
           />
         </div>
       </div>
@@ -107,7 +108,7 @@
           cartItems.value = [];
           cartId.value = null;
         }
-
+        /*
         const stockResponse = await axios.get<Stock[]>(`${apiUrl}/stock`, {
           params: { product_id: productId }
         });
@@ -133,7 +134,7 @@
             status: 'add',
             difference: difference
           });
-        }
+        }*/
 
       } catch (error) {
         console.error("Failed to remove item from cart:", error);
@@ -144,6 +145,8 @@
   onMounted(() => {
     fetchCart();
   });
+
+
 
   const total = computed(() => {
     return cartItems.value.reduce((acc, item) => acc + item.price * item.quantity, 0);

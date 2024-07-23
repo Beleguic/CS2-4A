@@ -52,29 +52,29 @@ services:
     ports:
       - 8080:8080
 
-  # poste:
-  #   image: node:20.0.0-alpine
-  #   environment:
-  #     PORT: 3001
-  #     DATABASE_URL_POSTE: postgres://root:password@postgres-poste:5432/poste
-  #     JWT_SECRET: posteAPI
-  #   ports:
-  #     - 127.0.0.1:3001:3001
-  #   volumes:
-  #     - ./poste:/home/node/poste
-  #   working_dir: /home/node/poste
-  #   command: sh -c "npm install && npm run dev node --watch"
+  poste:
+     image: node:20.0.0-alpine
+     environment:
+       PORT: 3001
+       DATABASE_URL_POSTE: postgres://root:password@postgres-poste:5432/poste
+       JWT_SECRET: posteAPI
+     ports:
+       - 127.0.0.1:3001:3001
+     volumes:
+       - ./poste:/home/node/poste
+     working_dir: /home/node/poste
+     command: sh -c "npm install && npm run dev node --watch"
 
-  # postgres-poste:
-  #   image: postgres
-  #   volumes:
-  #     - postgres-poste-data:/var/lib/postgresql/data
-  #   environment:
-  #     POSTGRES_USER: root
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: poste
+  postgres-poste:
+     image: postgres
+     volumes:
+       - postgres-poste-data:/var/lib/postgresql/data
+     environment:
+       POSTGRES_USER: root
+       POSTGRES_PASSWORD: password
+       POSTGRES_DB: poste
 
 volumes:
   mongo-data: {}
   postgres-data: {}
-  # postgres-poste-data: {}
+  postgres-poste-data: {}
