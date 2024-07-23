@@ -23,7 +23,6 @@ const getAllPromotionCodes = async (req, res, next) => {
 
     res.json(codes);
   } catch (e) {
-    console.error('Error fetching promotion codes:', e);
     next(e);
   }
 };
@@ -38,24 +37,20 @@ const getPromotionCodeById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching promotion code by ID:', e);
     next(e);
   }
 };
 
 const createPromotionCode = async (req, res, next) => {
   try {
-    console.log("reqbody :", req.body);
     const { error } = promotionCodeSchema.validate(req.body);
     if (error) {
-      console.log('Validation error:', error.details);
       return res.status(400).json({ error: error.details[0].message });
     }
 
     const promotionCode = await PromotionCode.create(req.body);
     res.status(201).json(promotionCode);
   } catch (e) {
-    console.error('Error creating promotion code:', e);
     next(e);
   }
 };
@@ -76,7 +71,6 @@ const updatePromotionCode = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating promotion code:', e);
     next(e);
   }
 };
@@ -94,7 +88,6 @@ const deletePromotionCode = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting promotion code:', e);
     next(e);
   }
 };

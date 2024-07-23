@@ -37,7 +37,6 @@ const getAllStocks = async (req, res, next) => {
       return res.json(stocks);
     }
   } catch (e) {
-    console.error('Error fetching stocks:', e);
     next(e);
   }
 };
@@ -55,7 +54,6 @@ const getStockById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching stock by ID:', e);
     next(e);
   }
 };
@@ -71,7 +69,6 @@ const createStock = async (req, res, next) => {
     const stock = await Stock.create(filteredBody);
     res.status(201).json(stock);
   } catch (e) {
-    console.error('Error creating stock:', e);
     next(e);
   }
 };
@@ -93,7 +90,6 @@ const updateStock = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating stock:', e);
     next(e);
   }
 };
@@ -111,7 +107,6 @@ const deleteStock = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting stock:', e);
     next(e);
   }
 };

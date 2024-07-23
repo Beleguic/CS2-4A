@@ -17,7 +17,6 @@ const getAllCategoryProducts = async (req, res, next) => {
     });
     res.json(categoryProducts);
   } catch (e) {
-    console.error('Error fetching category products:', e);
     next(e);
   }
 };
@@ -38,7 +37,6 @@ const getCategoryProductById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching category product by ID:', e);
     next(e);
   }
 };
@@ -53,7 +51,6 @@ const createCategoryProduct = async (req, res, next) => {
     const categoryProduct = await CategoryProduct.create(req.body);
     res.status(201).json(categoryProduct);
   } catch (e) {
-    console.error('Error creating category product:', e);
     next(e);
   }
 };
@@ -74,7 +71,6 @@ const updateCategoryProduct = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating category product:', e);
     next(e);
   }
 };
@@ -92,7 +88,6 @@ const deleteCategoryProduct = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting category product:', e);
     next(e);
   }
 };

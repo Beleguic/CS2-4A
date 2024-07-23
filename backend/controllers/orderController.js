@@ -17,7 +17,6 @@ const getAllOrders = async (req, res, next) => {
     });
     res.json(orders);
   } catch (e) {
-    console.error('Error fetching orders:', e);
     next(e);
   }
 };
@@ -35,7 +34,6 @@ const getOrderById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching order by ID:', e);
     next(e);
   }
 };
@@ -50,7 +48,6 @@ const createOrder = async (req, res, next) => {
     const order = await Order.create(req.body);
     res.status(201).json(order);
   } catch (e) {
-    console.error('Error creating order:', e);
     next(e);
   }
 };
@@ -73,7 +70,6 @@ const updateOrder = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating order:', e);
     next(e);
   }
 };
@@ -91,7 +87,6 @@ const deleteOrder = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting order:', e);
     next(e);
   }
 };

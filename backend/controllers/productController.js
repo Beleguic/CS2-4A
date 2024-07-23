@@ -36,7 +36,6 @@ const getAllProductsWithStock = async (req, res, next) => {
 
     res.json(productsWithStock);
   } catch (e) {
-    console.error('Error fetching products with stock:', e);
     next(e);
   }
 };
@@ -48,7 +47,6 @@ const getAllProductsForSelection = async (req, res, next) => {
     });
     res.json(products);
   } catch (e) {
-    console.error('Error fetching product list:', e);
     next(e);
   }
 };
@@ -82,7 +80,6 @@ const getAllProducts = async (req, res, next) => {
       });
     }
   } catch (e) {
-    console.error('Error fetching products:', e);
     next(e);
   }
 };
@@ -105,7 +102,6 @@ const getProductById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching product by ID:', e);
     next(e);
   }
 };
@@ -126,7 +122,6 @@ const createProduct = async (req, res, next) => {
     const product = await Product.create(newProductData);
     res.status(201).json(product);
   } catch (e) {
-    console.error('Error creating product:', e);
     next(e);
   }
 };
@@ -149,7 +144,6 @@ const updateProduct = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating product:', e);
     next(e);
   }
 };
@@ -167,7 +161,6 @@ const deleteProduct = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting product:', e);
     next(e);
   }
 };

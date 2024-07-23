@@ -57,7 +57,6 @@ const getAllCarts = async (req, res, next) => {
 
     res.json(cartData);
   } catch (e) {
-    console.error('Error fetching carts:', e);
     next(e);
   }
 };
@@ -77,7 +76,6 @@ const getCartById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching cart by ID:', e);
     next(e);
   }
 };
@@ -143,7 +141,6 @@ const deleteCart = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting cart:', e);
     next(e);
   }
 };
@@ -171,7 +168,6 @@ const removeProductFromCart = async (req, res, next) => {
 
     res.status(200).json(cart);
   } catch (e) {
-    console.error('Error removing product from cart:', e);
     next(e);
   }
 };

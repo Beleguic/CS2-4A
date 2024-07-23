@@ -14,7 +14,6 @@ const getAllPasswordHistories = async (req, res, next) => {
     });
     res.json(passwordHistories);
   } catch (e) {
-    console.error('Error fetching password histories:', e);
     next(e);
   }
 };
@@ -32,7 +31,6 @@ const getPasswordHistoryById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching password history by ID:', e);
     next(e);
   }
 };
@@ -47,7 +45,6 @@ const createPasswordHistory = async (req, res, next) => {
     const passwordHistory = await PasswordHistory.create(req.body);
     res.status(201).json(passwordHistory);
   } catch (e) {
-    console.error('Error creating password history:', e);
     next(e);
   }
 };
@@ -68,7 +65,6 @@ const updatePasswordHistory = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating password history:', e);
     next(e);
   }
 };
@@ -86,7 +82,6 @@ const deletePasswordHistory = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting password history:', e);
     next(e);
   }
 };

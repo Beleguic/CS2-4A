@@ -69,7 +69,6 @@ const login = async (req, res) => {
 
         res.json({ message: 'Login successful', token, userId: user.id, role: user.role });
     } catch (error) {
-        console.error('Error during login:', error);
         res.status(500).json({ message: 'An error occurred during login.' });
     }
 };
@@ -169,7 +168,6 @@ const resetPassword = async (req, res) => {
 
         res.status(200).json({ message: 'Password reset successfully.' });
     } catch (error) {
-        console.error('Error during password reset:', error);
         const statusCode = error.code || 500;
         res.status(statusCode).json({ message: 'An error occurred during password reset.' });
     }
@@ -218,7 +216,6 @@ const register = async (req, res) => {
         user: newUser
       });
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'e-mail:', error);
       res.status(500).json({
         message: "Utilisateur créé, mais l'envoi de l'email a échoué.",
         emailError: error.message,
@@ -227,7 +224,6 @@ const register = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Erreur lors de la création de l\'utilisateur:', error);
     res.status(500).json({ message: 'Erreur lors de la création de l’utilisateur', error: error.message });
   }
 };
@@ -252,7 +248,6 @@ const verifyAccount = async (req, res) => {
       if (error instanceof jwt.JsonWebTokenError) {
           return res.status(401).json({ message: 'Invalid verification token.' });
       }
-      console.error('Error during account verification:', error);
       res.status(500).json({ message: 'An error occurred during account verification.' });
   }
 };
@@ -279,7 +274,6 @@ const checkRole = async (req, res) => {
 
         res.status(200).json({ role: user.role });
     } catch (error) {
-        console.error('Error during role check:', error);
         res.status(500).json({ message: 'An error occurred during role check.' });
     }
 };

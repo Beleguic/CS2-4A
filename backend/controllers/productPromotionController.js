@@ -21,7 +21,6 @@ const getAllProductPromotions = async (req, res, next) => {
     });
     res.json(productPromotions);
   } catch (e) {
-    console.error('Error fetching product promotions:', e);
     next(e);
   }
 };
@@ -39,7 +38,6 @@ const getProductPromotionById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching product promotion by ID:', e);
     next(e);
   }
 };
@@ -54,7 +52,6 @@ const createProductPromotion = async (req, res, next) => {
     const productPromotion = await ProductPromotion.create(req.body);
     res.status(201).json(productPromotion);
   } catch (e) {
-    console.error('Error creating product promotion:', e);
     next(e);
   }
 };
@@ -76,7 +73,6 @@ const updateProductPromotion = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating product promotion:', e);
     next(e);
   }
 };
@@ -94,7 +90,6 @@ const deleteProductPromotion = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting product promotion:', e);
     next(e);
   }
 };

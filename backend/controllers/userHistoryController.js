@@ -19,7 +19,6 @@ const getAllUserHistories = async (req, res, next) => {
     const userHistories = await UserHistory.findAll();
     res.json(userHistories);
   } catch (e) {
-    console.error('Error fetching user histories:', e);
     next(e);
   }
 };
@@ -35,7 +34,6 @@ const getUserHistoryById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching user history by ID:', e);
     next(e);
   }
 };
@@ -50,7 +48,6 @@ const createUserHistory = async (req, res, next) => {
     const userHistory = await UserHistory.create(req.body);
     res.status(201).json(userHistory);
   } catch (e) {
-    console.error('Error creating user history:', e);
     next(e);
   }
 };
@@ -71,7 +68,6 @@ const updateUserHistory = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating user history:', e);
     next(e);
   }
 };
@@ -89,7 +85,6 @@ const deleteUserHistory = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting user history:', e);
     next(e);
   }
 };

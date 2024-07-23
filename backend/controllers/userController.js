@@ -24,7 +24,6 @@ const getAllUsers = async (req, res, next) => {
     const users = await User.findAll();
     res.json(users);
   } catch (e) {
-    console.error('Error fetching users:', e);
     next(e);
   }
 };
@@ -40,7 +39,6 @@ const getUserById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching user by ID:', e);
     next(e);
   }
 };
@@ -56,7 +54,6 @@ const createUser = async (req, res, next) => {
     const user = await User.create(filteredBody);
     res.status(201).json(user);
   } catch (e) {
-    console.error('Error creating user:', e);
     next(e);
   }
 };
@@ -78,7 +75,6 @@ const updateUser = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating user:', e);
     next(e);
   }
 };
@@ -96,7 +92,6 @@ const deleteUser = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting user:', e);
     next(e);
   }
 };

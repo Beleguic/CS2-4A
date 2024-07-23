@@ -17,7 +17,6 @@ const getAllCategoriesForSelection = async (req, res, next) => {
     });
     res.json(categories);
   } catch (e) {
-    console.error('Error fetching category list:', e);
     next(e);
   }
 };
@@ -33,7 +32,6 @@ const getAllCategories = async (req, res, next) => {
     });
     res.json(categories);
   } catch (e) {
-    console.error('Error fetching categories:', e);
     next(e);
   }
 };
@@ -56,7 +54,6 @@ const getCategoryById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching category by ID:', e);
     next(e);
   }
 };
@@ -71,7 +68,6 @@ const createCategory = async (req, res, next) => {
     const category = await Category.create(req.body);
     res.status(201).json(category);
   } catch (e) {
-    console.error('Error creating category:', e);
     next(e);
   }
 };
@@ -92,7 +88,6 @@ const updateCategory = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating category:', e);
     next(e);
   }
 };
@@ -110,7 +105,6 @@ const deleteCategory = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting category:', e);
     next(e);
   }
 };

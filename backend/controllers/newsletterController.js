@@ -13,7 +13,6 @@ const getAllNewsletters = async (req, res, next) => {
     });
     res.json(newsletters);
   } catch (e) {
-    console.error('Error fetching newsletters:', e);
     next(e);
   }
 };
@@ -31,7 +30,6 @@ const getNewsletterById = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching newsletter by ID:', e);
     next(e);
   }
 };
@@ -46,7 +44,6 @@ const createNewsletter = async (req, res, next) => {
     const newsletter = await Newsletter.create(req.body);
     res.status(201).json(newsletter);
   } catch (e) {
-    console.error('Error creating newsletter:', e);
     next(e);
   }
 };
@@ -67,7 +64,6 @@ const updateNewsletter = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating newsletter:', e);
     next(e);
   }
 };
@@ -85,7 +81,6 @@ const deleteNewsletter = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting newsletter:', e);
     next(e);
   }
 };
