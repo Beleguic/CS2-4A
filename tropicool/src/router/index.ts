@@ -45,6 +45,7 @@ import ConditionGeneralDutilisation from '../views/ConditionGeneralDutilisation.
 import VenteAlcool from '../views/VenteAlcool.vue';
 import Cart from '../views/Cart.vue';
 import Search from '../views/Search.vue';
+import NotFound from '../views/NotFound.vue';  // Import the NotFound component
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -426,7 +427,6 @@ const routes: Array<RouteRecordRaw> = [
         component: DBUserForm,
         props: true,
       },
-
     ]
   },
   {
@@ -456,6 +456,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/search',
     name: 'Search',
     component: Search,
+  },
+  {
+    path: '/:pathMatch(.*)*',  // Catch all route for 404
+    name: 'NotFound',
+    component: NotFound,
   },
 ];
 
