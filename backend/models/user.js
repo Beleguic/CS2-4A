@@ -1,3 +1,4 @@
+// Existing imports
 const bcrypt = require('bcryptjs');
 const { Model, DataTypes } = require('sequelize');
 
@@ -151,6 +152,10 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       allowNull: false,
+    },
+    deletion_requested_at: { 
+      type: DataTypes.DATE,
+      allowNull: true,
     }
   }, {
     sequelize,

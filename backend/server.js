@@ -7,7 +7,7 @@ const UserRouter = require("./routes/user");
 const AuthRouter = require("./routes/auth");
 const AlertRouter = require('./routes/alert');
 const CategoryRouter = require("./routes/category");
-const ProductRouter = require("./routes/product");
+const ProductRouter = require('./routes/product');
 const AlertTypeRouter = require('./routes/alertType');
 const CategoryProductRouter = require('./routes/categoryProduct');
 const CartRouter = require('./routes/cart');
@@ -32,12 +32,10 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-
 app.use((req, res, next) => {
     req.transporter = transporter;
     next();
 });
-
 
 app.use(session({
     secret: 'challenge4IWS2',
@@ -46,14 +44,20 @@ app.use(session({
     cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(express.json());
-app.use(cors());
 
+// Configurez les options CORS
+const corsOptions = {
+    origin: 'http://127.0.0.1:8000', // Remplacez par l'URL de votre frontend
+    credentials: true, // Cette option doit être définie sur true pour les requêtes avec credentials (comme les cookies ou l'authentification)
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 
 app.use("/users", UserRouter);
 app.use("/auth", AuthRouter);
@@ -70,7 +74,6 @@ app.use('/user_history', UserHistoryRouter);
 app.use('/password_history', PasswordHistoryRouter);
 app.use('/product_promotion', ProductPromotionRouter);
 app.use('/promotion_code', PromotionRouter);
-
 
 app.listen(process.env.PORT, () => {
     console.log("Server running on port " + process.env.PORT);

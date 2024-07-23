@@ -172,11 +172,42 @@ const deleteUser = async (req, res, next) => {
     next(e);
   }
 };
+const anonymizeUserAndRequestDeletion = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    const requestingUser = await User.findByPk(req.userData.userId);
+
+    if (user) {
+      if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
+        return res.status(403).json({ message: "You cannot delete other admin accounts." });
+      }
+
+      // Anonymize user data and set deletion_requested_at
+      await user.update({
+        email: `anonymized_${user.id}@example.com`,
+        username: `anonymized_${user.id}`,
+        firstName: 'X',
+        lastName: 'X',
+        dateOfBirth: new Date('1900-01-01'),
+        isSubscribedToNewsletter: false,
+        deletion_requested_at: new Date()
+      });
+
+      res.status(200).json({ message: 'User data anonymized and deletion requested successfully' });
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (e) {
+    console.error('Error anonymizing user and requesting deletion:', e);
+    next(e);
+  }
+};
 
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  anonymizeUserAndRequestDeletion // Add this line to export the new function
 };

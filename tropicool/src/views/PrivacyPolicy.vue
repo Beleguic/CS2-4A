@@ -45,7 +45,7 @@
       <ul class="list-disc pl-5">
         <li>Droit d'accès : vous pouvez demander à voir les informations que nous détenons sur vous.</li>
         <li>Droit de rectification : vous pouvez demander à corriger les informations inexactes ou incomplètes.</li>
-        <li>Droit à l'effacement : vous pouvez demander la suppression de vos informations personnelles.</li>
+        <li>Droit à l'effacement : vous pouvez demander la suppression de vos informations personnelles.effective apres 90 jours</li>
         <li>Droit d'opposition : vous pouvez vous opposer à l'utilisation de vos informations personnelles à certaines fins.</li>
         <li>Droit à la portabilité des données : vous pouvez demander à recevoir vos informations personnelles dans un format structuré, couramment utilisé et lisible par machine.</li>
       </ul>
