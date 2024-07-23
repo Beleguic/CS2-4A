@@ -5,7 +5,7 @@
             <div class="w-8/12">
                 <h2 class="text-2xl font-bold mb-1 text-left text-main mb-4">Procéder au paiement</h2>
                 <button @click="handlePayment" class="bg-main hover:bg-secondary text-white py-2 px-4 uppercase text-lg">Procéder au paiement</button>
-                
+
             </div>
         </div>
     </div>-->
@@ -26,79 +26,56 @@
 </template>
 
 <script setup lang="ts">
-//handleSubmit
-/*
-import { ref, watch, onMounted, nextTick } from 'vue';
-import FormComponent from '../components/FormComponent.vue';
-import { loadStripe } from '@stripe/stripe-js';
-
-const stripePromise = loadStripe('pk_test_51Pf1JALuibZ66sl2zkolBm8QingouYyjJHBLrsfWEEnlkm3WQLWBFAew6IWuXCDsR9EHMNbS5Qc9DTgvEGcpAKiF00ZxQnWYxV');
-console.log(stripePromise);
-const form = ref(null);
-
-
-
-/*onMounted(() => {
-    nextTick(() => {
-        watch(() => form.value?.getFieldValue('same'), (newVal) => {
-            if (newVal) {
-                const shippingFields = ['nom', 'prenom', 'societe', 'adresse', 'adresse2', 'ville', 'code_postale', 'telephone'];
-                shippingFields.forEach(field => {
-                    form.value.setFieldValue(`${field}_facturation`, form.value.getFieldValue(field));
-                });
-            } else {
-                const billingFields = ['nom_facturation', 'prenom_facturation', 'societe_facturation', 'adresse_facturation', 'adresse2_facturation', 'ville_facturation', 'code_postale_facturation', 'telephone_facturation'];
-                billingFields.forEach(field => {
-                    form.value.setFieldValue(field, '');
-                });
-            }
-        });
-    });
-});*/
-/*
-const handlePayment = async () => {
-    const stripe = await stripePromise;
-
-    const response = await fetch('http://localhost:3000/stripe/new', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount: 5000 }), // Montant en cents, donc 5000 cents = 50 dollars
-    });
-
-    const { clientSecret } = await response.json();
-
-    if (stripe) {
-    const { error } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-            card: {
-                number: '4242424242424242',
-                exp_month: 12,
-                exp_year: 2024,
-                cvc: '123',
-            },
-        },
-    });
-    
-      if (error) {
-        console.error(error.message);
-      } else {
-        console.log('Payment successful');
-      }
-    }
-};*/
-
 import { ref, onMounted, onUnmounted } from 'vue';
 import { loadStripe } from '@stripe/stripe-js';
 import FormComponent from './FormComponent.vue';
+import { useRoute } from 'vue-router';
+import axios from "axios";
+import {useAuthStore} from "../stores/authStore.ts";
+
+const authStore = useAuthStore();
+const isLoggedIn = ref(authStore.isLoggedIn);
+
+const cartItems = ref<CartItem[]>([]);
+const cartId = ref<string | null>(null);
+
+interface CartItem {
+    product_id: string;
+    name: string;
+    image: string;
+    price: number;
+    quantity: number;
+    reference: string;
+    tva: number;
+    is_adult: boolean;
+}
+
+interface Cart {
+    id: string;
+    user_id: string;
+    cartProductsData: CartItem[];
+}
+
+interface Order {
+    user_id: string;
+    products: CartItem[];
+}
+
+const route = useRoute();
 
 const stripePromise = loadStripe('pk_test_51Pf1JALuibZ66sl2zkolBm8QingouYyjJHBLrsfWEEnlkm3WQLWBFAew6IWuXCDsR9EHMNbS5Qc9DTgvEGcpAKiF00ZxQnWYxV');
 const errorMessage = ref('');
 const loading = ref(false);
 let cardElement: any;
+const userId = ref('');
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
+
+const cart = ref<Cart>({
+    id: '',
+    user_id: '',
+    cartProductsData: [],
+});
 
 const fields = [
     {
@@ -133,24 +110,50 @@ const fields = [
 ];
 
 onMounted(() => {
-const setupStripe = async () => {
-    const stripe = await stripePromise;
-    const elements = stripe ? stripe.elements() : null;
-    if (elements) {
-        cardElement = elements.create('card');
-        cardElement.mount('#card-element');
-    }
-};
-  setupStripe();
+
+    userId.value = route.query.user_id as string;
+    const setupStripe = async () => {
+        const stripe = await stripePromise;
+        const elements = stripe ? stripe.elements() : null;
+        if (elements) {
+            cardElement = elements.create('card');
+            cardElement.mount('#card-element');
+        }
+    };
+    setupStripe();
+
+
 });
 
 onUnmounted(() => {
-  if (cardElement) {
-    cardElement.destroy();
-  }
+    if (cardElement) {
+        // Destruction des informations bancaires
+        cardElement.destroy();
+    }
 });
 
 const handleSubmit = async () => {
+    try {
+        console.log('------------------------', userId.value);
+        const responseCart = await axios.get(`${apiUrl}/cart/user/${userId.value}`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+
+        console.log('responseCart', responseCart);
+        cart.value = responseCart.data;
+
+    } catch (err) {
+        errorMessage.value = 'Une erreur est survenue. Veuillez réessayer.';
+        console.error(err);
+    } finally {
+        loading.value = false;
+    }
+
+    console.log('cart', cart.value);
+
     loading.value = true;
     errorMessage.value = '';
 
@@ -168,18 +171,29 @@ const handleSubmit = async () => {
         const stripe = await stripePromise;
         const { error } = await stripe.confirmCardPayment(clientSecret, {
             payment_method: {
-            card: cardElement,
-         },
+                card: cardElement,
+            },
         });
 
         if (error) {
             errorMessage.value = error.message;
         } else {
+
+            const order: Order = {
+                user_id: cart.value.user_id,
+                products: cart.value.cartProductsData,
+            };
+
+            // Envoie la commande au serveur pour la sauvegarder
+            const apiUrl = import.meta.env.VITE_API_URL as string;
+            const response = await axios.post(`${apiUrl}/order/new`, order);
+
+            console.log(response.data);
+
+            // Modifier le stock pour retirer les produits achetés
+            // Requete la poste pour recup le numero de livraison + ajouter livraison dans la poste
+            // Ajouter dans le model order du numero de livraison
             console.log('Payment successful');
-            // Redirection vers la page de resumé de commande :)
-            // Afficher les commande passé sur le profile de l'utilisateur
-            // Genere un PDF de la commande
-            
         }
 
     } catch (err) {
@@ -189,7 +203,13 @@ const handleSubmit = async () => {
         loading.value = false;
     }
 };
+
+/*
+
+
+    */
 </script>
+
 
 <style scoped>
 </style>

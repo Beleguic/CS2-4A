@@ -201,6 +201,28 @@ const getTotalProductCount = async (req, res, next) => {
   }
 };
 
+const getCartByUserId = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const cart = await Cart.findOne({
+      where: { user_id: userId },
+      include: [
+        { model: User, as: 'user', attributes: ['id'] }
+      ]
+    });
+
+    if (cart) {
+      res.json(cart);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (e) {
+    console.error('Error fetching cart by user ID:', e);
+    next(e);
+  }
+};
+
+
 
 
 module.exports = {
@@ -210,7 +232,8 @@ module.exports = {
   updateCart,
   deleteCart,
   removeProductFromCart,
-  getTotalProductCount 
+  getTotalProductCount,
+    getCartByUserId
 };
 ////
 //g

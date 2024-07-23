@@ -94,7 +94,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:promoCode', 'update:reduction', 'update:promoMessage']);
+const emit = defineEmits(['update:promoCode', 'update:reduction', 'update:promoMessage', 'update:cartProductsData', 'update:user_id']);
 
 const router = useRouter(); // Utiliser le routeur
 
@@ -158,28 +158,21 @@ const updatedTva = computed(() => {
 });
 
 const submitCart = async () => {
-  try {
-    // Crée une commande basée sur le panier actuel
-    const order: Order = {
-      user_id: props.user_id,
-      products: props.cartProductsData,
-    };
-
-    // Envoie la commande au serveur pour la sauvegarder
-    const apiUrl = import.meta.env.VITE_API_URL as string;
-    const response = await axios.post(`${apiUrl}/order/new`, order);
-
-    if (response.status === 201) {
-      console.log("Order submitted successfully");
-      // Rediriger vers la page de paiement
-      router.push({ name: 'Payment' });
-    } else {
-      console.error("Failed to submit order", response);
+    try {
+        console.log("Submitting cart", props.cartProductsData);
+        console.log("User ID", props.user_id);
+        await router.push({
+            name: 'Payment',
+            query: {
+                user_id: props.user_id,
+            }
+        });
+    } catch (error) {
+        console.error("Error submitting cart", error);
     }
-  } catch (error) {
-    console.error("Error submitting cart", error);
-  }
 };
+
+
 </script>
 
 <style scoped>
