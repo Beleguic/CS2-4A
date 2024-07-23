@@ -554,7 +554,9 @@ const routes: Array<RouteRecordRaw> = [
     path: '/payment',
     name: 'Payment',
     component: Payment,
-  },
+    props: true,
+  }
+
 ];
 
 const router = createRouter({
