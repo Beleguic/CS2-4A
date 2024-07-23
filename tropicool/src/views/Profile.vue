@@ -14,7 +14,8 @@
           <div class="form-group">
             <label for="rgpdCheckbox">
               <input type="checkbox" id="rgpdCheckbox" v-model="rgpdChecked" />
-              J'accepte que mes données soient anonymisées conformément à la politique de confidentialité suite à la suppression de mon compte dans 60 jours. <a href="/privacy-policy">En savoir plus.</a>
+              J'accepte que mes données soient anonymisées conformément à la politique de confidentialité suite à la suppression de mon compte effective dans 90 jours. 
+              <a href="/privacy-policy" class="link">En savoir plus.</a>
             </label>
           </div>
           <button type="submit" :disabled="!rgpdChecked">Supprimer mon compte</button>
@@ -162,18 +163,22 @@ const deleteAccount = async () => {
   
   if (confirm("Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.")) {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/delete-account`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include' // Assuming credentials might be needed
+      // Anonymize and request account deletion
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/anonymize-and-request-deletion/${userId}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        credentials: 'include' // Assurez-vous que les credentials sont inclus
       });
 
       if (!response.ok) {
         const message = await response.text();
-        throw new Error(message || 'Failed to delete account');
+        throw new Error(message || 'Failed to request account deletion');
       }
 
-      alert('Votre compte a été supprimé avec succès.');
+      alert('Votre compte a été anonymisé et sera supprimé dans 90 jours.');
       router.push('/'); // Redirect to home page or sign-in page
     } catch (error) {
       console.error('Erreur lors de la suppression du compte:', error);
@@ -181,6 +186,7 @@ const deleteAccount = async () => {
     }
   }
 };
+
 
 const redirectToForgotPassword = () => {
   router.push({ name: 'ForgotPassword' });
@@ -245,5 +251,13 @@ button {
 }
 button:disabled {
   background-color: #ccc;
+}
+.link {
+  color: #1E90FF; /* Bleu comme un lien */
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link:hover {
+  color: #104E8B; /* Bleu plus foncé au survol */
 }
 </style>
