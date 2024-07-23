@@ -28,7 +28,7 @@ exports.getLivraisonById = async (req, res) => {
 
 // Créer une nouvelle livraison
 exports.createLivraison = async (req, res) => {
-    console.log(Livraison);
+    console.log('Livraison');
     try {
         console.log(req.body);
         const newLivraison = await Livraison.create(req.body);

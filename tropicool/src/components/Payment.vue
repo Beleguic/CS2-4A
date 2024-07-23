@@ -16,6 +16,7 @@
                 <FormComponent
                     :fields="fields"
                     ref="form"
+                    v-model:formData="fields"
                     submitButtonText="Procéder au paiement"
                     @submit="handleSubmit"
                 />
@@ -38,6 +39,7 @@ const isLoggedIn = ref(authStore.isLoggedIn);
 
 const total = ref(0);
 const tva = ref(0);
+const livraisonNumber = ref('');
 
 const cartItems = ref<CartItem[]>([]);
 const cartId = ref<string | null>(null);
@@ -62,6 +64,10 @@ interface Cart {
 interface Order {
     user_id: string;
     products: CartItem[];
+    total: number;
+    tva: number;
+    isPayed: boolean;
+    livraison: string;
 }
 
 interface Stock {
@@ -69,6 +75,11 @@ interface Stock {
     product_id: string;
     quantity: number;
     status: "remove";
+}
+
+interface livraison{
+    expiditeur: JSON;
+    destinataire: JSON;
 }
 
 const route = useRoute();
@@ -80,6 +91,8 @@ let cardElement: any;
 const userId = ref('');
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
+const posteUrl = "http://localhost:3001"
+console.log(posteUrl);
 
 const cart = ref<Cart>({
     id: '',
@@ -92,6 +105,11 @@ const stock = ref<Stock>({
     product_id: '',
     quantity: 0,
     status: 'remove',
+});
+
+const livraison = ref<livraison>({
+    expediteur: {},
+    destinataire: {}
 });
 
 const fields = [
@@ -151,7 +169,63 @@ onUnmounted(() => {
     }
 });
 
-const handleSubmit = async () => {
+const handleSubmit = async (formData) => {
+
+    console.log('formData', formData);
+
+    console.log(formData.adresse);
+    const addrLivraison = {
+        "nom": formData.nom,
+        "prenom": formData.prenom,
+        "societe": formData.societe,
+        "adresse": formData.adresse,
+        "adresse2": formData.adresse2,
+        "ville": formData.ville,
+        "code_postale": formData.code_postale,
+        "telephone": formData.telephone
+    };
+    const addrFacturation = {
+        "nom": formData.nom_facturation,
+        "prenom": formData.prenom_facturation,
+        "societe": formData.societe_facturation,
+        "adresse": formData.adresse_facturation,
+        "adresse2": formData.adresse2_facturation,
+        "ville": formData.ville_facturation,
+        "code_postale": formData.code_postale_facturation,
+        "telephone": formData.telephone_facturation
+    };
+    const addrExpedition = {
+        "nom_entreprise": "Troupicool",
+        "adresse": "1 rue du confinement",
+        "code_postal": "75012",
+        "ville": "Paris",
+        "pays": "France"
+    };
+
+    livraison.value.destinataire = addrLivraison;
+    livraison.value.expediteur = addrExpedition;
+
+    try {
+        const responseLivraison = await fetch(`${posteUrl}/new`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(livraison.value),
+        });
+        const livraisonData = await responseLivraison.json();
+        console.log('responseLivraison', livraisonData);
+        livraisonNumber.value = livraisonData.livraison;
+
+        console.log('livraisonNumber', livraisonNumber.value);
+
+    } catch (err) {
+        errorMessage.value = 'Une erreur est survenue. Veuillez réessayer.';
+        console.error(err);
+    } finally {
+        loading.value = false;
+    }
+
     try {
         console.log('------------------------', userId.value);
         const responseCart = await axios.get(`${apiUrl}/cart/user/${userId.value}`, {
@@ -171,8 +245,6 @@ const handleSubmit = async () => {
     }
 
     console.log('cart', cart.value);
-
-
 
     loading.value = true;
     errorMessage.value = '';
@@ -202,12 +274,16 @@ const handleSubmit = async () => {
             const order: Order = {
                 user_id: cart.value.user_id,
                 products: cart.value.cartProductsData,
+                total: total.value,
+                tva: tva.value,
+                isPayed: true,
+                livraison: livraisonNumber.value,
             };
 
             // Envoie la commande au serveur pour la sauvegarder
-            const response = await axios.post(`${apiUrl}/order/new`, order);
+            const responseOrder = await axios.post(`${apiUrl}/order/new`, order);
 
-            console.log(response.data);
+            console.log(responseOrder.data);
 
             const stocks: Stock[] = [];
 
@@ -243,7 +319,6 @@ const handleSubmit = async () => {
                 }
             }
 
-
             // Requete la poste pour recup le numero de livraison + ajouter livraison dans la poste
             // Ajouter dans le model order du numero de livraison
             console.log('Payment successful');
@@ -256,6 +331,7 @@ const handleSubmit = async () => {
         loading.value = false;
     }
 };
+
 
 
 /*

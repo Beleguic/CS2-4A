@@ -15,6 +15,10 @@ app.use(session({
     cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
+app.get('/', (req, res) => {
+    res.send('Bienvenue sur Troupicool Delivery!');
+});
+
 // Middlewares standards pour le parsing des cookies et des JSON bodies
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(express.json());  // Assurez-vous que ce middleware est présent
