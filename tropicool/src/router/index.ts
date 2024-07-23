@@ -48,6 +48,7 @@ import Search from '../views/Search.vue';
 import DBStockView from "../views/DBStockView.vue";
 import DBStockGraph from "../views/DBStockGraph.vue";
 import AddAlert from '../views/AddAlert.vue';
+import NotFound from '../views/NotFound.vue';  // Import the NotFound component
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -541,6 +542,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/add-alert',
     name: 'AddAlert',
     component: AddAlert,
+  },
+  {
+    path: '/:pathMatch(.*)*',  // Catch all route for 404
+    name: 'NotFound',
+    component: NotFound,
   },
 ];
 

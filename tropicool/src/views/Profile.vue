@@ -8,6 +8,19 @@
       @submit="handleSubmit"
     />
     <button @click="redirectToForgotPassword" class="action-button">Changer le mot de passe</button>
+    <div class="w-full max-w-7xl mx-auto py-4">
+      <div class="profile-view">
+        <form @submit.prevent="deleteAccount">
+          <div class="form-group">
+            <label for="rgpdCheckbox">
+              <input type="checkbox" id="rgpdCheckbox" v-model="rgpdChecked" />
+              J'accepte que mes données soient anonymisées conformément à la politique de confidentialité suite à la suppression de mon compte dans 60 jours. <a href="/privacy-policy">En savoir plus.</a>
+            </label>
+          </div>
+          <button type="submit" :disabled="!rgpdChecked">Supprimer mon compte</button>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -60,6 +73,8 @@ const fields = ref([
     ]
   }
 ]);
+
+const rgpdChecked = ref(false);
 
 const fetchUserData = async () => {
   try {
@@ -139,6 +154,34 @@ const handleDeleteAlert = async (id) => {
   }
 };
 
+const deleteAccount = async () => {
+  if (!rgpdChecked.value) {
+    alert("Veuillez accepter la politique de confidentialité pour continuer.");
+    return;
+  }
+  
+  if (confirm("Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.")) {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/delete-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' // Assuming credentials might be needed
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || 'Failed to delete account');
+      }
+
+      alert('Votre compte a été supprimé avec succès.');
+      router.push('/'); // Redirect to home page or sign-in page
+    } catch (error) {
+      console.error('Erreur lors de la suppression du compte:', error);
+      alert(error.message || 'Erreur lors de la suppression du compte.');
+    }
+  }
+};
+
 const redirectToForgotPassword = () => {
   router.push({ name: 'ForgotPassword' });
 };
@@ -179,5 +222,28 @@ onMounted(() => {
 }
 .profile-page button:hover {
   background: #5756A1;
+}
+.profile-view {
+  margin: auto;
+  width: 50%;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.form-group {
+  margin-bottom: 20px;
+}
+button {
+  background-color: #f44336; /* Red */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+}
+button:disabled {
+  background-color: #ccc;
 }
 </style>
