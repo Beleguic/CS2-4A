@@ -32,6 +32,9 @@
 import { ref, onMounted, nextTick, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ProductCardComponent from '../components/ProductCardComponent.vue';
+import { useToast } from 'vue-toast-notification';
+
+const $toast = useToast();
 
 interface Product {
   id: string;
@@ -70,21 +73,30 @@ onMounted(async () => {
       method: 'GET',
     });
 
+    console.log('response :', response);
+
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      $toast.open({
+        message: 'Erreur, veuillez recommencer',
+        type: 'error',
+        position: 'bottom-left',
+      });
     }
 
     const data = await response.json();
     if (Array.isArray(data) && data.length > 0) {
       category.value = data[0] as Category;
-      console.log("category:", category.value);
       await nextTick();  // Ensure the DOM is updated
       updateMaxWidth();
     } else {
       category.value = null;
     }
   } catch (error) {
-    console.error('Error fetching category:', error);
+    $toast.open({
+      message: 'Erreur, veuillez recommencer',
+      type: 'error',
+      position: 'bottom-left',
+    });
   }
 });
 

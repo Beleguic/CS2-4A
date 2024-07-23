@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { useToast } from 'vue-toast-notification';
+
+const $toast = useToast();
 import { forEachChild } from 'typescript';
 
 interface Product {
@@ -51,17 +54,14 @@ export async function useAddToCartFormValidation(
   const apiUrl = import.meta.env.VITE_API_URL;
 
   if (!userId) {
-    console.error("User is not logged in");
     return { message: { error: "Veuillez vous connecter" } };
   }
 
   if (!item) {
-    console.error("Item is not provided");
     return { message: { error: "Item is required" } };
   }
 
   if (isNaN(quantity) || quantity <= 0 || quantity >= 11) {
-    console.error("Invalid quantity", quantity);
     return { message: { error: "La quantité ne doit pas excéder 10 !" } };
   }
 
@@ -69,7 +69,6 @@ export async function useAddToCartFormValidation(
     const productResponse = await axios.get<Product>(`${apiUrl}/product/${item}`);
     const product = productResponse.data;
     if (!product) {
-      console.error("Invalid product", item);
       return { message: { error: "Veuillez choisir un produit valide" } };
     }
 
@@ -87,7 +86,6 @@ export async function useAddToCartFormValidation(
     const numberProductOnCart = cartResponseProduct.data;
 
     if (!latestStock || (latestStock.quantity - numberProductOnCart.total_count) < quantity) { // 
-      console.error("Insufficient stock", latestStock);
       return { message: { error: "Stock indisponible" } };
     }
 
@@ -151,7 +149,6 @@ export async function useAddToCartFormValidation(
 
     return { message: { success: "Produit ajouté au panier !" } };
   } catch (error) {
-    console.error("An error has occurred", error);
-    return { message: { error: "An error has occurred" } };
+    return { message: { error: "Erreur! Veuillez recommencer!" } };
   }
 }

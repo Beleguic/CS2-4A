@@ -72,7 +72,8 @@
               class="w-6 h-6 px-3 py-2 border border-gray-300 cursor-pointer"
             />
             <label :for="field.name" class="block mb-1 ml-2 cursor-pointer" :style="{color: field.color}">
-              <router-link :to="field.link" class="underline text-blue-500">{{ field.label }}</router-link>
+              <router-link v-if="field.link" :to="field.link" class="underline text-blue-500">{{ field.label }}</router-link>
+              <span v-else>{{ field.label }}</span>
             </label>
             <span v-if="errors[field.name]" class="text-red-500">{{ errors[field.name] }}</span>
           </div>
@@ -128,8 +129,6 @@ const props = defineProps({
   },
 });
 
-console.log('Props received in FormComponent:', props);
-
 const emit = defineEmits(['submit', 'update:modelValue']);
 
 const { formData: localFormData, errors, validateForm, resetErrors } = useFormValidation(props.fields);
@@ -152,7 +151,7 @@ watch(
 
 const handleSubmit = () => {
   resetErrors();
-  const validationErrors = validateForm(localFormData.value);
+  const validationErrors = validateForm(localFormData);
   if (Object.keys(validationErrors).length === 0) {
     emit('update:modelValue', localFormData);
     if (props.onSubmit && typeof props.onSubmit === 'function') {

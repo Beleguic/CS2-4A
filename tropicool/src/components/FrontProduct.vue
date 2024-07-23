@@ -98,7 +98,9 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ProductCardComponent from '../components/ProductCardComponent.vue';
 import iconFilterSetting from '../assets/icons/filter-setting.svg';
+import { useToast } from 'vue-toast-notification';
 
+const $toast = useToast();
 const products = ref<any[]>([]);
 const categories = ref<any[]>([]);
 const selectedCategory = ref<string>('');
@@ -111,7 +113,7 @@ const stockFilter = ref<string | null>(null);
 const apiUrl = import.meta.env.VITE_API_URL;
 const searchInput = ref<HTMLInputElement | null>(null);
 const filtersVisible = ref(true);
-const asideStyle = ref({ top: '139px', maxHeight: '780px' });
+const asideStyle = ref({ top: '139px', maxHeight: 'fit-content' });
 
 const router = useRouter();
 const route = useRoute();
@@ -139,7 +141,11 @@ const fetchCategories = async () => {
     });
 
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      $toast.open({
+        message: 'Erreur, veuillez recommencer',
+        type: 'error',
+        position: 'bottom-left',
+      });
     }
 
     const data = await response.json();
@@ -147,7 +153,11 @@ const fetchCategories = async () => {
 
     syncFiltersWithRoute();
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    $toast.open({
+      message: 'Erreur, veuillez recommencer',
+      type: 'error',
+      position: 'bottom-left',
+    });
   }
 };
 
@@ -186,13 +196,21 @@ const fetchProducts = async () => {
     });
 
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+        $toast.open({
+        message: 'Erreur, veuillez recommencer',
+        type: 'error',
+        position: 'bottom-left',
+      });
     }
 
     const data = await response.json();
     products.value = Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error('Error fetching products:', error);
+    $toast.open({
+      message: 'Erreur, veuillez recommencer',
+      type: 'error',
+      position: 'bottom-left',
+    });
     products.value = [];
   }
 };

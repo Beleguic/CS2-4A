@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import router from '../router';
+import { useToast } from 'vue-toast-notification';
+const $toast = useToast();
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -21,15 +23,21 @@ export const useAuthStore = defineStore('auth', {
 
         if (!response.ok) {
           const errorData = await response.json();
-          const serverError = errorData.message || 'Une erreur de réseau est survenue';
-          const loginAttempts = errorData.loginAttempts || 0;
-          console.log(`Tentatives de connexion échouées: ${loginAttempts}`);
+          errorData.message || 'Une erreur de réseau est survenue';
 
           if (errorData.forcePasswordChange) {
-            alert("Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser.");
+            $toast.open({
+              message: 'Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser !',
+              type: 'error',
+              position: 'bottom-left',
+            });
           }
 
-          throw new Error('Login failed: ' + serverError);
+          $toast.open({
+            message: 'Erreur, veuillez recommencer !',
+            type: 'error',
+            position: 'bottom-left',
+          });        
         }
 
         const data = await response.json();
@@ -42,12 +50,20 @@ export const useAuthStore = defineStore('auth', {
           this.userId = data.userId;
           this.userRole = data.role;
           this.isVerified = data.isVerified;
-          console.log("Connexion réussie");
+          
+          $toast.open({
+            message: 'Connexion réussie !',
+            type: 'success',
+            position: 'bottom-left',
+          });
           router.push({ name: 'Home' });
         }
-      } catch (error) {
-        console.error('Error during login:', error);
-        throw new Error('Login failed: An unexpected error occurred');
+      } catch (e) {
+        $toast.open({
+          message: 'Erreur, veuillez recommencer !',
+          type: 'error',
+          position: 'bottom-left',
+        });
       }
     },
     logout() {
@@ -59,7 +75,6 @@ export const useAuthStore = defineStore('auth', {
       this.userId = null;
       this.userRole = null;
       this.isVerified = null;
-      console.log("Déconnexion réussie");
       router.push({ name: 'Login' });
     }
   }

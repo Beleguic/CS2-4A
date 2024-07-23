@@ -20,7 +20,9 @@
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import FormComponent from '../components/FormComponent.vue';
+import { useToast } from 'vue-toast-notification';
 
+const $toast = useToast();
 const route = useRoute();
 
 const formData = ref({
@@ -43,7 +45,11 @@ const updateFormData = (newData) => {
 
 const submit = async () => {
   if (formData.value.password !== formData.value.confirmPassword) {
-    alert("Les mots de passe ne correspondent pas.");
+    $toast.open({
+      message: 'Les mots de passe ne correspondent pas.',
+      type: 'error',
+      position: 'bottom-left',
+    }); 
     return;
   }
 
@@ -59,13 +65,25 @@ const submit = async () => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Une erreur est survenue. Veuillez réessayer.');
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      });
     }
 
-    alert('Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.');
+    $toast.open({
+      message: 'Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.',
+      type: 'success',
+      position: 'bottom-left',
+    }); 
+
   } catch (error) {
-    console.error('Erreur lors de la réinitialisation du mot de passe:', error);
-    alert(error.message);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    });
   }
 };
 </script>

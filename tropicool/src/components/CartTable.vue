@@ -49,6 +49,9 @@
 <script setup lang="ts">
 import { defineProps, ref, defineEmits } from 'vue';
 import { useUpdateCartItemQuantity } from '../composables/useUpdateCartItemQuantity';
+import { useToast } from 'vue-toast-notification';
+
+const $toast = useToast();
 
 interface CartItem {
   product_id: string;
@@ -74,8 +77,17 @@ const handleUpdateQuantity = async (productId: string) => {
   const response = await updateQuantity(productId, userId);
   if (response.message.success) {
     emit('update-cart');
+    $toast.open({
+      message: 'Panier mis-à-jour!',
+      type: 'success',
+      position: 'bottom-left',
+    });
   } else {
-    alert(response.message.error);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    });
   }
 };
 

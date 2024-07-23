@@ -1,7 +1,7 @@
 const Stripe = require('stripe');
 const Joi = require('joi');
 
-const stripe = new Stripe("sk_test_51Pf1JALuibZ66sl2UVOj54S3zPT8rkudasqEBHgr3xvAnn5GzztDYrBh9DuH9lfDPmvzJHQB0uS09jjiFqIUJRs100nn667Fdn"); // Utilisez les variables d'environnement
+const stripe = new Stripe(process.env.STRIPE_SK); // Utilisez les variables d'environnement
 
 const stripeSchema = Joi.object({
     amount: Joi.number().integer().min(0).required(),
