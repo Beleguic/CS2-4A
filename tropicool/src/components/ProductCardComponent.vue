@@ -21,6 +21,9 @@
 
 <script setup>
 import { defineProps } from 'vue';
+import { useToast } from 'vue-toast-notification';
+
+const $toast = useToast();
 
 const props = defineProps({
   product: {
@@ -34,24 +37,24 @@ const getImageUrl = (path) => {
   let relativePath = path;
 
   if (!path) {
-    console.error('Path is undefined or null');
+    $toast.open({
+      message: 'Erreur, veuillez recommencer',
+      type: 'error',
+      position: 'bottom-left',
+    });
     return '';
   }
 
-  // Enlever le chemin de base s'il est déjà présent
   if (path.startsWith(baseUrl)) {
     relativePath = path.replace(baseUrl, '');
   }
 
-  // Enlever la partie spécifique au système de fichiers pour obtenir un chemin relatif
   relativePath = relativePath.replace('/home/node/app', '');
 
-  // Ajouter une barre oblique initiale si elle est absente
   if (!relativePath.startsWith('/')) {
     relativePath = `/${relativePath}`;
   }
 
-  // Construire l'URL complète
   const imageUrl = `${baseUrl}${relativePath}`;
   return imageUrl;
 };

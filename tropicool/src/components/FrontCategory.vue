@@ -25,6 +25,9 @@
   import { ref, onMounted } from 'vue';
   import axios from 'axios';
   import Cards from '../components/CardsComponent.vue';
+  import { useToast } from 'vue-toast-notification';
+
+  const $toast = useToast();
 
   interface Category {
     id: number;
@@ -45,7 +48,11 @@
           const response = await axios.get<Category[]>(`${apiUrl}/category?frontend=true`);
           categories.value = response.data;
       } catch (error) {
-          console.error('Error fetching categories:', error);
+        $toast.open({
+          message: 'Erreur! Veuillez recommencer!',
+          type: 'error',
+          position: 'bottom-left',
+        }); 
       }
   });
 </script>
