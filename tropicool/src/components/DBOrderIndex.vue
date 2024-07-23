@@ -50,8 +50,8 @@ const fetchOrders = async () => {
     const ordersWithUsers = response.data.map(order => {
       return {
         ...order,
-        username: order.User.username,
-        email: order.User.email,
+        username: order.user.username,
+        email: order.user.email,
         products: JSON.stringify(order.products),
         created_at: dayjs(order.created_at).format('DD/MM/YYYY HH:mm')
       };

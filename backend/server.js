@@ -22,6 +22,14 @@ const cors = require("cors");
 const nodemailer = require('nodemailer');
 const app = express();
 
+// Configuration CORS
+app.use(cors({
+    origin: 'https://troupicool.fr',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
+}));
+
+// Configuration de Nodemailer
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
@@ -32,13 +40,13 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-
+// Middleware pour rendre le transporter disponible dans les requêtes
 app.use((req, res, next) => {
     req.transporter = transporter;
     next();
 });
 
-
+// Configuration de la session
 app.use(session({
     secret: 'challenge4IWS2',
     resave: false,
@@ -46,15 +54,17 @@ app.use(session({
     cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-
+// Middlewares standards pour le parsing des cookies et des JSON bodies
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(express.json());
-app.use(cors());
 
+// Route pour vérifier le fonctionnement du serveur
+app.get('/', (req, res) => {
+    res.send('Bienvenue sur le serveur Troupicool!');
+});
 
+// Utilisation des routers
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-
 app.use("/users", UserRouter);
 app.use("/auth", AuthRouter);
 app.use("/category", CategoryRouter);
@@ -71,7 +81,7 @@ app.use('/password_history', PasswordHistoryRouter);
 app.use('/product_promotion', ProductPromotionRouter);
 app.use('/promotion_code', PromotionRouter);
 
-
+// Démarrage du serveur
 app.listen(process.env.PORT, () => {
     console.log("Server running on port " + process.env.PORT);
 });

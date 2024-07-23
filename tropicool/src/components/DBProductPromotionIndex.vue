@@ -36,7 +36,15 @@ interface ProductPromotion {
   end_at: string;
 }
 
-const datas = ref<ProductPromotion[]>([]);
+// Interface pour la structure aplatie
+interface FlattenedProductPromotion {
+  id: string;
+  product_name: string;
+  start_at: string;
+  end_at: string;
+}
+
+const datas = ref<FlattenedProductPromotion[]>([]);
 
 const columns = [
   { key: 'id', label: 'ID' },

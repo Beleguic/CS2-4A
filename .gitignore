@@ -10,6 +10,7 @@ tropicool/node_modules/
 tropicool/.npm/
 tropicool/.npm/_logs
 tropicool/.env
+tropicool/.env.production
 package-lock.json
 tropicool/package-lock.json
 tropicool/public/uploads/*

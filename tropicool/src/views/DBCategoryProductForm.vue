@@ -54,15 +54,18 @@ const categoryProduct = ref<CategoryProduct>({
 const categories = ref<Category[]>([]);
 const products = ref<Product[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const mode = ref<'new' | 'edit' | 'delete'>(
+  route.name && typeof route.name === 'string' && route.name.includes('New') ? 'new' :
+  route.name && typeof route.name === 'string' && route.name.includes('Edit') ? 'edit' : 'delete'
+);
 const fields = ref<any[]>([]);
 
 const generateFields = () => [
   {
     header: "Formulaire",
     field: [
-      [{type: "select",name: "category_id",label: "Catégorie",required: true,options: categories.value,color: "#000000"}],
-      [{type: "select",name: "product_id",label: "Produit",required: true,options: products.value,color: "#000000"}]
+      [{type: "select", name: "category_id", label: "Catégorie", required: true, options: categories.value, color: "#000000"}],
+      [{type: "select", name: "product_id", label: "Produit", required: true, options: products.value, color: "#000000"}]
     ]
   }
 ];
@@ -96,7 +99,6 @@ const fetchCategories = async () => {
 };
 
 onMounted(async () => {
-
   await fetchProducts();
   await fetchCategories();
 
@@ -105,29 +107,19 @@ onMounted(async () => {
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
       const response = await axios.get<CategoryProduct>(`${apiUrl}/category_product/${route.params.id}`);
-      const { category, product, ...rest } = response.data; // Exclude category and product from the data
-      categoryProduct.value = rest;
+      categoryProduct.value = response.data;
     } catch (error) {
       console.error('Error fetching category product:', error);
     }
   }
-  try {
-    const categoryResponse = await axios.get<Category[]>(`${apiUrl}/category`);
-    const productResponse = await axios.get<Product[]>(`${apiUrl}/product`);
-    categories.value = categoryResponse.data;
-    products.value = productResponse.data;
-  } catch (error) {
-    console.error('Error fetching categories or products:', error);
-  }
 });
 
 const submitForm = async (formData: CategoryProduct) => {
-  console.log(categoryProduct.value);
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/category_product/new` : `${apiUrl}/category_product/${route.params.id}`;
 
-    const { id, category, product, ...payload } = formData;
+    const { id, ...payload } = formData;
 
     const response = await axios({
       method,

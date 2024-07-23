@@ -32,9 +32,9 @@ import FormComponent from '../components/FormComponent.vue';
 interface Alert {
   id?: string;
   alert_type_id: string;
-  product_id?: string;
-  category_id?: string;
-  user_id?: string;
+  product_id?: string | null;
+  category_id?: string | null;
+  user_id?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -72,7 +72,10 @@ const categories = ref<Category[]>([]);
 const alertTypes = ref<AlertType[]>([]);
 const users = ref<User[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const mode = ref<'new' | 'edit' | 'delete'>(
+  route.name && typeof route.name === 'string' && route.name.includes('New') ? 'new' :
+  route.name && typeof route.name === 'string' && route.name.includes('Edit') ? 'edit' : 'delete'
+);
 const fields = ref<any[]>([]);
 
 const fetchProducts = async () => {
@@ -228,7 +231,7 @@ onMounted(async () => {
 
 watch(
   () => alert.value,
-  (newAlert) => {
+  () => {
     fields.value = generateFields();
   },
   { deep: true }

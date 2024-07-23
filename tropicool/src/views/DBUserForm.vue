@@ -36,7 +36,7 @@
         </div>
         <div class="grid gap-1">
           <label for="is_verified" class="block text-sm font-medium text-gray-700">Vérifié</label>
-          <input type="checkbox" id="is_verified" v-model="user.is_verified" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" />
+          <input type="checkbox" id="is_verified" v-model="user.is_verified" class="p-2 block border border-gray-300 rounded-md shadow-sm" />
         </div>
         <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
       </form>
@@ -68,6 +68,14 @@ interface User {
   username: string;
   firstName: string;
   lastName: string;
+  created_at?: string;
+  updated_at?: string;
+  verification_token?: string;
+  reset_password_token?: string;
+  reset_password_expires?: string;
+  login_attempts?: number;
+  lock_until?: string;
+  password_last_changed?: string;
 }
 
 const route = useRoute();
@@ -83,7 +91,10 @@ const user = ref<User>({
   lastName: ''
 });
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const mode = ref<'new' | 'edit' | 'delete'>(
+  typeof route.name === 'string' && route.name.includes('New') ? 'new' :
+  typeof route.name === 'string' && route.name.includes('Edit') ? 'edit' : 'delete'
+);
 
 onMounted(async () => {
   if (mode.value === 'edit' || mode.value === 'delete') {

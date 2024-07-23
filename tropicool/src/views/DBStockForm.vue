@@ -101,9 +101,9 @@ onMounted(async () => {
     }
   }
   try {
-    const productResponse = await axios.get<{ products: Product[] }>(`${apiUrl}/product`);
-    products.value = productResponse.data.products;
-    formFields.value[0].field[0][0].options = products.value.map(product => ({ value: product.id, label: product.name }));  // Mettre à jour les options du select
+    const productResponse = await axios.get<Product[]>(`${apiUrl}/product`);
+    products.value = productResponse.data;
+    formFields.value.find(field => field.name === 'product_id')!.options = products.value.map(product => ({ value: product.id, label: product.name }));
   } catch (error) {
     console.error('Error fetching products:', error);
   }
@@ -156,7 +156,7 @@ const submitForm = async () => {
     const method = (mode.value === 'new' || mode.value === 'restock') ? 'POST' : 'PATCH';
     const url = (mode.value === 'new' || mode.value === 'restock') ? `${apiUrl}/stock/new` : `${apiUrl}/stock/${route.params.id}`;
 
-    const { id, product, created_at, ...payload } = stock.value;  // Exclure product et created_at des données
+    const payload = { ...stock.value };
 
     if (latestStock.value) {
       const newTotalQuantity = stock.value.status === 'add'

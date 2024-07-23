@@ -51,7 +51,12 @@ const productPromotion = ref<ProductPromotion>({
 });
 const products = ref<Product[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+
+const mode = ref<'new' | 'edit' | 'delete'>(
+  route.name && typeof route.name === 'string' && route.name.includes('New') ? 'new' :
+  route.name && typeof route.name === 'string' && route.name.includes('Edit') ? 'edit' : 'delete'
+);
+
 const fields = ref<any[]>([]);
 
 const fetchProducts = async () => {
@@ -91,7 +96,7 @@ onMounted(async () => {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      const { product, start_at, end_at, ...rest } = data; // Exclude product from data
+      const { start_at, end_at, ...rest } = data; // Exclude product from data
       productPromotion.value = {
         ...rest,
         start_at: dayjs(start_at).format('YYYY-MM-DDTHH:mm'),
@@ -118,7 +123,7 @@ const submitForm = async (formData: ProductPromotion) => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/product_promotion/new` : `${apiUrl}/product_promotion/${route.params.id}`;
 
-    const { id, product, ...payload } = formData // Exclude product from data
+    const { id, ...payload } = formData // Exclude product from data
 
     const response = await fetch(url, {
       method,

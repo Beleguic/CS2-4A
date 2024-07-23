@@ -57,7 +57,10 @@ const promotionCode = ref<PromotionCode>({
 const products = ref<Product[]>([]);
 const categories = ref<Category[]>([]);
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
+const mode = ref<'new' | 'edit' | 'delete'>(
+  route.name && typeof route.name === 'string' && route.name.includes('New') ? 'new' :
+  route.name && typeof route.name === 'string' && route.name.includes('Edit') ? 'edit' : 'delete'
+);
 const fields = ref<any[]>([]);
 
 const fetchProducts = async () => {
@@ -91,11 +94,11 @@ const fetchCategories = async () => {
 const generateFields = () => [
   {  
     field: [
-      [{name: 'product_id', label: 'Produit', type: 'select', required: true, placeholder: '', color: 'gray-700', options: products.value,}],
-      [{name: 'category_id', label: 'Catégorie', type: 'select', required: true, placeholder: '', color: 'gray-700', options: categories.value,}],
-      [{name: 'code', label: 'Code', type: 'text', required: true, placeholder: '', color: 'gray-700',}],
-      [{name: 'start_at',label: 'Début',type: 'datetime-local',required: true,placeholder: '',color: 'gray-700',}],
-      [{name: 'end_at',label: 'Fin',type: 'datetime-local',required: true,placeholder: '',color: 'gray-700',}]
+      [{name: 'product_id', label: 'Produit', type: 'select', required: true, placeholder: '', color: 'gray-700', options: products.value}],
+      [{name: 'category_id', label: 'Catégorie', type: 'select', required: true, placeholder: '', color: 'gray-700', options: categories.value}],
+      [{name: 'code', label: 'Code', type: 'text', required: true, placeholder: '', color: 'gray-700'}],
+      [{name: 'start_at',label: 'Début',type: 'datetime-local',required: true,placeholder: '',color: 'gray-700'}],
+      [{name: 'end_at',label: 'Fin',type: 'datetime-local',required: true,placeholder: '',color: 'gray-700'}]
     ]
   }
 ];
@@ -124,7 +127,7 @@ const submitForm = async (formData: PromotionCode) => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/promotion_code/new` : `${apiUrl}/promotion_code/${route.params.id}`;
 
-    const { id, updated_at, created_at, ...payload } = formData;
+    const { id, ...payload } = formData;
 
     const response = await fetch(url, {
       method,

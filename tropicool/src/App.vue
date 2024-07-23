@@ -29,16 +29,24 @@ import DashboardNavbar from './components/DashboardNavbar.vue';
 import ScrollToTopButton from './components/ScrollToTopButton.vue';
 import ToastManager from './components/ToastManager.vue';
 
+// Définir l'interface pour le type de ToastManager
+interface ToastManagerInterface {
+  addToast: (message: string, type: string) => void;
+  removeToast: (id: number) => void;
+}
+
 const route = useRoute();
-const toastManager = ref(null);
+const toastManager = ref<ToastManagerInterface | null>(null);
 
 const isDashboardRoute = computed(() => route.path.startsWith('/dashboard'));
 
 useCartCheck();
 
 onMounted(() => {
-  // Afficher le toast de bienvenue lorsque l'utilisateur arrive sur le site
-  toastManager.value.addToast('Bienvenue sur notre site !', 'success');
+  // Vérifier si toastManager n'est pas null avant d'ajouter le toast
+  if (toastManager.value) {
+    toastManager.value.addToast('Bienvenue sur notre site !', 'success');
+  }
 });
 </script>
 

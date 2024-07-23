@@ -27,16 +27,6 @@ services:
     working_dir: /home/node/app
     command: sh -c "npm install && npm run dev node --watch"
 
-  vue:
-    image: node:20.0.0-alpine
-    user: node
-    working_dir: /home/node
-    command: npm run dev -- --port 5174 --host
-    ports:
-      - "127.0.0.1:8000:5174"
-    volumes:
-      - ./tropicool:/home/node
-
   postgres:
     image: postgres
     volumes:
@@ -50,30 +40,92 @@ services:
     image: adminer
     restart: unless-stopped
     ports:
-      - 8080:8080
+      - 127.0.0.1:8080:8080
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    networks:
+      - app-network
 
-  # poste:
-  #   image: node:20.0.0-alpine
-  #   environment:
-  #     PORT: 3001
-  #     DATABASE_URL_POSTE: postgres://root:password@postgres-poste:5432/poste
-  #     JWT_SECRET: posteAPI
-  #   ports:
-  #     - 127.0.0.1:3001:3001
-  #   volumes:
-  #     - ./poste:/home/node/poste
-  #   working_dir: /home/node/poste
-  #   command: sh -c "npm install && npm run dev node --watch"
+  certbot:
+    image: certbot/dns-cloudflare
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ./cloudflare.ini:/etc/letsencrypt/cloudflare.ini
+      - vue-build:/usr/share/nginx/html
+    environment:
+      - CF_API_TOKEN=szKgLfw6kGOWlHty03gxPGZdjM7eMPA-OJVxnAzW
+      - EMAIL=Matisshaillouy@gmail.com
+    command: certonly --staging --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini --dns-cloudflare-propagation-seconds 60 -d troupicool.fr -d www.troupicool.fr --non-interactive --agree-tos --email Matisshaillouy@gmail.com
+    networks:
+      - app-network
 
-  # postgres-poste:
-  #   image: postgres
-  #   volumes:
-  #     - postgres-poste-data:/var/lib/postgresql/data
-  #   environment:
-  #     POSTGRES_USER: root
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: poste
+  vue:
+    image: node:20.0.0-alpine
+    user: root
+    working_dir: /home/node
+    command: sh -c "/home/node/start.sh"
+    volumes:
+      - .:/home/node
+      - vue-build:/home/node/tropicool/dist
+    networks:
+      - app-network
 
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - vue-build:/usr/share/nginx/html
+      - /home/matiss/CS2-4A/nginx/logs:/var/log/nginx # Assurez-vous que ce chemin est correct
+    depends_on:
+      - certbot
+      - vue
+      - node
+      - adminer
+      - poste
+    networks:
+      - app-network
+
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    volumes:
+      - ./fail2ban/jail.d:/etc/fail2ban/jail.d
+      - ./fail2ban/filter.d:/etc/fail2ban/filter.d
+      - ./logs:/var/log
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - app-network
+  poste:
+    image: node:20.0.0-alpine
+    environment:
+      PORT: 3001
+      DATABASE_URL_POSTE: postgres://root:password@postgres-poste:5432/poste
+      JWT_SECRET: posteAPI
+    ports:
+      - 127.0.0.1:3001:3001
+    volumes:
+      - ./poste:/home/node/poste
+    working_dir: /home/node/poste
+    command: sh -c "npm install && npm run dev node --watch"
+    networks:
+      - app-network
+
+  postgres-poste:
+    image: postgres
+    volumes:
+      - postgres-poste-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: poste
+    networks:
+      - app-network
 volumes:
   mongo-data: {}
   postgres-data: {}

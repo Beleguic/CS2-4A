@@ -73,7 +73,8 @@ module.exports = (sequelize) => {
       allowNull: false,
       validate: {
         notNull: {
-          msg: 'Password cannot be null'
+          msg: 'Password cannot be null',
+          len: [12, 100]
         }
       }
     },
