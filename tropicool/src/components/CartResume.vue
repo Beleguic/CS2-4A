@@ -165,6 +165,8 @@ const submitCart = async () => {
             name: 'Payment',
             query: {
                 user_id: props.user_id,
+                total: updatedTotal.value,
+                tva: updatedTva.value,
             }
         });
     } catch (error) {

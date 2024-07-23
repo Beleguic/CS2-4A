@@ -167,6 +167,8 @@ const submitForm = async () => {
       payload.difference = stock.value.status === 'add' ? `+${stock.value.quantity}` : `-${stock.value.quantity}`;
     }
 
+    console.log('Payload:',payload);
+
     const response = await axios({
       method,
       url,
