@@ -37,6 +37,9 @@
   import { ref, onMounted, computed } from 'vue';
   import axios from 'axios';
   import { useAuthStore } from '../stores/authStore';
+  import { useToast } from 'vue-toast-notification';
+
+  const $toast = useToast();
 
   interface Stock {
     id: string;
@@ -136,8 +139,18 @@
           });
         }*/
 
+        $toast.open({
+          message: 'Panier mis-à-jour !',
+          type: 'success',
+          position: 'bottom-left',
+        }); 
+
       } catch (error) {
-        console.error("Failed to remove item from cart:", error);
+        $toast.open({
+          message: 'Erreur! Veuillez recommencer!',
+          type: 'error',
+          position: 'bottom-left',
+        }); 
       }
     }
   };

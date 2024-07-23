@@ -142,7 +142,7 @@ export function useUpdateCartItemQuantity() {
       }
 
       selectedItem.value = null;
-      return { message: { success: "Quantity updated successfully" } };
+      return { message: { success: "Erreur! Veuillez recommencer!" } };
     } catch (error) {
       return { message: { error: "An error has occurred" } };
     }

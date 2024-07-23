@@ -87,7 +87,8 @@ interface livraison{
 
 const route = useRoute();
 
-const stripePromise = loadStripe('pk_test_51Pf1JALuibZ66sl2zkolBm8QingouYyjJHBLrsfWEEnlkm3WQLWBFAew6IWuXCDsR9EHMNbS5Qc9DTgvEGcpAKiF00ZxQnWYxV');
+const stripePK = import.meta.env.VITE_STRIPE_PK as string;
+const stripePromise = loadStripe(stripePK);
 const errorMessage = ref('');
 const loading = ref(false);
 let cardElement: any;
@@ -95,8 +96,7 @@ const userId = ref('');
 const id_order = ref('');
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
-const posteUrl = "http://localhost:3001"
-console.log(posteUrl);
+const posteUrl = import.meta.env.VITE_POSTE_API_URL as string;
 
 const cart = ref<Cart>({
     id: '',

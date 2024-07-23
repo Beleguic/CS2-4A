@@ -15,7 +15,7 @@
     <div class="grid gap-4">
       <h1 class="font-bold text-xl text-main">Code Promo</h1>
       <form @submit.prevent="handleApplyPromoCode" class="flex gap-2">
-        <input type="text" v-model="localPromoCode" name="promo" id="promo" class="px-4 py-2 border-black border">
+        <input type="search" v-model="localPromoCode" name="promo" id="promo" class="px-4 py-2 border-black border">
         <button type="submit" class="bg-main hover:bg-secondary text-white px-4 py-2">Appliquer</button>
       </form>
       <div v-if="reduction > 0">
@@ -49,6 +49,9 @@ import { computed, ref } from 'vue';
 import axios from 'axios';
 import { defineProps, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
+  import { useToast } from 'vue-toast-notification';
+
+  const $toast = useToast();
 
 interface PromotionCode {
   code: string;
@@ -103,7 +106,11 @@ const appliedPromoCode = ref(props.promoCode);
 
 const handleApplyPromoCode = async () => {
   if (!localPromoCode.value) {
-    emit('update:promoMessage', 'Code promo invalide');
+    $toast.open({
+        message: 'Code promo invalide!',
+        type: 'error',
+        position: 'bottom-left',
+      });
     emit('update:reduction', 0);
     return;
   }
@@ -114,29 +121,46 @@ const handleApplyPromoCode = async () => {
       params: { code: localPromoCode.value }
     });
 
-    if (response.data.length === 1 && typeof response.data[0].reduction === 'number') {
-      emit('update:reduction', response.data[0].reduction);
-      emit('update:promoMessage', `Code promo appliqué avec succès : réduction de ${response.data[0].reduction}%`);
-      appliedPromoCode.value = localPromoCode.value;
-    } else {
+      if (response.data.length === 1 && typeof response.data[0].reduction === 'number') {
+        $toast.open({
+          message: 'Code promo appliqué avec succès!',
+          type: 'success',
+          position: 'bottom-left',
+        });
+        emit('update:reduction', response.data[0].reduction);
+        appliedPromoCode.value = localPromoCode.value;
+      } else {
+        $toast.open({
+          message: 'Code promo invalide!',
+          type: 'error',
+          position: 'bottom-left',
+        });
+        emit('update:reduction', 0);
+      }
+    } catch (error) {
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
       emit('update:reduction', 0);
-      emit('update:promoMessage', 'Code promo invalide');
     }
-  } catch (error) {
-    emit('update:promoMessage', 'Erreur lors de l\'application du code promo');
-    emit('update:reduction', 0);
-  }
-};
+  };
 
-const handleRemovePromoCode = () => {
-  emit('update:reduction', 0);
-  emit('update:promoMessage', 'Code promo supprimé');
-  appliedPromoCode.value = '';
-  emit('update:promoCode', '');
-  setTimeout(() => {
-    emit('update:promoMessage', '');
-  }, 1000);
-};
+  const handleRemovePromoCode = () => {
+    $toast.open({
+      message: 'Code promo supprimé!',
+      type: 'success',
+      position: 'bottom-left',
+    }); 
+    emit('update:reduction', 0);
+
+    appliedPromoCode.value = '';
+    emit('update:promoCode', '');
+    setTimeout(() => {
+      emit('update:promoMessage', '');
+    }, 1000);
+  };
 
 const total = computed(() => {
   return props.cartProductsData.reduce((acc, product) => acc + (product.price * product.quantity), 0);

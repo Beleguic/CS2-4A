@@ -108,7 +108,6 @@ const addToCart = async () => {
     messageType.value = response.message.error ? 'error' : 'success';
 
     if (messageType.value === 'success') {
-      // Émettre un événement lorsque l'article est ajouté au panier avec succès
       emit('item-added', props.item);
     }
   } catch (error) {

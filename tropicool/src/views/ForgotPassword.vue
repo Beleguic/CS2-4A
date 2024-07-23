@@ -17,7 +17,9 @@
 <script setup>
 import { ref } from 'vue';
 import FormComponent from '../components/FormComponent.vue';
+import { useToast } from 'vue-toast-notification';
 
+const $toast = useToast();
 const email = ref('');
 
 const fields = [
@@ -39,13 +41,24 @@ const handleSubmit = async (formData) => {
     });
 
     if (!response.ok) {
-      throw new Error('Une erreur est survenue. Veuillez réessayer.');
+      $toast.open({
+        message: 'Un lien de réinitialisation a été envoyé à votre adresse e-mail.',
+        type: 'success',
+        position: 'bottom-left',
+      }); 
     }
 
-    alert('Un lien de réinitialisation a été envoyé à votre adresse e-mail.');
+    $toast.open({
+      message: 'Un lien de réinitialisation a été envoyé à votre adresse e-mail.',
+      type: 'success',
+      position: 'bottom-left',
+    }); 
   } catch (error) {
-    console.error('Erreur lors de l\'envoi du lien de réinitialisation:', error);
-    alert(error.message);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    }); 
   }
 };
 </script>

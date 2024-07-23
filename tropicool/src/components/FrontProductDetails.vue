@@ -6,6 +6,7 @@
       <p>Price: <span>{{ product.price }}€</span></p>
       <AddToCart 
         :item="product.id"
+        :price="product.price"
       />
     </section>
     <section v-else>
@@ -18,6 +19,9 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AddToCart from '../views/AddToCart.vue'
+import { useToast } from 'vue-toast-notification';
+
+const $toast = useToast();
 
 interface Product {
   name: string;
@@ -33,9 +37,17 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 onMounted(async () => {
   try {
     const response = await fetch(`${apiUrl}/product/${route.params.id}?frontend=true`);
+    console.log('response', response);
+    
     if (!response.ok) {
-      throw new Error('Error fetching product');
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
     }
+
+
     const data = await response.json();
     if (data.is_active) {
       product.value = data
@@ -44,7 +56,11 @@ onMounted(async () => {
     }
   } catch (error) {
     router.push({ name: 'Product' });
-    console.error('Error fetching product:', error);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    }); 
   }
 });
 </script>

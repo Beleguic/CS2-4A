@@ -30,7 +30,9 @@
 <script setup>
   import { ref, onMounted } from 'vue';
   import axios from 'axios';
-  
+  import { useToast } from 'vue-toast-notification';
+
+  const $toast = useToast();
   const formData = ref({
     alert_type_id: null,
     product_id: '',
@@ -46,7 +48,11 @@
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/alert_types`);
       alertTypes.value = response.data;
     } catch (error) {
-      console.error('Error fetching alert types:', error);
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
     }
   };
   
@@ -55,7 +61,11 @@
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/product/list`);
       products.value = response.data;
     } catch (error) {
-      console.error('Error fetching products:', error);
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
     }
   };
   
@@ -64,7 +74,11 @@
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/category/list`);
       categories.value = response.data;
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
     }
   };
   
@@ -75,10 +89,18 @@
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      alert('Alerte ajoutée avec succès');
+      $toast.open({
+        message: 'Alerte ajoutée avec succès!',
+        type: 'success',
+        position: 'bottom-left',
+      }); 
     } catch (error) {
       console.error('Error adding alert:', error);
-      alert('Erreur lors de l\'ajout de l\'alerte');
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
     }
   };
   

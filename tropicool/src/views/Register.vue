@@ -22,7 +22,9 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import FormComponent from '../components/FormComponent.vue';
+import { useToast } from 'vue-toast-notification';
 
+const $toast = useToast();
 const router = useRouter();
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -41,15 +43,21 @@ const fields = [
 ];
 
 const register = async (formData) => {
-  console.log('register function called with:', formData);
-
   if (formData.password !== formData.confirmPassword) {
-    alert('Les mots de passe ne correspondent pas.');
+    $toast.open({
+      message: 'Les mots de passe ne correspondent pas !',
+      type: 'error',
+      position: 'bottom-left',
+    });
     return;
   }
 
   if (!formData.acceptTerms) {
-    alert('Vous devez accepter les conditions générales d\'utilisation.');
+    $toast.open({
+      message: 'Vous devez accepter les conditions générales d\'utilisation.',
+      type: 'error',
+      position: 'bottom-left',
+    });
     return;
   }
 
@@ -74,13 +82,25 @@ const register = async (formData) => {
     const responseData = await response.json();
 
     if (response.ok) {
-      console.log('Inscription réussie:', responseData);
+      $toast.open({
+        message: "Inscription réussie! Vérifiez votre email pour confirmer votre inscription",
+        type: 'success',
+        position: 'bottom-left',
+      });
       router.push('/');
     } else {
-      console.error('Échec de l\'inscription:', responseData);
+      $toast.open({
+        message: "Échec lors de l'inscription, veuillez recommencer",
+        type: 'error',
+        position: 'bottom-left',
+      });
     }
   } catch (error) {
-    console.error('Erreur lors de la communication avec l\'API:', error);
+    $toast.open({
+      message: "Erreur, veuillez recommencer",
+      type: 'error',
+      position: 'bottom-left',
+    });
   }
 };
 </script>

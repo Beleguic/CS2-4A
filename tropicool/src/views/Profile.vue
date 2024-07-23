@@ -30,7 +30,9 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/authStore';
 import FormComponent from '../components/FormComponent.vue';
 import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toast-notification';
 
+const $toast = useToast();
 const authStore = useAuthStore();
 const userId = authStore.userId;
 
@@ -74,7 +76,11 @@ const fetchUserData = async () => {
       }
     });
     if (!response.ok) {
-      throw new Error('Failed to fetch user data');
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      });
     }
     const data = await response.json();
     user.value.email = data.email;
@@ -83,38 +89,59 @@ const fetchUserData = async () => {
     user.value.lastName = data.lastName;
     user.value.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : '';
     user.value.isSubscribedToNewsletter = data.isSubscribedToNewsletter || false;
+    userAlerts.value = data.alerts.map(alert => ({
+      ...alert,
+      created_at: new Date(alert.created_at).toLocaleString('fr-FR'),
+      alertType: {
+        type: alert.alertType?.type || ''
+      },
+      product: {
+        name: alert.product?.name || ''
+      },
+      category: {
+        name: alert.category?.name || ''
+      }
+    }));
   } catch (error) {
-    console.error('Error fetching user data:', error);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    }); 
   }
 };
 
 const fetchUserOrders = async () => {
   try {
-    console.log('Fetching user orders for userId:', userId); // Log pour vérifier l'ID utilisateur
+    console.log('Fetching user orders for userId:', userId);
     const response = await fetch(`${import.meta.env.VITE_API_URL}/order?userId=${userId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     });
     if (!response.ok) {
-      throw new Error('Failed to fetch user orders');
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
     }
     const data = await response.json();
-    console.log('Fetched user orders data:', data); // Log pour vérifier les données reçues
     userOrders.value = data.map(order => ({
       ...order,
       created_at: new Date(order.created_at).toLocaleString('fr-FR'),
       isPayed: order.isPayed ? 'Oui' : 'Non'
     }));
-    console.log('userOrders:', userOrders.value); // Log pour vérifier les données traitées
   } catch (error) {
-    console.error('Error fetching user orders:', error);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    }); 
   }
 };
 
 const handleSubmit = async (formData) => {
-  console.log('Submitting form with data:', formData);
-
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}`, {
       method: 'PATCH',
@@ -127,10 +154,48 @@ const handleSubmit = async (formData) => {
     if (!response.ok) {
       throw new Error('Failed to update profile');
     }
-    alert('Profile updated successfully');
+    $toast.open({
+      message: 'Votre profil a été modifié !',
+      type: 'success',
+      position: 'bottom-left',
+    });
   } catch (error) {
-    console.error('Error updating profile:', error);
-    alert('Failed to update profile');
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer! !',
+      type: 'error',
+      position: 'bottom-left',
+    });
+  }
+};
+
+const handleDeleteAlert = async (id) => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/alert/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    if (response.status === 204) {
+      userAlerts.value = userAlerts.value.filter(alert => alert.id !== id);
+      $toast.open({
+        message: 'Alerte supprimée avec succès',
+        type: 'error',
+        position: 'bottom-left',
+      });
+    } else {
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      });
+    }
+  } catch (error) {
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    });
   }
 };
 
