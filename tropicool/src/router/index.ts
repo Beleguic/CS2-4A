@@ -51,6 +51,7 @@ import AddAlert from '../views/AddAlert.vue';
 import NotFound from '../views/NotFound.vue';  // Import the NotFound component
 
 import Payment from '../components/Payment.vue';
+import Confirmation from '../views/Confirmation.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -554,6 +555,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/payment',
     name: 'Payment',
     component: Payment,
+    props: true,
+  },
+  {
+    path: '/confirmation',
+    name: 'Confirmation',
+    component: Confirmation,
     props: true,
   }
 

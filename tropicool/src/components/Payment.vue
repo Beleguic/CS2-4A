@@ -30,12 +30,14 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { loadStripe } from '@stripe/stripe-js';
 import FormComponent from './FormComponent.vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import axios from "axios";
 import {useAuthStore} from "../stores/authStore.ts";
 
 const authStore = useAuthStore();
 const isLoggedIn = ref(authStore.isLoggedIn);
+
+const router = useRouter();
 
 const total = ref(0);
 const tva = ref(0);
@@ -90,6 +92,7 @@ const errorMessage = ref('');
 const loading = ref(false);
 let cardElement: any;
 const userId = ref('');
+const id_order = ref('');
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const posteUrl = "http://localhost:3001"
@@ -285,6 +288,8 @@ const handleSubmit = async (formData) => {
             // Envoie la commande au serveur pour la sauvegarder
             const responseOrder = await axios.post(`${apiUrl}/order/new`, order);
 
+            id_order.value = responseOrder.data.id;
+
             console.log(responseOrder.data);
 
             const stocks: Stock[] = [];
@@ -324,6 +329,14 @@ const handleSubmit = async (formData) => {
             // Requete la poste pour recup le numero de livraison + ajouter livraison dans la poste
             // Ajouter dans le model order du numero de livraison
             console.log('Payment successful');
+
+            // Redirige l'utilisateur vers la page de confirmation
+            await router.push({
+                name: 'Confirmation',
+                query: {
+                    id_order: id_order.value
+                }
+            });
         }
 
     } catch (err) {
