@@ -68,6 +68,7 @@ interface Order {
     tva: number;
     isPayed: boolean;
     livraison: string;
+    adresseFacturation: JSON;
 }
 
 interface Stock {
@@ -278,6 +279,7 @@ const handleSubmit = async (formData) => {
                 tva: tva.value,
                 isPayed: true,
                 livraison: livraisonNumber.value,
+                adresseFacturation: addrFacturation
             };
 
             // Envoie la commande au serveur pour la sauvegarder
