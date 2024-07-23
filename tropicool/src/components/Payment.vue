@@ -17,7 +17,7 @@
                     :fields="fields"
                     ref="form"
                     submitButtonText="Procéder au paiement"
-                    @submit="handlePayment"
+                    @submit="handleSubmit"
                 />
             </div>
         </div>
@@ -26,6 +26,7 @@
 </template>
 
 <script setup lang="ts">
+//handleSubmit
 /*
 import { ref, watch, onMounted, nextTick } from 'vue';
 import FormComponent from '../components/FormComponent.vue';
@@ -97,6 +98,8 @@ const errorMessage = ref('');
 const loading = ref(false);
 let cardElement: any;
 
+const apiUrl = import.meta.env.VITE_API_URL as string;
+
 const fields = [
     {
         header: 'Adresse de livraison',
@@ -124,7 +127,7 @@ const fields = [
     {
         header: 'Information Bancaire',
         field: [
-            [{ name: 'payment', label: 'Information de paiement', type: 'payment', required: true,  color: 'white' }],
+            [{ name: 'payment', label: 'Information de paiement', type: 'payment', required: false,  color: 'white' }],
         ],
     }
 ];
@@ -173,6 +176,10 @@ const handleSubmit = async () => {
             errorMessage.value = error.message;
         } else {
             console.log('Payment successful');
+            // Redirection vers la page de resumé de commande :)
+            // Afficher les commande passé sur le profile de l'utilisateur
+            // Genere un PDF de la commande
+            
         }
 
     } catch (err) {
