@@ -13,7 +13,7 @@
               {{ route.text }}
             </router-link>
           </li>
-          <li v-if="isAdmin">
+          <li v-if="canViewDashboard">
             <router-link :to="{ name: 'DashboardIndex' }" active-class="text-white bg-main" class="text-main hover:text-white hover:bg-main px-5 py-3 rounded-full">
               Dashboard
             </router-link>
@@ -98,7 +98,11 @@ const routes: Route[] = [
 
 const auth = useAuthStore();
 
-const isAdmin = computed(() => auth.userRole === 'admin');
+const allowedRoles = ['admin', 'store-keeper'];
+
+const canViewDashboard = computed(() => {
+  return auth.userRole !== null && allowedRoles.includes(auth.userRole);
+});
 
 function logout() {
     auth.logout();

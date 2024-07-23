@@ -48,12 +48,21 @@
               </template>
             </template>
             <template v-else>
-              <div class="grid grid-cols-2 gap-4">
-                <router-link :to="{ name: editLink, params: { id: data.id } }" class="p-4 bg-blue-500 hover:bg-blue-800 rounded-md flex flex-col justify-center items-center text-white">
+              <div class="flex items-center gap-4">
+              <router-link v-if="newLink" :to="{ name: newLink, params: { id: data.id } }" class="p-4 bg-green-500 hover:bg-green-800 rounded-md flex flex-col justify-center items-center text-white w-16 h-16">
+                  <component :is="iconAdd" />
+              </router-link>
+              <router-link v-if="viewLink" :to="{ name: viewLink, params: { id: data.id } }" class="p-4 bg-yellow-500 hover:bg-yellow-800 rounded-md flex flex-col justify-center items-center text-white w-16 h-16">
+                  <component :is="iconEye" />
+              </router-link>
+                <router-link v-if="editLink" :to="{ name: editLink, params: { id: data.id } }" class="p-4 bg-blue-500 hover:bg-blue-800 rounded-md flex flex-col justify-center items-center text-white w-16 h-16">
                   <component :is="iconPen" />
                 </router-link>
-                <router-link :to="{ name: deleteLink, params: { id: data.id } }" class="p-4 bg-red-500 hover:bg-red-800 rounded-md flex flex-col justify-center items-center text-white">
+                <router-link v-if="deleteLink" :to="{ name: deleteLink, params: { id: data.id } }" class="p-4 bg-red-500 hover:bg-red-800 rounded-md flex flex-col justify-center items-center text-white w-16 h-16">
                   <component :is="iconTrash" />
+                </router-link>
+                <router-link v-if="graphLink" :to="{ name: graphLink, params: { id: data.id } }" class="p-4 bg-purple-500 hover:bg-purple-800 rounded-md flex flex-col justify-center items-center text-white w-16 h-16">
+                  <component :is="iconGraph" />
                 </router-link>
               </div>
             </template>
@@ -72,6 +81,8 @@
   import iconTrash from '../assets/icons/trash.svg';
   import iconCopy from '../assets/icons/copy.svg';
   import iconCheck from '../assets/icons/check.svg';
+  import iconAdd from '../assets/icons/add.svg';
+  import iconGraph from '../assets/icons/analytic.svg';
 
   interface Column {
     key: string;
@@ -81,12 +92,15 @@
   interface TableProps {
     datas: Array<Record<string, any>>;
     columns: Array<Column>;
-    editLink: string;
-    deleteLink: string;
+    editLink: string|null;
+    deleteLink: string|null;
+    newLink: string|null;
+    viewLink: string|null;
+    graphLink: string|null;
   }
 
   const props = defineProps<TableProps>();
-  const { datas, columns, editLink, deleteLink } = props;
+  const { datas, columns, editLink, deleteLink, newLink, viewLink } = props;
 
   const dynamicMaxWidth = ref('calc(100vw - 50px)');
   const dynamicMaxHeight = ref('calc(100vh - 215px)');

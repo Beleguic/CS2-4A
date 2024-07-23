@@ -9,8 +9,7 @@ import ResetPassword from '../views/ResetPassword.vue';
 import Profile from '../views/Profile.vue';
 import Product from '../views/Product.vue';
 import PrivacyPolicy from '../views/PrivacyPolicy.vue';
-import { verifyAdmin, isAuthenticated } from '../router/authGuard';
-import { useAuthStore } from '../stores/authStore';
+import { verifyRole, isAuthenticated } from './authGuard';
 import DBIndex from '../components/DBIndex.vue';
 import FrontCategory from '../components/FrontCategory.vue';
 import FrontCategoryDetails from '../components/FrontCategoryDetails.vue';
@@ -45,6 +44,8 @@ import ConditionGeneralDutilisation from '../views/ConditionGeneralDutilisation.
 import VenteAlcool from '../views/VenteAlcool.vue';
 import Cart from '../views/Cart.vue';
 import Search from '../views/Search.vue';
+import DBStockView from "../views/DBStockView.vue";
+import DBStockGraph from "../views/DBStockGraph.vue";
 import AddAlert from '../views/AddAlert.vue';
 
 const routes: Array<RouteRecordRaw> = [
@@ -132,302 +133,379 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Dashboard',
     component: Dashboard,
     meta: { requiresAdmin: true },
-    beforeEnter: verifyAdmin,
+    beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin', 'store-keeper']),
     children: [
       {
         path: '',
         name: 'DashboardIndex',
         component: DBIndex,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin', 'store-keeper']),
       },
       // Category Routes
       {
         path: 'category',
         name: 'DBCategoryIndex',
         component: DBCategoryIndex,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'category/new',
         name: 'DBCategoryNew',
         component: DBCategoryForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'category/edit/:id',
         name: 'DBCategoryEdit',
         component: DBCategoryForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'category/delete/:id',
         name: 'DBCategoryDelete',
         component: DBCategoryForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Alert Routes
       {
         path: 'alert',
         name: 'DBAlertIndex',
         component: DBAlertIndex,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'alert/new',
         name: 'DBAlertNew',
         component: DBAlertForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'alert/edit/:id',
         name: 'DBAlertEdit',
         component: DBAlertForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'alert/delete/:id',
         name: 'DBAlertDelete',
         component: DBAlertForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Alert Type Routes
       {
         path: 'alert-types',
         name: 'DBAlertTypeIndex',
         component: DBAlertTypeIndex,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'alert-types/new',
         name: 'DBAlertTypeNew',
         component: DBAlertTypeForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'alert-types/edit/:id',
         name: 'DBAlertTypeEdit',
         component: DBAlertTypeForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'alert-types/delete/:id',
         name: 'DBAlertTypeDelete',
         component: DBAlertTypeForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Product Routes
       {
         path: 'product',
         name: 'DBProductIndex',
         component: DBProductIndex,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'product/new',
         name: 'DBProductNew',
         component: DBProductForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'product/edit/:id',
         name: 'DBProductEdit',
         component: DBProductForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'product/delete/:id',
         name: 'DBProductDelete',
         component: DBProductForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Cart Routes
       {
         path: 'cart',
         name: 'DBCartIndex',
         component: DBCartIndex,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'cart/new',
         name: 'DBCartNew',
         component: DBCartForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'cart/edit/:id',
         name: 'DBCartEdit',
         component: DBCartForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'cart/delete/:id',
         name: 'DBCartDelete',
         component: DBCartForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Category Product Routes
       {
         path: 'category-product',
         name: 'DBCategoryProductIndex',
         component: DBCategoryProductIndex,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'category-product/new',
         name: 'DBCategoryProductNew',
         component: DBCategoryProductForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'category-product/edit/:id',
         name: 'DBCategoryProductEdit',
         component: DBCategoryProductForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'category-product/delete/:id',
         name: 'DBCategoryProductDelete',
         component: DBCategoryProductForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Newsletter Routes
       {
         path: 'newsletter',
         name: 'DBNewsletterIndex',
         component: DBNewsletterIndex,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'newsletter/new',
         name: 'DBNewsletterNew',
         component: DBNewsletterForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'newsletter/edit/:id',
         name: 'DBNewsletterEdit',
         component: DBNewsletterForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'newsletter/delete/:id',
         name: 'DBNewsletterDelete',
         component: DBNewsletterForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Order Routes
       {
         path: 'order',
         name: 'DBOrderIndex',
         component: DBOrderIndex,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'order/new',
         name: 'DBOrderNew',
         component: DBOrderForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'order/edit/:id',
         name: 'DBOrderEdit',
         component: DBOrderForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'order/delete/:id',
         name: 'DBOrderDelete',
         component: DBOrderForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Product Promotion Routes
       {
         path: 'product-promotion',
         name: 'DBProductPromotionIndex',
         component: DBProductPromotionIndex,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'product-promotion/new',
         name: 'DBProductPromotionNew',
         component: DBProductPromotionForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'product-promotion/edit/:id',
         name: 'DBProductPromotionEdit',
         component: DBProductPromotionForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'product-promotion/delete/:id',
         name: 'DBProductPromotionDelete',
         component: DBProductPromotionForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Promotion Code Routes
       {
         path: 'promotion-code',
         name: 'DBPromotionCodeIndex',
         component: DBPromotionCodeIndex,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'promotion-code/new',
         name: 'DBPromotionCodeNew',
         component: DBPromotionCodeForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'promotion-code/edit/:id',
         name: 'DBPromotionCodeEdit',
         component: DBPromotionCodeForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'promotion-code/delete/:id',
         name: 'DBPromotionCodeDelete',
         component: DBPromotionCodeForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       // Stock Routes
       {
         path: 'stock',
         name: 'DBStockIndex',
         component: DBStockIndex,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin', 'store-keeper']),
       },
       {
         path: 'stock/new',
         name: 'DBStockNew',
         component: DBStockForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin', 'store-keeper']),
+      },
+      {
+        path: 'stock/restock/:id',
+        name: 'DBStockRestock',
+        component: DBStockForm,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin', 'store-keeper']),
       },
       {
         path: 'stock/edit/:id',
         name: 'DBStockEdit',
         component: DBStockForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin', 'store-keeper']),
       },
       {
         path: 'stock/delete/:id',
         name: 'DBStockDelete',
         component: DBStockForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin', 'store-keeper']),
+      },
+      {
+        path: 'stock/view/:id',
+        name: 'DBStockView',
+        component: DBStockView,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin', 'store-keeper']),
+      },
+      {
+        path: 'stock/graph/:id',
+        name: 'DBStockGraph',
+        component: DBStockGraph,
+        props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin', 'store-keeper']),
       },
       // User Routes
       {
         path: 'user',
         name: 'DBUserIndex',
         component: DBUserIndex,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'user/new',
         name: 'DBUserNew',
         component: DBUserForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'user/edit/:id',
         name: 'DBUserEdit',
         component: DBUserForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {
         path: 'user/delete/:id',
         name: 'DBUserDelete',
         component: DBUserForm,
         props: true,
+        beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
-
     ]
   },
   {

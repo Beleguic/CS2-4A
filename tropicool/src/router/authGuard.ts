@@ -1,31 +1,17 @@
+import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
-export const verifyAdmin = async (to, from, next) => {
+export const verifyRole = async (to, from, next, roles) => {
   try {
     const auth = useAuthStore();
     if (auth.isLoggedIn) {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No token found in localStorage');
-        next({ name: 'Login' });
-        return;
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/check-role`, {
-        method: 'GET',
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/auth/check-role`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to verify role');
-      }
-
-      const data = await response.json();
-
-      if (data.role === 'admin') {
+      if (roles.includes(response.data.role)) {
         next();
       } else {
         next({ name: 'Home' });
@@ -38,7 +24,6 @@ export const verifyAdmin = async (to, from, next) => {
     next({ name: 'Login' });
   }
 };
-
 
 export function isAuthenticated(to, from, next) {
   const auth = useAuthStore();

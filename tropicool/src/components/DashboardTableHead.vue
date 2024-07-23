@@ -1,10 +1,11 @@
 <template>
-  <th class="py-2 px-4 text-2xl bg-main text-white whitespace-nowrap">
+  <th :class="thClasses">
     {{ column.label }}
   </th>
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue';
   import { defineProps } from 'vue';
 
   interface Column {
@@ -14,4 +15,10 @@
 
   const props = defineProps<{ column: Column }>();
   const { column } = props;
+
+  const thClasses = computed(() => {
+    const baseClasses = 'py-2 px-4 text-2xl bg-main text-white whitespace-nowrap';
+    const additionalClasses = column.label === 'Actions' ? 'sticky right-0 z-10' : '';
+    return `${baseClasses} ${additionalClasses}`;
+  });
 </script>
