@@ -7,6 +7,8 @@ const promotionCodeSchema = Joi.object({
   reduction: Joi.number().required().min(1).max(100),
   start_at: Joi.date().allow(null),
   end_at: Joi.date().allow(null),
+  product_id: Joi.string().uuid(),
+  category_id: Joi.string().uuid().allow(null),
 });
 
 const getAllPromotionCodes = async (req, res, next) => {

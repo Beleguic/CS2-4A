@@ -8,6 +8,20 @@
       @submit="handleSubmit"
     />
     <button @click="redirectToForgotPassword" class="action-button">Changer le mot de passe</button>
+    
+    <h2>Mes Commandes</h2>
+    <div v-if="userOrders.length > 0" class="orders-list">
+      <div v-for="order in userOrders" :key="order.id" class="order-item">
+        <p><strong>Date de création:</strong> {{ order.created_at }}</p>
+        <p><strong>Total:</strong> {{ order.total }} €</p>
+        <p><strong>Livraison:</strong> {{ order.livraison }}</p>
+        <p><strong>Payé:</strong> {{ order.isPayed }}</p>
+        <router-link :to="{ name: 'Confirmation', query: { id_order: order.id } }" class="action-button">Voir les détails</router-link>
+      </div>
+    </div>
+    <div v-else>
+      <p>Aucune commande trouvée.</p>
+    </div>
   </div>
 </template>
 
@@ -15,8 +29,7 @@
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/authStore';
 import FormComponent from '../components/FormComponent.vue';
-import TableComponent from '../components/TableComponent.vue';
-import router from '@/router';
+import { useRouter } from 'vue-router';
 
 const authStore = useAuthStore();
 const userId = authStore.userId;
@@ -30,15 +43,7 @@ const user = ref({
   isSubscribedToNewsletter: false,
 });
 
-const alertColumns = [
-  { key: 'alertType.type', label: 'Type d\'alerte' },
-  { key: 'product.name', label: 'Produit' },
-  { key: 'category.name', label: 'Catégorie' },
-  { key: 'created_at', label: 'Créé le' },
-  { key: 'actions', label: 'Actions' }
-];
-
-const userAlerts = ref([]);
+const userOrders = ref([]);
 
 const fields = ref([
   {
@@ -78,22 +83,32 @@ const fetchUserData = async () => {
     user.value.lastName = data.lastName;
     user.value.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : '';
     user.value.isSubscribedToNewsletter = data.isSubscribedToNewsletter || false;
-    userAlerts.value = data.alerts.map(alert => ({
-      ...alert,
-      created_at: new Date(alert.created_at).toLocaleString('fr-FR'),
-      alertType: {
-        type: alert.alertType?.type || ''
-      },
-      product: {
-        name: alert.product?.name || ''
-      },
-      category: {
-        name: alert.category?.name || ''
-      }
-    }));
-    console.log('userAlerts:', userAlerts.value);
   } catch (error) {
     console.error('Error fetching user data:', error);
+  }
+};
+
+const fetchUserOrders = async () => {
+  try {
+    console.log('Fetching user orders for userId:', userId); // Log pour vérifier l'ID utilisateur
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/order?userId=${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch user orders');
+    }
+    const data = await response.json();
+    console.log('Fetched user orders data:', data); // Log pour vérifier les données reçues
+    userOrders.value = data.map(order => ({
+      ...order,
+      created_at: new Date(order.created_at).toLocaleString('fr-FR'),
+      isPayed: order.isPayed ? 'Oui' : 'Non'
+    }));
+    console.log('userOrders:', userOrders.value); // Log pour vérifier les données traitées
+  } catch (error) {
+    console.error('Error fetching user orders:', error);
   }
 };
 
@@ -119,26 +134,6 @@ const handleSubmit = async (formData) => {
   }
 };
 
-const handleDeleteAlert = async (id) => {
-  try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/alert/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    if (response.status === 204) {
-      userAlerts.value = userAlerts.value.filter(alert => alert.id !== id);
-      alert('Alerte supprimée avec succès');
-    } else {
-      throw new Error('Failed to delete alert');
-    }
-  } catch (error) {
-    console.error('Error deleting alert:', error);
-    alert('Failed to delete alert');
-  }
-};
-
 const redirectToForgotPassword = () => {
   router.push({ name: 'ForgotPassword' });
 };
@@ -146,6 +141,7 @@ const redirectToForgotPassword = () => {
 onMounted(() => {
   if (authStore.isLoggedIn) {
     fetchUserData();
+    fetchUserOrders();
   } else {
     router.push({ name: 'Login' });
   }
@@ -154,7 +150,7 @@ onMounted(() => {
 
 <style scoped>
 .profile-page {
-  max-width: 600px;
+  max-width: 800px;
   margin: auto;
   padding: 1rem;
   background: #f9f9f9;
@@ -165,7 +161,21 @@ onMounted(() => {
   text-align: center;
   margin-bottom: 1rem;
 }
-.profile-page button {
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.order-item {
+  padding: 1rem;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+.order-item p {
+  margin: 0.5rem 0;
+}
+.profile-page button, .action-button {
   display: block;
   width: 100%;
   padding: 0.75rem;
@@ -176,8 +186,10 @@ onMounted(() => {
   cursor: pointer;
   transition: background 0.3s;
   margin-top: 1rem;
+  text-align: center;
+  text-decoration: none;
 }
-.profile-page button:hover {
+.profile-page button:hover, .action-button:hover {
   background: #5756A1;
 }
 </style>

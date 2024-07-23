@@ -176,11 +176,65 @@ const removeProductFromCart = async (req, res, next) => {
   }
 };
 
+const getTotalProductCount = async (req, res, next) => {
+  const { product_id } = req.query;
+
+  if (!product_id) {
+    return res.status(400).json({ error: 'Product ID is required' });
+  }
+
+  try {
+    const carts = await Cart.findAll();
+
+    let totalCount = 0;
+    carts.forEach(cart => {
+      const product = cart.cartProductsData.find(p => p.product_id === product_id);
+      if (product) {
+        totalCount += product.quantity;
+      }
+    });
+
+    res.status(200).json({ product_id, total_count: totalCount });
+  } catch (e) {
+    console.error('Error calculating total product count:', e);
+    next(e);
+  }
+};
+
+const getCartByUserId = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const cart = await Cart.findOne({
+      where: { user_id: userId },
+      include: [
+        { model: User, as: 'user', attributes: ['id'] }
+      ]
+    });
+
+    if (cart) {
+      res.json(cart);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (e) {
+    console.error('Error fetching cart by user ID:', e);
+    next(e);
+  }
+};
+
+
+
+
 module.exports = {
   getAllCarts,
   getCartById,
   createCart,
   updateCart,
   deleteCart,
-  removeProductFromCart
+  removeProductFromCart,
+  getTotalProductCount,
+    getCartByUserId
 };
+////
+//g
+//

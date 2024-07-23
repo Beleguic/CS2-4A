@@ -32,6 +32,11 @@ interface Stock {
   difference: string;
 }
 
+interface CartProductCount {
+  product_id: string;
+  total_count: number;
+}
+
 export function useUpdateCartItemQuantity() {
   const selectedItem = ref<string | null>(null);
   const selectedQuantity = ref<number>(1);
@@ -78,14 +83,32 @@ export function useUpdateCartItemQuantity() {
       const stockData = stockResponse.data;
       const latestStock = stockData[stockData.length - 1];
 
-      if (!latestStock || latestStock.quantity < quantity) {
-        return { message: { error: "Stock unavailable" } };
-      }
-
+      const cartResponseProduct = await axios.get<CartProductCount[]>(`${apiUrl}/cart/product/count`, {
+        params: { product_id: productId }
+      });
+      const numberProductOnCart = cartResponseProduct.data;
       const cartResponse = await axios.get<Cart[]>(`${apiUrl}/cart`, {
         params: { user_id: userId }
       });
       const cartData = cartResponse.data;
+      console.log('cartData', cartData);
+      let quantityCartUser = 0;
+
+      if(cartData[0].cartProductsData[0].quantity){
+        quantityCartUser = cartData[0].cartProductsData[0].quantity;
+      }
+
+      console.log('----');
+      console.log(quantityCartUser);
+      console.log(numberProductOnCart.total_count);
+      console.log((latestStock.quantity - (numberProductOnCart.total_count - quantityCartUser)));
+      console.log(quantity);
+      console.log('----');
+      if (!latestStock || (latestStock.quantity - (numberProductOnCart.total_count - quantityCartUser)) < quantity) {
+        return { message: { error: "Stock unavailable" } };
+      }
+
+
 
       let activeCart: Cart;
       if (!cartData || cartData.length === 0) {
@@ -107,22 +130,6 @@ export function useUpdateCartItemQuantity() {
           }
 
           activeCart.cartProductsData[existingProductIndex].quantity = newQuantity;
-
-          const difference = calculateDifference(currentQuantity, newQuantity);
-
-          await axios.post(`${apiUrl}/stock/new`, {
-            product_id: productId,
-            quantity: currentQuantity,
-            status: 'add',
-            difference: difference
-          });
-
-          await axios.post(`${apiUrl}/stock/new`, {
-            product_id: productId,
-            quantity: latestStock.quantity + currentQuantity - newQuantity,
-            status: 'remove',
-            difference: difference
-          });
 
         } else {
           return { message: { error: "Please fill your cart" } };
