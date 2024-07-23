@@ -1,5 +1,5 @@
 <template>
-  <div v-if="visible" :class="toastClasses" class="fixed bottom-5 left-5 p-4 rounded shadow-lg transition-transform transform">
+  <div v-if="visible" :class="toastClasses" class="fixed bottom-5 left-5 p-4 rounded shadow-lg transition-transform transform z-50">
     {{ message }}
     <button @click="hideToast" class="ml-4 text-black font-bold">X</button>
   </div>

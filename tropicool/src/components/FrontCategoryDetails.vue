@@ -1,42 +1,102 @@
 <template>
-  <div class="max-w-7xl w-full py-4 mx-auto">
-    <h1>Category Details</h1>
-    <section v-if="category">
-      <div>
-        <h1>Name: <span class="capitalize">{{ category.name }}</span></h1>
-        <p>Description: {{ category.description }}</p>
+  <div class="p-4">
+    <template v-if="category">
+      <div class="max-w-[80%] mx-auto mt-8 grid gap-16">
+        <div id="category-description" class="grid grid-cols-2 gap-4 items-center">
+          <div class="flex items-center justify-center">
+            <img :src="category.image" alt="category image"/>
+          </div>
+          <div class="flex flex-col gap-4">
+            <h1 class="text-main text-4xl font-bold">{{ category.name }}</h1>
+            <p class="text-black text-xl">{{ category.description }}</p>
+          </div>
+        </div>
+        <div v-if="category.products && category.products.length > 0" class="grid gap-4">
+          <h2 class="text-main text-2xl font-bold">Produits Associés</h2>
+          <ul ref="productsList" class="snap-x flex items-center gap-4 overflow-x-auto" :style="{ maxWidth: `${maxWidth}px` }">
+            <ProductCardComponent v-for="product in category.products" :key="product.id" :product="product" class="snap-center h-full min-w-96 max-w-[33.33%]"/>
+          </ul>
+        </div>
+        <div v-else>
+          <h2 class="text-main text-2xl font-bold">Pas de produits Associés...</h2>
+        </div>
       </div>
-      <hr class="my-8">
-    </section>
-    <section v-else>
-      <p>Loading...</p>
-    </section>
+    </template>
+    <template v-else>
+      <p>Pas de catégorie trouvée...</p>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue';
-  import { useRoute } from 'vue-router';
+import { ref, onMounted, nextTick, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
+import ProductCardComponent from '../components/ProductCardComponent.vue';
 
-  interface Category {
-      name: string;
-      description: string;
-      url: string;
+interface Product {
+  id: string;
+  name: string;
+}
+
+interface Category {
+  name: string;
+  description: string;
+  url: string;
+  image: string;
+  products: Product[];
+}
+
+const route = useRoute();
+const category = ref<Category | null>(null);
+const apiUrl = import.meta.env.VITE_API_URL as string;
+const maxWidth = ref<number>(0);
+const productsList = ref<HTMLUListElement | null>(null);
+
+const updateMaxWidth = () => {
+  const categoryDescription = document.getElementById('category-description');
+  if (categoryDescription) {
+    maxWidth.value = categoryDescription.clientWidth;
   }
+};
 
-  const route = useRoute();
-  const category = ref<Category | null>(null);
-  const apiUrl = import.meta.env.VITE_API_URL as string;
+onMounted(async () => {
+  try {
+    const params = new URLSearchParams({
+      frontend: 'true',
+      url: route.params.id as string,
+    });
 
-  onMounted(async () => {
-      try {
-          const response = await fetch(`${apiUrl}/category/${route.params.id}?frontend=true`);
-          if (!response.ok) {
-              throw new Error('Error fetching category');
-          }
-          category.value = await response.json() as Category;
-      } catch (error) {
-          console.error('Error fetching category:', error);
-      }
-  });
+    const response = await fetch(`${apiUrl}/category?${params.toString()}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    if (Array.isArray(data) && data.length > 0) {
+      category.value = data[0] as Category;
+      console.log("category:", category.value);
+      await nextTick();  // Ensure the DOM is updated
+      updateMaxWidth();
+    } else {
+      category.value = null;
+    }
+  } catch (error) {
+    console.error('Error fetching category:', error);
+  }
+});
+
+window.addEventListener('resize', updateMaxWidth);
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateMaxWidth);
+});
 </script>
+
+<style scoped>
+  .-ml-3\/12 {
+    margin-left: -25%;
+  }
+</style>

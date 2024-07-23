@@ -1,5 +1,5 @@
 const { join } = require('path');
-const { Product, Stock } = require('../models');
+const { Product, Stock, Category } = require('../models');
 const Joi = require('joi');
 
 const productSchema = Joi.object({
@@ -55,23 +55,62 @@ const getAllProductsForSelection = async (req, res, next) => {
 
 const getAllProducts = async (req, res, next) => {
   const isFrontend = req.query.frontend === 'true';
-
+  const isSorting = req.query.sorting === 'true';
+  const sortField = req.query.sortField || 'name';
+  const sortOrder = req.query.sortOrder === 'desc' ? 'DESC' : 'ASC';
   try {
-    if (isFrontend) {
+    if (isFrontend && isSorting) {
       const products = await Product.findAll({
         where: {
           is_active: true
-        }
+        },
+        include: [
+          {
+            model: Category,
+            as: 'categories',
+            through: {
+              attributes: []
+            },
+            attributes: ['id', 'name']
+          },
+          {
+            model: Stock,
+            as: 'stocks',
+            attributes: ['quantity']
+          }
+        ],
+        order: [[sortField, sortOrder]]
       });
-      res.json(products);
+
+      const productsWithStock = products.map(product => {
+        const totalStock = product.stocks.reduce((total, stock) => total + stock.quantity, 0);
+        return {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          description: product.description,
+          image: product.image,
+          is_active: product.is_active,
+          is_adult: product.is_adult,
+          created_at: product.created_at,
+          updated_at: product.updated_at,
+          reference: product.reference,
+          tva: product.tva,
+          categories: product.categories,
+          stock: totalStock
+        };
+      });
+
+      res.json(productsWithStock);
     } else {
-      const page = parseInt(req.query.page) || 1;  
+      const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
 
       const { count, rows } = await Product.findAndCountAll({
         offset: offset,
-        limit: limit
+        limit: limit,
+        order: [[sortField, sortOrder]]
       });
 
       res.json({

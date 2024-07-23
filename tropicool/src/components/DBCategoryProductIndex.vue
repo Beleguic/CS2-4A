@@ -36,8 +36,8 @@ const datas = ref<CategoryProduct[]>([]);
 
 const columns = [
   { key: 'id', label: 'ID' },
-  { key: 'categoryName', label: 'Catégorie' }, // Flattened key for category name
   { key: 'productName', label: 'Produit' }, // Flattened key for product name
+  { key: 'categoryName', label: 'Catégorie' }, // Flattened key for category name
   { key: 'actions', label: 'Actions' },
 ];
 
