@@ -23,4 +23,5 @@ const deleteOldAccounts = async () => {
   }
 };
 
+
 deleteOldAccounts();
