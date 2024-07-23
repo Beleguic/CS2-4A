@@ -131,7 +131,6 @@ const fields = [
     {
         header: 'Adresse de Facturation',
         field: [
-            [{ name:'same', label: "Même que l'adresse de livraison", type: 'checkbox', required: false, color: 'white', styleDiv: 'inline-flex', value: false }],
             [{ name: 'nom_facturation', label: 'Nom', type: 'text', required: true,  color: 'white' },{ name: 'prenom_facturation', label: 'Prénom', type: 'text', required: true,  color: 'white' }],
             [{ name: 'societe_facturation', label: 'Société (optionnel)', type: 'text', required: false,  color: 'white' }],
             [{ name: 'adresse_facturation', label: 'Adresse', type: 'text', required: true,  color: 'white' }],
