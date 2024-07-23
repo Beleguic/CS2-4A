@@ -40,7 +40,9 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import AddToCart from './AddToCart.vue';
+import { useToast } from 'vue-toast-notification';
 
+const $toast = useToast();
 const authStore = useAuthStore();
 const userId = authStore.userId;
 
@@ -55,7 +57,7 @@ const product = ref({
 const isAllowed = ref(true);
 const alertTypes = ref([]);
 const selectedAlerts = ref([]);
-const initialAlerts = ref([]); // Store the initial alerts with UUIDs
+const initialAlerts = ref([]);
 const router = useRouter();
 
 const fetchProduct = async () => {
@@ -73,9 +75,13 @@ const fetchProduct = async () => {
       checkAge();
     }
     await fetchAlertTypes();
-    await fetchUserAlerts(); // Fetch user alerts without product ID
+    await fetchUserAlerts();
   } catch (error) {
-    console.error('Error fetching product:', error);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    }); 
   }
 };
 
@@ -89,7 +95,11 @@ const fetchAlertTypes = async () => {
     });
     alertTypes.value = await response.json();
   } catch (error) {
-    console.error('Error fetching alert types:', error);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    }); 
   }
 };
 
@@ -103,31 +113,30 @@ const fetchUserAlerts = async () => {
     });
     const userAlerts = await response.json();
 
-    // Filter alerts by product ID
     const productAlerts = userAlerts.filter(alert => alert.product_id === product.value.id);
 
     selectedAlerts.value = productAlerts.map(alert => alert.alert_type_id);
-    initialAlerts.value = productAlerts.map(alert => ({ alert_type_id: alert.alert_type_id, id: alert.id })); // Copy initial selected alerts with IDs
+    initialAlerts.value = productAlerts.map(alert => ({ alert_type_id: alert.alert_type_id, id: alert.id }));
   } catch (error) {
-    console.error('Error fetching user alerts:', error);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    }); 
   }
 };
 
 const saveAlertPreferences = async () => {
   const apiUrl = import.meta.env.VITE_API_URL;
-
-  // Find alerts to be deleted
   const alertsToDelete = initialAlerts.value.filter(alert => !selectedAlerts.value.includes(alert.alert_type_id));
-  // Find alerts to be added
   const alertsToAdd = selectedAlerts.value.filter(alertTypeId => !initialAlerts.value.some(alert => alert.alert_type_id === alertTypeId));
 
-  // Add new alerts
   for (const alertTypeId of alertsToAdd) {
     const alert = {
       alert_type_id: String(alertTypeId),
       user_id: String(authStore.userId),
       product_id: String(product.value.id),
-      category_id: null, // If needed, add logic for category_id
+      category_id: null,
     };
 
     try {
@@ -140,17 +149,22 @@ const saveAlertPreferences = async () => {
         body: JSON.stringify(alert)
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la sauvegarde des alertes');
+          $toast.open({
+          message: 'Erreur! Veuillez recommencer!',
+          type: 'error',
+          position: 'bottom-left',
+        }); 
       }
     } catch (error) {
-      console.error('Error saving alert preferences:', error);
-      alert(error.message);
-      return; // Stop processing if there is an error
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
+      return;
     }
   }
 
-  // Delete deselected alerts
   for (const alert of alertsToDelete) {
     try {
       const response = await fetch(`${apiUrl}/alert/${alert.id}`, {
@@ -161,20 +175,34 @@ const saveAlertPreferences = async () => {
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la suppression des alertes');
+        if(errorData.error){
+          $toast.open({
+            message: 'Erreur! Veuillez recommencer!',
+            type: 'error',
+            position: 'bottom-left',
+          }); 
+        }
       }
     } catch (error) {
-      console.error('Error deleting alert preferences:', error);
-      alert(error.message);
-      return; // Stop processing if there is an error
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
+      return;
     }
   }
 
-  alert('Alertes mises à jour avec succès');
+  $toast.open({
+    message: 'Alertes mises à jour avec succès',
+    type: 'success',
+    position: 'bottom-left',
+  }); 
+
   initialAlerts.value = selectedAlerts.value.map(alertTypeId => {
     const alert = initialAlerts.value.find(a => a.alert_type_id === alertTypeId);
     return { alert_type_id: alertTypeId, id: alert ? alert.id : null };
-  }); // Update initial alerts to reflect current state
+  });
 };
 
 const checkAge = async () => {
@@ -187,23 +215,32 @@ const checkAge = async () => {
         }
       });
       const user = await response.json();
-      console.log('User data:', user);
       const age = calculateAge(new Date(user.dateOfBirth));
-      console.log('User age:', age);
       if (age < 18) {
         isAllowed.value = false;
-        console.log('Accès refusé : Utilisateur non majeur.');
+        $toast.open({
+          message: 'Vous devez être majeur pour voir ce produit!',
+          type: 'error',
+          position: 'bottom-left',
+        }); 
       } else {
         isAllowed.value = true;
-        console.log('Accès autorisé : Utilisateur majeur.');
       }
     } catch (error) {
-      console.error('Error fetching user:', error);
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
       isAllowed.value = false;
     }
   } else {
     isAllowed.value = false;
-    console.log('Accès refusé : Aucun ID utilisateur trouvé.');
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    }); 
   }
 };
 
@@ -214,7 +251,6 @@ const calculateAge = (birthdate) => {
   if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthdate.getDate())) {
     age--;
   }
-  console.log('Calculated age:', age);
   return age;
 };
 
@@ -223,27 +259,21 @@ const getImageUrl = (path) => {
   let relativePath = path;
 
   if (!path) {
-    console.error('Path is undefined or null');
     return '';
   }
 
-  // Enlever le chemin de base s'il est déjà présent
   if (path.startsWith(baseUrl)) {
     relativePath = path.replace(baseUrl, '');
   }
 
-  // Enlever la partie spécifique au système de fichiers pour obtenir un chemin relatif
   relativePath = relativePath.replace('/home/node/app', '');
 
-  // Ajouter une barre oblique initiale si elle est absente
   if (!relativePath.startsWith('/')) {
     relativePath = `/${relativePath}`;
   }
 
-  // Construire l'URL complète
   const imageUrl = `${baseUrl}${relativePath}`;
-  
-  console.log('Image URL:', imageUrl); // Log de l'URL de l'image
+
   return imageUrl;
 };
 

@@ -7,7 +7,7 @@
       <div v-if="mode !== 'delete'">
         <FormComponent
           :fields="fields"
-          v-model:formData="category"
+          v-model="category"
           submitButtonText="Envoyer"
           @submit="submitForm"
         />

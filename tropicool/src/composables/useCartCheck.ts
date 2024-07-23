@@ -1,6 +1,9 @@
 import { onBeforeMount } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toast-notification';
+
+const $toast = useToast();
 
 interface CartProductData {
   product_id: string;
@@ -56,14 +59,22 @@ export default function useCartCheck() {
               difference: difference
             });
           } catch (stockError) {
-            console.error(`Erreur lors de la mise à jour du stock pour le produit ${product.product_id}`, stockError);
+            $toast.open({
+              message: 'Erreur! Veuillez recommencer!',
+              type: 'error',
+              position: 'bottom-left',
+            });       
           }
         }
 
         await axios.delete(`${apiUrl}/cart/${id}`);
       }
     } catch (error) {
-      console.error('Erreur lors de la vérification du panier', error);
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
     }
   };
 

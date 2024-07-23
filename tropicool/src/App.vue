@@ -1,6 +1,6 @@
 <template>
   <div v-if="isDashboardRoute" class="h-screen flex">
-    <DashboardSidebar v-if="isDashboardRoute" />
+    <DashboardSidebar />
     <main id="main-dashboard" class="bg-white p-0 flex-1 flex flex-col ml-80 relative">
       <DashboardNavbar />
       <router-view />
@@ -13,12 +13,11 @@
   </main>
   <FooterComponent v-if="!isDashboardRoute" />
 
-  <ToastManager ref="toastManager" />
   <ScrollToTopButton />
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import useCartCheck from './composables/useCartCheck';
 
@@ -27,18 +26,21 @@ import FooterComponent from './components/FooterComponent.vue';
 import DashboardSidebar from './components/DashboardSidebar.vue';
 import DashboardNavbar from './components/DashboardNavbar.vue';
 import ScrollToTopButton from './components/ScrollToTopButton.vue';
-import ToastManager from './components/ToastManager.vue';
+import { useToast } from 'vue-toast-notification';
 
 const route = useRoute();
-const toastManager = ref(null);
+const $toast = useToast();
 
 const isDashboardRoute = computed(() => route.path.startsWith('/dashboard'));
 
 useCartCheck();
 
 onMounted(() => {
-  // Afficher le toast de bienvenue lorsque l'utilisateur arrive sur le site
-  toastManager.value.addToast('Bienvenue sur notre site !', 'success');
+  $toast.open({
+    message: 'Bievenue sur Troupicool !',
+    type: 'info',
+    position: 'bottom-left',
+  });
 });
 </script>
 
