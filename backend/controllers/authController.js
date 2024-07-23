@@ -21,27 +21,23 @@ const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Rechercher l'utilisateur par e-mail
     const user = await User.findOne({ where: { email } });
 
-    // Si l'utilisateur n'existe pas
     if (!user) {
       console.log('User not found');
       return res.status(401).json({ message: 'Authentication failed', loginAttempts: 0 });
     }
 
-    // Vérifier si le compte est vérifié
     if (!user.is_verified) {
       console.log('Account not verified');
       return res.status(403).json({ message: "Votre compte n'est pas vérifié. Veuillez vérifier votre e-mail pour activer votre compte." });
     }
 
-    // Vérifier si le compte est verrouillé
-    if (user.lockUntil && user.lockUntil > new Date()) {
-      const daysSinceLastChange = (new Date() - user.passwordLastChanged) / (1000 * 60 * 60 * 24);
+    if (user.lock_until && user.lock_until > new Date()) {
+      const daysSinceLastChange = (new Date() - user.password_last_changed) / (1000 * 60 * 60 * 24);
 
       if (daysSinceLastChange > 60) {
-        user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        user.lock_until = new Date(Date.now() + 24 * 60 * 60 * 1000);
         await sendPasswordResetEmail(user);
         console.log('Password needs to be renewed. Email sent.');
         return res.status(403).json({
@@ -50,38 +46,33 @@ const login = async (req, res) => {
         });
       }
       console.log('Account temporarily locked. Try again later.');
-      return res.status(401).json({ message: 'Account temporarily locked. Try again later.', loginAttempts: user.loginAttempts });
+      return res.status(401).json({ message: 'Account temporarily locked. Try again later.', loginAttempts: user.login_attempts });
     }
 
-    // Vérifier si le mot de passe est correct
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      user.loginAttempts = (user.loginAttempts || 0) + 1;
-      if (user.loginAttempts >= 3) {
-        user.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
-        user.loginAttempts = 0;
+      user.login_attempts = (user.login_attempts || 0) + 1;
+
+      if (user.login_attempts >= 3) {
+        user.lock_until = new Date(Date.now() + 2 * 60 * 60 * 1000);
+        user.login_attempts = 0;
         await user.save();
         await sendAccountLockedEmail(user);
-        console.log('Account temporarily locked due to failed login attempts.');
         return res.status(401).json({
-          message: 'Account temporarily locked. Try again later.',
-          loginAttempts: user.loginAttempts,
-          lockUntil: user.lockUntil
+          loginAttempts: user.login_attempts,
+          lockUntil: user.lock_until
         });
       }
 
       await user.save();
-      console.log('Authentication failed. Incorrect password.');
-      return res.status(401).json({ message: 'Authentication failed', loginAttempts: user.loginAttempts });
+      return res.status(401).json({ message: 'Authentication failed', loginAttempts: user.login_attempts });
     }
 
-    // Réinitialiser les tentatives de connexion et déverrouiller le compte
-    user.loginAttempts = 0;
-    user.lockUntil = null;
+    user.login_attempts = 0;
+    user.lock_until = null;
     await user.save();
 
-    // Générer le token JWT
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role, isVerified: user.is_verified },
       process.env.JWT_SECRET,
@@ -130,8 +121,8 @@ const forgotPassword = async (req, res) => {
         const token = crypto.randomBytes(20).toString('hex');
         const expires = Date.now() + 3600000;
 
-        user.resetPasswordToken = token;
-        user.resetPasswordExpires = expires;
+        user.reset_password_token = token;
+        user.reset_password_expires = expires;
         await user.save();
 
         const resetLink = `${process.env.FRONT_END_URL}/reset-password?token=${token}`;
@@ -153,10 +144,11 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
     try {
         const { token, password } = req.body;
+
         const user = await User.findOne({
             where: {
-                resetPasswordToken: token,
-                resetPasswordExpires: { [Op.gt]: Date.now() }
+                reset_password_token: token,
+                reset_password_expires: { [Op.gt]: Date.now() }
             }
         });
 
@@ -170,17 +162,15 @@ const resetPassword = async (req, res) => {
 
         for (let entry of previousPasswords) {
             if (await bcrypt.compare(password, entry.hashed_password)) {
-                const error = new Error('You cannot reuse an old password.');
-                error.code = 400;
-                throw error;
+                return res.status(400).json({ message: 'You cannot reuse an old password.' });
             }
         }
 
         user.password = password;
-        user.resetPasswordToken = null;
-        user.resetPasswordExpires = null;
-        user.passwordLastChanged = new Date();
-        user.lockUntil = null;
+        user.reset_password_token = null;
+        user.reset_password_expires = null;
+        user.password_last_changed = new Date();
+        user.lock_until = null;
 
         await user.save();
 
@@ -196,7 +186,6 @@ const resetPassword = async (req, res) => {
         res.status(statusCode).json({ message: 'An error occurred during password reset.' });
     }
 };
-
 const register = async (req, res) => {
   const { email, password, lastName, firstName, username, dateOfBirth } = req.body;
   try {
