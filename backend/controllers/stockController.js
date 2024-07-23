@@ -190,7 +190,9 @@ const getStockByDay = async (req, res, next) => {
 
     const query = `
       SELECT 
-        DATE(s.created_at) AS date, quantity, p.name AS product_name
+        DATE(s.created_at) AS date, 
+        s.quantity, 
+        p.name AS product_name
       FROM 
         stocks s
       INNER JOIN 
@@ -208,6 +210,12 @@ const getStockByDay = async (req, res, next) => {
       ON 
         DATE(s.created_at) = subquery.date
         AND s.created_at = subquery.max_created_at
+      INNER JOIN
+        products p
+      ON
+        s.product_id = p.id
+      WHERE 
+        s.product_id = :productId
       ORDER BY 
         s.created_at ASC;
     `;
@@ -215,7 +223,6 @@ const getStockByDay = async (req, res, next) => {
     const stock = await sequelize.query(query, {
       replacements: { productId },
       type: sequelize.QueryTypes.SELECT,
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
     });
 
     if (stock.length > 0) {
@@ -228,6 +235,7 @@ const getStockByDay = async (req, res, next) => {
     next(e);
   }
 };
+
 
 
 module.exports = {
