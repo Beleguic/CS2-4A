@@ -10,10 +10,12 @@
   },
   "dependencies": {
     "axios": "^1.6.8",
+    "chart.js": "^4.4.3",
     "dayjs": "^1.11.11",
     "nodemailer": "^6.9.13",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",
+    "vue-chartjs": "^5.3.1",
     "vue-router": "^4.3.0",
     "zod": "^3.23.8"
   },

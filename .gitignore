@@ -16,3 +16,6 @@ tropicool/public/uploads/*
 !tropicool/public/uploads/temporary-image.jpg
 uploads/
 uploads/*
+.env.*
+!.env.example
+.idea/*

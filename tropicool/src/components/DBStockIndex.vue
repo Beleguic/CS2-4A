@@ -2,11 +2,12 @@
   <section class="h-full">
     <div class="py-8 px-6">
       <div class="flex items-center justify-between mb-8">
-        <h1 class="text-4xl font-bold text-black">Liste des stocks</h1>
+        <h1 class="text-4xl font-bold text-black">Liste des produits en stocks</h1>
+        <p> (Si un produit n'apparaît pas, c'est qu'il n'y a jamais eu de stock. Ajoutez-en avec le bouton 'Ajouter'. ->)</p>
         <router-link :to="{ name: 'DBStockNew' }" class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
       <template v-if="datas.length > 0">
-        <Table :columns="columns" :datas="datas" editLink="DBStockEdit" deleteLink="DBStockDelete" />
+        <Table :columns="columns" :datas="datas" newLink="DBStockRestock" editLink="" deleteLink="" viewLink="DBStockView" graphLink="DBStockGraph"/>
       </template>
       <template v-else>
         <p class="text-center text-gray-500">Pas de stock trouvé</p>
@@ -36,28 +37,36 @@ interface Stock {
 const datas = ref<Stock[]>([]);
 
 const columns = [
-  { key: 'id', label: 'ID' },
   { key: 'productName', label: 'Produit' }, // Use a flattened key
   { key: 'quantity', label: 'Quantité' },
-  { key: 'status', label: 'Status' },
-  { key: 'difference', label: 'Différence' },
-  { key: 'created_at', label: 'Date' },
+  { key: 'created_at', label: "Dernier ajout le" },
   { key: 'actions', label: 'Actions' },
 ];
+
+/*
+
+ { key: 'difference', label: 'Différence' },
+ */
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
 const fetchStocks = async () => {
   try {
-    const response = await axios.get<Stock[]>(`${apiUrl}/stock/`);
+    const response = await axios.get<Stock[]>(`${apiUrl}/stock/store-keeper`);
     console.log('Fetched Stocks:', response.data); // Log the response data to verify structure
 
     // Map data to include productName at the top level and format the date
-    datas.value = response.data.map(stock => ({
-      ...stock,
-      productName: stock.product.name, // Add product name to top level
-      created_at: dayjs(stock.created_at).format('DD/MM/YYYY HH:mm') // Format the date
-    }));
+      datas.value = response.data.map(stock => {
+          const {difference, status,  ...rest } = stock;
+          return {
+              ...rest,
+              productName: stock.product.name, // Ajouter le nom du produit au niveau supérieur
+              created_at: dayjs(stock.created_at).format('DD/MM/YYYY HH:mm') // Formater la date
+          };
+      });
+
+
+      console.log(datas);
 
     console.log('Mapped Stocks:', datas.value); // Log the mapped data
   } catch (error) {
