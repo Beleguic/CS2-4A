@@ -1,7 +1,7 @@
 <template>
   <div :style="{ maxWidth: dynamicMaxWidth, maxHeight: dynamicMaxHeight }" class="overflow-auto">
     <table class="w-full text-left table-auto relative">
-      <thead class="w-full sticky left-0 top-0">
+      <thead class="w-full sticky left-0 top-0 z-50">
         <tr class="relative">
           <DashboardTableHead v-for="(column, index) in columns" :key="index" :column="column" />
         </tr>

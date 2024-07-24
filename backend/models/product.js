@@ -28,7 +28,6 @@ module.exports = function (sequelize) {
         onDelete: 'CASCADE'
       });
 
-      // Association with Category through CategoryProduct
       Product.belongsToMany(models.Category, {
         through: models.CategoryProduct,
         foreignKey: 'product_id',

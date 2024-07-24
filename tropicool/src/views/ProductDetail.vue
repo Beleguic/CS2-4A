@@ -6,6 +6,7 @@
       </div>
       <div class="product-details">
         <h1 class="product-name">{{ product.name }}</h1>
+        <p class="product-price">Prix unitaire : {{ product.price.toFixed(2) }} €</p>
         <p class="product-description">{{ product.description }}</p>
         <AddToCart :item="product.id" :price="product.price" />
 
@@ -36,124 +37,55 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
-import { useRouter } from 'vue-router';
-import AddToCart from './AddToCart.vue';
-import { useToast } from 'vue-toast-notification';
+  import { ref, onMounted } from 'vue';
+  import { useAuthStore } from '@/stores/authStore';
+  import { useRouter } from 'vue-router';
+  import AddToCart from './AddToCart.vue';
+  import { useToast } from 'vue-toast-notification';
 
-const $toast = useToast();
-const authStore = useAuthStore();
-const userId = authStore.userId;
+  const $toast = useToast();
+  const authStore = useAuthStore();
+  const userId = authStore.userId;
 
-const product = ref({
-  id: '',
-  price: 0,
-  name: '',
-  description: '',
-  image: '',
-  is_adult: false
-});
-const isAllowed = ref(true);
-const alertTypes = ref([]);
-const selectedAlerts = ref([]);
-const initialAlerts = ref([]);
-const router = useRouter();
-
-const fetchProduct = async () => {
-  const productId = router.currentRoute.value.params.id;
+  const product = ref({
+    id: '',
+    price: 0,
+    name: '',
+    description: '',
+    image: '',
+    is_adult: false
+  });
+  const isAllowed = ref(true);
+  const alertTypes = ref([]);
+  const selectedAlerts = ref([]);
+  const initialAlerts = ref([]);
+  const router = useRouter();
+  const token = localStorage.getItem('token');
   const apiUrl = import.meta.env.VITE_API_URL;
-  try {
-    const response = await fetch(`${apiUrl}/product/${productId}?frontend=true`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    const data = await response.json();
-    product.value = data;
-    if (data.is_adult) {
-      checkAge();
-    }
-    await fetchAlertTypes();
-    await fetchUserAlerts();
-  } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
-  }
-};
 
-const fetchAlertTypes = async () => {
-  const apiUrl = import.meta.env.VITE_API_URL;
-  try {
-    const response = await fetch(`${apiUrl}/alert_types`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    alertTypes.value = await response.json();
-  } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
-  }
-};
-
-const fetchUserAlerts = async () => {
-  const apiUrl = import.meta.env.VITE_API_URL;
-  try {
-    const response = await fetch(`${apiUrl}/alert?user_id=${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    const userAlerts = await response.json();
-
-    const productAlerts = userAlerts.filter(alert => alert.product_id === product.value.id);
-
-    selectedAlerts.value = productAlerts.map(alert => alert.alert_type_id);
-    initialAlerts.value = productAlerts.map(alert => ({ alert_type_id: alert.alert_type_id, id: alert.id }));
-  } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
-  }
-};
-
-const saveAlertPreferences = async () => {
-  const apiUrl = import.meta.env.VITE_API_URL;
-  const alertsToDelete = initialAlerts.value.filter(alert => !selectedAlerts.value.includes(alert.alert_type_id));
-  const alertsToAdd = selectedAlerts.value.filter(alertTypeId => !initialAlerts.value.some(alert => alert.alert_type_id === alertTypeId));
-
-  for (const alertTypeId of alertsToAdd) {
-    const alert = {
-      alert_type_id: String(alertTypeId),
-      user_id: String(authStore.userId),
-      product_id: String(product.value.id),
-      category_id: null,
-    };
-
+  const fetchProduct = async () => {
+    const productId = router.currentRoute.value.params.id;
     try {
-      const response = await fetch(`${apiUrl}/alert/new`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(alert)
-      });
-      if (!response.ok) {
-          $toast.open({
-          message: 'Erreur! Veuillez recommencer!',
-          type: 'error',
-          position: 'bottom-left',
-        }); 
+      if (token) {
+        const response = await fetch(`${apiUrl}/product/${productId}?frontend=true`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        product.value = data;
+        if (data.is_adult) {
+          checkAge();
+        }
+        await fetchAlertTypes();
+        await fetchUserAlerts();
+      } else {
+        const response = await fetch(`${apiUrl}/product/${productId}?frontend=true`);
+        const data = await response.json();
+        product.value = data;
+        if (data.is_adult) {
+          checkAge();
+        }
       }
     } catch (error) {
       $toast.open({
@@ -161,125 +93,210 @@ const saveAlertPreferences = async () => {
         type: 'error',
         position: 'bottom-left',
       }); 
-      return;
     }
-  }
+  };
 
-  for (const alert of alertsToDelete) {
+  const fetchAlertTypes = async () => {
     try {
-      const response = await fetch(`${apiUrl}/alert/${alert.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        if(errorData.error){
+      if (token) {      
+        const response = await fetch(`${apiUrl}/alert_types`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        alertTypes.value = await response.json();
+      }
+    } catch (error) {
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
+    }
+  };
+
+  const fetchUserAlerts = async () => {
+    try {
+      if (token) {
+        const response = await fetch(`${apiUrl}/alert?user_id=${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const userAlerts = await response.json();
+    
+        const productAlerts = userAlerts.filter(alert => alert.product_id === product.value.id);
+    
+        selectedAlerts.value = productAlerts.map(alert => alert.alert_type_id);
+        initialAlerts.value = productAlerts.map(alert => ({ alert_type_id: alert.alert_type_id, id: alert.id }));
+      }
+    } catch (error) {
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
+    }
+  };
+
+  const saveAlertPreferences = async () => {
+    if(token) {
+      const alertsToDelete = initialAlerts.value.filter(alert => !selectedAlerts.value.includes(alert.alert_type_id));
+      const alertsToAdd = selectedAlerts.value.filter(alertTypeId => !initialAlerts.value.some(alert => alert.alert_type_id === alertTypeId));
+
+      for (const alertTypeId of alertsToAdd) {
+        const alert = {
+          alert_type_id: String(alertTypeId),
+          user_id: String(authStore.userId),
+          product_id: String(product.value.id),
+          category_id: null,
+        };
+
+        try {
+          const response = await fetch(`${apiUrl}/alert/new`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(alert)
+          });
+          if (!response.ok) {
+              $toast.open({
+              message: 'Erreur! Veuillez recommencer!',
+              type: 'error',
+              position: 'bottom-left',
+            }); 
+          }
+        } catch (error) {
           $toast.open({
             message: 'Erreur! Veuillez recommencer!',
             type: 'error',
             position: 'bottom-left',
           }); 
+          return;
         }
       }
-    } catch (error) {
+
+      for (const alert of alertsToDelete) {
+        try {
+          const response = await fetch(`${apiUrl}/alert/${alert.id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          if (!response.ok) {
+            const errorData = await response.json();
+            if(errorData.error){
+              $toast.open({
+                message: 'Erreur! Veuillez recommencer!',
+                type: 'error',
+                position: 'bottom-left',
+              }); 
+            }
+          }
+        } catch (error) {
+          $toast.open({
+            message: 'Erreur! Veuillez recommencer!',
+            type: 'error',
+            position: 'bottom-left',
+          }); 
+          return;
+        }
+      }
+
       $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
+        message: 'Alertes mises à jour avec succès',
+        type: 'success',
         position: 'bottom-left',
       }); 
-      return;
-    }
-  }
 
-  $toast.open({
-    message: 'Alertes mises à jour avec succès',
-    type: 'success',
-    position: 'bottom-left',
-  }); 
-
-  initialAlerts.value = selectedAlerts.value.map(alertTypeId => {
-    const alert = initialAlerts.value.find(a => a.alert_type_id === alertTypeId);
-    return { alert_type_id: alertTypeId, id: alert ? alert.id : null };
-  });
-};
-
-const checkAge = async () => {
-  if (authStore.userId) {
-    const apiUrl = import.meta.env.VITE_API_URL;
-    try {
-      const response = await fetch(`${apiUrl}/users/${authStore.userId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      initialAlerts.value = selectedAlerts.value.map(alertTypeId => {
+        const alert = initialAlerts.value.find(a => a.alert_type_id === alertTypeId);
+        return { alert_type_id: alertTypeId, id: alert ? alert.id : null };
       });
-      const user = await response.json();
-      const age = calculateAge(new Date(user.dateOfBirth));
-      if (age < 18) {
-        isAllowed.value = false;
-        $toast.open({
-          message: 'Vous devez être majeur pour voir ce produit!',
-          type: 'error',
-          position: 'bottom-left',
-        }); 
-      } else {
-        isAllowed.value = true;
+    }
+  };
+
+  const checkAge = async () => {
+    if(token) {
+      if (authStore.userId) {
+        try {
+          const response = await fetch(`${apiUrl}/users/${authStore.userId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          const user = await response.json();
+          const age = calculateAge(new Date(user.dateOfBirth));
+          if (age < 18) {
+            isAllowed.value = false;
+            $toast.open({
+              message: 'Vous devez être majeur pour voir ce produit!',
+              type: 'error',
+              position: 'bottom-left',
+            }); 
+          } else {
+            isAllowed.value = true;
+          }
+        } catch (error) {
+          $toast.open({
+            message: 'Erreur! Veuillez recommencer!',
+            type: 'error',
+            position: 'bottom-left',
+          }); 
+          isAllowed.value = false;
+        }
       }
-    } catch (error) {
+    } else {
+      isAllowed.value = false;
       $toast.open({
         message: 'Erreur! Veuillez recommencer!',
         type: 'error',
         position: 'bottom-left',
       }); 
-      isAllowed.value = false;
     }
-  } else {
-    isAllowed.value = false;
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
-  }
-};
+  };
 
-const calculateAge = (birthdate) => {
-  const today = new Date();
-  let age = today.getFullYear() - birthdate.getFullYear();
-  const monthDifference = today.getMonth() - birthdate.getMonth();
-  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthdate.getDate())) {
-    age--;
-  }
-  return age;
-};
+  const calculateAge = (birthdate) => {
+    if (token) {
+      const today = new Date();
+      let age = today.getFullYear() - birthdate.getFullYear();
+      const monthDifference = today.getMonth() - birthdate.getMonth();
+      if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthdate.getDate())) {
+        age--;
+      }
+      return age;
+    }
+  };
 
-const getImageUrl = (path) => {
-  const baseUrl = import.meta.env.VITE_API_URL;
-  let relativePath = path;
+  const getImageUrl = (path) => {
+    const baseUrl = import.meta.env.VITE_API_URL;
+    let relativePath = path;
 
-  if (!path) {
-    return '';
-  }
+    if (!path) {
+      return '';
+    }
 
-  if (path.startsWith(baseUrl)) {
-    relativePath = path.replace(baseUrl, '');
-  }
+    if (path.startsWith(baseUrl)) {
+      relativePath = path.replace(baseUrl, '');
+    }
 
-  relativePath = relativePath.replace('/home/node/app', '');
+    relativePath = relativePath.replace('/home/node/app', '');
 
-  if (!relativePath.startsWith('/')) {
-    relativePath = `/${relativePath}`;
-  }
+    if (!relativePath.startsWith('/')) {
+      relativePath = `/${relativePath}`;
+    }
 
-  const imageUrl = `${baseUrl}${relativePath}`;
+    const imageUrl = `${baseUrl}${relativePath}`;
 
-  return imageUrl;
-};
+    return imageUrl;
+  };
 
-onMounted(() => {
-  fetchProduct();
-});
+  onMounted(() => {
+    fetchProduct();
+  });
 </script>
 
 <style scoped>

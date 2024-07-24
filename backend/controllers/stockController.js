@@ -2,7 +2,6 @@ const { Stock, Product, sequelize} = require('../models');
 const Joi = require('joi');
 const {Op} = require("sequelize");
 
-// Stock schema validation
 const stockSchema = Joi.object({
   quantity: Joi.number().integer().min(0).required(),
   product_id: Joi.string().uuid().required(),
@@ -11,7 +10,6 @@ const stockSchema = Joi.object({
   difference: Joi.string().required(),
 });
 
-// Filtrer les champs non autorisés
 const filterStockFields = (stock) => {
   const { product, created_at, ...filteredStock } = stock;
   return filteredStock;
@@ -23,7 +21,7 @@ const getAllStocks = async (req, res, next) => {
 
     const queryOptions = {
       include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
-      order: [['created_at', 'ASC']], // Ajoutez cette ligne pour trier par created_at asc
+      order: [['created_at', 'ASC']],
     };
 
     if (product_id) {
@@ -33,13 +31,12 @@ const getAllStocks = async (req, res, next) => {
     const stocks = await Stock.findAll(queryOptions);
 
     if (!stocks) {
-      return res.status(404).json({ message: 'Stocks not found' });
+      return res.sendStatus(404);
     } else {
-      return res.json(stocks);
+      return res.status(200).json(stocks);
     }
   } catch (e) {
-    console.error('Error fetching stocks:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -47,7 +44,6 @@ const getAllStocksForStoreKeeper = async (req, res, next) => {
   try {
     const { product_id } = req.query;
 
-    // Sous-requête pour obtenir le dernier created_at pour chaque product_id
     const latestStocksSubQuery = await Stock.findAll({
       attributes: [
         [sequelize.fn('MAX', sequelize.col('created_at')), 'latest_created_at'],
@@ -57,7 +53,6 @@ const getAllStocksForStoreKeeper = async (req, res, next) => {
       raw: true,
     });
 
-    // Construire un tableau des conditions pour la requête principale
     const latestConditions = latestStocksSubQuery.map(stock => {
       return {
         product_id: stock.product_id,
@@ -80,13 +75,12 @@ const getAllStocksForStoreKeeper = async (req, res, next) => {
     const stocks = await Stock.findAll(queryOptions);
 
     if (!stocks || stocks.length === 0) {
-      return res.status(404).json({ message: 'Stocks not found' });
+      return res.status(404);
     } else {
-      return res.json(stocks);
+      return res.status(200).json(stocks);
     }
   } catch (e) {
-    console.error('Error fetching stocks:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -98,13 +92,12 @@ const getStockById = async (req, res, next) => {
     });
 
     if (stock) {
-      res.json(stock);
+      return res.status(200).json(stock);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching stock by ID:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -117,10 +110,9 @@ const createStock = async (req, res, next) => {
     }
 
     const stock = await Stock.create(filteredBody);
-    res.status(201).json(stock);
+    return res.status(201).json(stock);
   } catch (e) {
-    console.error('Error creating stock:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -134,15 +126,14 @@ const updateStock = async (req, res, next) => {
 
     const stock = await Stock.findByPk(req.params.id);
 
-    if (stock) {
-      await stock.update(filteredBody);
-      res.json(stock);
-    } else {
-      res.sendStatus(404);
+    if (!stock) {
+      return res.sendStatus(404);
     }
+
+    await stock.update(filteredBody);
+    return res.status(200).json(stock);
   } catch (e) {
-    console.error('Error updating stock:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -153,14 +144,13 @@ const deleteStock = async (req, res, next) => {
         id: req.params.id,
       },
     });
-    if (nbDeleted === 1) {
-      res.sendStatus(204);
-    } else {
-      res.sendStatus(404);
+    if (nbDeleted !== 1) {
+      return res.sendStatus(404);
     }
+
+    return res.status(204);
   } catch (e) {
-    console.error('Error deleting stock:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -174,13 +164,12 @@ const getStockByIdForStoreKeeper = async (req, res, next) => {
     });
 
     if (stock.length > 0) {
-      res.json(stock);
+      return res.status(200).json(stock);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching stock by ID:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -226,13 +215,12 @@ const getStockByDay = async (req, res, next) => {
     });
 
     if (stock.length > 0) {
-      res.json(stock);
+      return res.status(200).json(stock);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching stock by day:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 

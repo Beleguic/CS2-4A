@@ -20,9 +20,16 @@ const cartSchema = Joi.object({
   updated_at: Joi.date().optional()
 });
 
+const isAdmin = (user) => user.role === 'admin';
+
 const getAllCarts = async (req, res, next) => {
   try {
     const { user_id } = req.query;
+    const user = await User.findByPk(req.userData.userId);
+
+    if((!user) || (user.id !== user_id)){
+      return res.sendStatus(404);
+    }
 
     const queryOptions = {
       include: [
@@ -31,8 +38,8 @@ const getAllCarts = async (req, res, next) => {
     };
 
     let carts;
-    if (user_id) {
-      queryOptions.where = { user_id: user_id };
+    if (!isAdmin(user)) {
+      queryOptions.where = { user_id: user.id };
       carts = await Cart.findAll(queryOptions);
     } else {
       carts = await Cart.findAll(queryOptions);
@@ -55,49 +62,70 @@ const getAllCarts = async (req, res, next) => {
       };
     });
 
-    res.json(cartData);
+    return res.status(200).json(cartData);
   } catch (e) {
-    console.error('Error fetching carts:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
 const getCartById = async (req, res, next) => {
   try {
-    const id = req.params.id;
-    const cart = await Cart.findByPk(id, {
-      include: [
-        { model: User, as: 'user', attributes: ['id'] }
-      ]
-    });
+    const userId = req.userData.userId;
+    const user = await User.findByPk(userId);
+    const cartId = req.params.id;
 
-    if (cart) {
-      res.json(cart);
-    } else {
-      res.sendStatus(404);
+    let cart;
+
+    if ((!user) || (!cartId)) {
+      return res.sendStatus(404);
     }
+
+    if (isAdmin(user)) {
+      cart = await Cart.findByPk(id, {
+        include: [
+          { model: User, as: 'user', attributes: ['id'] }
+        ]
+      });
+    } else {
+      cart = await Cart.findOne({
+        where: { id: cartId, user_id: userId },
+        include: [
+          { model: User, as: 'user', attributes: ['id'] }
+        ]
+      });
+    }
+
+    if (!cart) {
+      return res.sendStatus(404);
+    }
+
+    return res.status(200).json(cart);
   } catch (e) {
-    console.error('Error fetching cart by ID:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
 const createCart = async (req, res, next) => {
-  const { error, value } = cartSchema.validate(req.body);
-
-  if (error) {
-    return res.status(400);
-  }
-
   try {
+    const { error, value } = cartSchema.validate(req.body);
+
+    if (error) {
+      return res.sendStatus(400);
+    }
+
     const newCart = await Cart.create({
       user_id: value.user_id,
       cartProductsData: value.cartProductsData,
       expired_at: new Date(Date.now() + 15 * 60 * 1000)
     });
-    res.status(201);
+
+    if(!newCart){
+      return res.sendStatus(404);
+    } 
+    return res.sendStatus(201);
+    
   } catch (err) {
-    next(err);
+    return res.sendStatus(500);
   }
 };
 
@@ -105,28 +133,43 @@ const updateCart = async (req, res, next) => {
   const { error, value } = cartSchema.validate(req.body);
 
   if (error) {
-    return res.status(400).json({ error: error.details[0].message });
+    return res.status(404);
   }
 
-  const { id } = req.params;
+  const cartId = req.params.id;
+  const userId = req.userData.userId;
+
   try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.sendStatus(404);
+    }
+
+    let whereCondition;
+
+    if (isAdmin(user)) {
+      whereCondition = { id: cartId };
+    } else {
+      whereCondition = { id: cartId, user_id: userId };
+    }
+
     const [affectedRows, [updatedCart]] = await Cart.update(
       {
         cartProductsData: value.cartProductsData,
       },
       {
-        where: { id },
+        where: whereCondition,
         returning: true,
       }
     );
 
     if (affectedRows === 0) {
-      return res.status(404).json({ error: 'Cart not found' });
+      return res.sendStatus(404);
     }
 
-    res.status(200).json(updatedCart);
+    return res.status(200).json(updatedCart);
   } catch (err) {
-    next(err);
+    return res.sendStatus(500);
   }
 };
 
@@ -138,13 +181,12 @@ const deleteCart = async (req, res, next) => {
       },
     });
     if (nbDeleted === 1) {
-      res.sendStatus(204);
+      return res.sendStatus(204);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting cart:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -155,7 +197,7 @@ const removeProductFromCart = async (req, res, next) => {
     const cart = await Cart.findOne({ where: { user_id } });
 
     if (!cart) {
-      return res.status(404)
+      return res.status(404);
     }
 
     const updatedProducts = cart.cartProductsData.filter(
@@ -169,10 +211,9 @@ const removeProductFromCart = async (req, res, next) => {
     cart.cartProductsData = updatedProducts;
     await cart.save();
 
-    res.status(200).json(cart);
+    return res.status(200).json(cart);
   } catch (e) {
-    console.error('Error removing product from cart:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -194,10 +235,9 @@ const getTotalProductCount = async (req, res, next) => {
       }
     });
 
-    res.status(200).json({ product_id, total_count: totalCount });
+    return res.status(200).json({ product_id, total_count: totalCount });
   } catch (e) {
-    console.error('Error calculating total product count:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -211,19 +251,14 @@ const getCartByUserId = async (req, res, next) => {
       ]
     });
 
-    if (cart) {
-      res.json(cart);
-    } else {
-      res.sendStatus(404);
+    if (!cart) {
+      return res.sendStatus(404);
     }
+    return res.status(200).json(cart);
   } catch (e) {
-    console.error('Error fetching cart by user ID:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
-
-
-
 
 module.exports = {
   getAllCarts,
@@ -233,8 +268,5 @@ module.exports = {
   deleteCart,
   removeProductFromCart,
   getTotalProductCount,
-    getCartByUserId
+  getCartByUserId
 };
-////
-//g
-//

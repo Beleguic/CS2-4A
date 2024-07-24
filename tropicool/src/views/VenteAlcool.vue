@@ -7,7 +7,7 @@
         <h2 class="cgv-section-title text-2xl font-semibold text-blue-800 mb-4">Troupicool</h2>
         <p>Adresse : 242 Rue du Faubourg Saint-Antoine, Paris</p>
         <p>Email : <a href="mailto:team.troupicool@outlook.fr" class="contact-email text-blue-800 underline">team.troupicool@outlook.fr</a></p>
-        <p>N° SIRET : [Votre numéro SIRET]</p>
+        <p>N° SIRET : 362 521 879 00034</p>
         <p>Représenté par Yvars Clement</p>
       </section>
   
@@ -76,7 +76,7 @@
   
       <section class="cgv-section mb-8">
         <h2 class="cgv-section-title text-2xl font-semibold text-blue-800 mb-4">Fait à PARIS, le Mardi 9 Juillet 2024</h2>
-        <p>Modification faite le 15 Juillet 2024</p>
+        <p>Modifications faites le 15 Juillet 2024</p>
       </section>
     </div>
   </template>

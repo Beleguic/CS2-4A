@@ -63,7 +63,7 @@ app.use('/alert', AlertRouter);
 app.use('/product', ProductRouter);
 app.use('/alert_types', AlertTypeRouter);
 app.use('/category_product', CategoryProductRouter);
-app.use('/cart', CartRouter);
+app.use('/carts', CartRouter);
 app.use('/order', OrderRouter);
 app.use('/newsletter', NewsletterRouter);
 app.use('/stock', StockRouter);

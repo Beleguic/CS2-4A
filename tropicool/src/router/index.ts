@@ -9,7 +9,7 @@ import ResetPassword from '../views/ResetPassword.vue';
 import Profile from '../views/Profile.vue';
 import Product from '../views/Product.vue';
 import PrivacyPolicy from '../views/PrivacyPolicy.vue';
-import { verifyRole, isAuthenticated } from './authGuard';
+import { verifyRole } from './authGuard';
 import { useAuthStore } from '../stores/authStore';
 import DBIndex from '../components/DBIndex.vue';
 import FrontCategory from '../components/FrontCategory.vue';
@@ -48,10 +48,11 @@ import Search from '../views/Search.vue';
 import DBStockView from "../views/DBStockView.vue";
 import DBStockGraph from "../views/DBStockGraph.vue";
 import AddAlert from '../views/AddAlert.vue';
-import NotFound from '../views/NotFound.vue';  // Import the NotFound component
-
+import NotFound from '../views/NotFound.vue';
 import Payment from '../components/Payment.vue';
 import Confirmation from '../views/Confirmation.vue';
+import FrontProfileOrders from '../components/FrontProfileOrders.vue';
+import FrontProfile from '../components/FrontProfile.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -98,7 +99,19 @@ const routes: Array<RouteRecordRaw> = [
     path: '/profile',
     name: 'Profile',
     component: Profile,
-    beforeEnter: isAuthenticated,
+    beforeEnter: (to, from, next) => verifyRole(to, from, next, ['user', 'store-keeper', 'admin']),
+    children : [
+      {
+        path: '',
+        name: 'FrontProfile',
+        component: FrontProfile,
+      },
+      {
+        path: 'orders',
+        name: 'FrontProfileOrders',
+        component: FrontProfileOrders,
+      }
+    ]
   },
   {
     path: '/product',

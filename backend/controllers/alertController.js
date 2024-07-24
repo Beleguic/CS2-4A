@@ -1,7 +1,6 @@
 const { Alert, Product, Category, User, AlertType } = require('../models');
 const Joi = require('joi');
 
-// Alert schema validation
 const alertSchema = Joi.object({
   alert_type_id: Joi.string().uuid().required(),
   product_id: Joi.string().uuid().optional().allow(null),
@@ -18,8 +17,6 @@ const getAllAlerts = async (req, res, next) => {
       where.user_id = user_id;
     }
     
-    console.log('Fetching alerts with conditions:', where);
-
     const alerts = await Alert.findAll({
       where,
       include: [
@@ -30,12 +27,9 @@ const getAllAlerts = async (req, res, next) => {
       ],
     });
 
-    console.log('Fetched alerts:', alerts);
-
-    res.json(alerts);
+    return res.status(200).json(alerts);
   } catch (e) {
-    console.error('Error fetching alerts:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -52,13 +46,12 @@ const getAlertById = async (req, res, next) => {
     });
 
     if (alert) {
-      res.json(alert);
+      return res.status(200).json(alert);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching alert by ID:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -66,13 +59,12 @@ const createAlert = async (req, res, next) => {
   try {
     const { error } = alertSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      return res.sendStatus(400);
     }
     const alert = await Alert.create(req.body);
-    res.status(201).json(alert);
+    return res.status(201).json(alert);
   } catch (e) {
-    console.error('Error creating alert:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -80,38 +72,36 @@ const updateAlert = async (req, res, next) => {
   try {
     const { error } = alertSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      return res.sendStatus(400);
     }
 
     const alert = await Alert.findByPk(req.params.id);
 
     if (alert) {
       await alert.update(req.body);
-      res.json(alert);
+      return res.status(200).json(alert);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating alert:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
 const deleteAlert = async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log('Deleting alert with ID:', id); // Log the ID being deleted
+    console.log('Deleting alert with ID:', id);
     const alert = await Alert.findByPk(id);
 
     if (alert) {
       await alert.destroy();
-      res.sendStatus(204);
+      return res.sendStatus(204);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting alert:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 

@@ -35,44 +35,56 @@
             <option v-for="category in categories" :key="category.id" :value="category.name">{{ category.name }}</option>
           </select>
         </div>
-        <div class="grid gap-2">
+        <div class="grid gap-2 text-black">
           <label class="text-lg font-bold">Produits Alcoolisés</label>
           <div class="flex items-center">
-            <input type="checkbox" id="alcohol-yes" v-model="alcoholFilter" :value="true" @change="updateAlcoholFilter">
+            <input type="radio" id="alcohol-all" name="alcohol" value="" v-model="alcoholFilter" @change="updateURL">
+            <label for="alcohol-all" class="ml-2">Tout voir</label>
+          </div>
+          <div class="flex items-center">
+            <input type="radio" id="alcohol-yes" name="alcohol" value="true" v-model="alcoholFilter" @change="updateURL">
             <label for="alcohol-yes" class="ml-2">Avec alcool</label>
           </div>
           <div class="flex items-center">
-            <input type="checkbox" id="alcohol-no" v-model="alcoholFilter" :value="false" @change="updateAlcoholFilter">
+            <input type="radio" id="alcohol-no" name="alcohol" value="false" v-model="alcoholFilter" @change="updateURL">
             <label for="alcohol-no" class="ml-2">Sans alcool</label>
           </div>
         </div>
-        <div class="grid gap-2">
+        <div class="grid gap-2 text-black">
           <label class="text-lg font-bold">Filtrer par prix</label>
           <div class="flex items-center">
-            <input type="checkbox" id="price-0-10" v-model="priceRange" true-value="0-10" false-value="" @change="updateURL">
+            <input type="radio" id="price-all" name="price" value="" v-model="priceRange" @change="updateURL">
+            <label for="price-all" class="ml-2">Tout voir</label>
+          </div>
+          <div class="flex items-center">
+            <input type="radio" id="price-0-10" name="price" value="0-10" v-model="priceRange" @change="updateURL">
             <label for="price-0-10" class="ml-2">Moins de 10€</label>
           </div>
           <div class="flex items-center">
-            <input type="checkbox" id="price-10-20" v-model="priceRange" true-value="10-20" false-value="" @change="updateURL">
+            <input type="radio" id="price-10-20" name="price" value="10-20" v-model="priceRange" @change="updateURL">
             <label for="price-10-20" class="ml-2">Entre 10 et 20€</label>
           </div>
           <div class="flex items-center">
-            <input type="checkbox" id="price-20-30" v-model="priceRange" true-value="20-30" false-value="" @change="updateURL">
+            <input type="radio" id="price-20-30" name="price" value="20-30" v-model="priceRange" @change="updateURL">
             <label for="price-20-30" class="ml-2">Entre 20€ et 30€</label>
           </div>
           <div class="flex items-center">
-            <input type="checkbox" id="price-30+" v-model="priceRange" true-value="30+" false-value="" @change="updateURL">
+            <input type="radio" id="price-30+" name="price" value="30+" v-model="priceRange" @change="updateURL">
             <label for="price-30+" class="ml-2">Plus de 30€</label>
           </div>
         </div>
-        <div class="grid gap-2">
+        <div class="grid gap-2 text-black">
           <label class="text-lg font-bold">Stock</label>
           <div class="flex items-center">
-            <input type="checkbox" id="stock-available" :checked="stockFilter === 'available'" @change="updateStockFilter('available')">
+            <input type="radio" id="stock-all" name="stock" value="" v-model="stockFilter" @change="updateURL">
+            <label for="stock-all" class="ml-2">Tout voir</label>
+          </div>
+          <div class="flex items-center">
+            <input type="radio" id="stock-available" name="stock" value="available" v-model="stockFilter" @change="updateURL">
             <label for="stock-available" class="ml-2">Disponible</label>
           </div>
           <div class="flex items-center">
-            <input type="checkbox" id="stock-unavailable" :checked="stockFilter === 'unavailable'" @change="updateStockFilter('unavailable')">
+            <input type="radio" id="stock-unavailable" name="stock" value="unavailable" v-model="stockFilter" @change="updateURL">
             <label for="stock-unavailable" class="ml-2">Indisponible</label>
           </div>
         </div>
@@ -108,8 +120,8 @@ const searchText = ref<string>('');
 const searchQuery = ref<string>('');
 const sortOption = ref<string>('');
 const priceRange = ref<string>('');
-const alcoholFilter = ref<boolean[]>([]);
-const stockFilter = ref<string | null>(null);
+const alcoholFilter = ref<string>('');
+const stockFilter = ref<string | null>('');
 const apiUrl = import.meta.env.VITE_API_URL;
 const searchInput = ref<HTMLInputElement | null>(null);
 const filtersVisible = ref(true);
@@ -140,21 +152,22 @@ const fetchCategories = async () => {
       method: 'GET',
     });
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       $toast.open({
-        message: 'Erreur, veuillez recommencer',
+        message: '157 Erreur, veuillez recommencer',
         type: 'error',
         position: 'bottom-left',
       });
     }
 
     const data = await response.json();
+    
     categories.value = data;
 
     syncFiltersWithRoute();
   } catch (error) {
     $toast.open({
-      message: 'Erreur, veuillez recommencer',
+      message: '169 Erreur, veuillez recommencer',
       type: 'error',
       position: 'bottom-left',
     });
@@ -171,10 +184,8 @@ const fetchProducts = async () => {
       category: selectedCategory.value,
     });
 
-    if (alcoholFilter.value.includes(true)) {
-      params.append('with-alcohol', 'true');
-    } else if (alcoholFilter.value.includes(false)) {
-      params.append('with-alcohol', 'false');
+    if (alcoholFilter.value) {
+      params.append('with-alcohol', alcoholFilter.value);
     }
 
     if (priceRange.value) {
@@ -196,18 +207,18 @@ const fetchProducts = async () => {
     });
 
     if (!response.ok) {
-        $toast.open({
-        message: 'Erreur, veuillez recommencer',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      throw new Error(`Error: ${response.status}`);
     }
 
     const data = await response.json();
-    products.value = Array.isArray(data) ? data : [];
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid response format');
+    }
+
+    products.value = data;
   } catch (error) {
     $toast.open({
-      message: 'Erreur, veuillez recommencer',
+      message: '220 Erreur, veuillez recommencer',
       type: 'error',
       position: 'bottom-left',
     });
@@ -244,12 +255,8 @@ const filteredProducts = computed(() => {
       }
     }
 
-    if (alcoholFilter.value.length) {
-      if (alcoholFilter.value.includes(true) && alcoholFilter.value.includes(false)) {
-        matchesAlcohol = true;
-      } else {
-        matchesAlcohol = alcoholFilter.value.includes(product.is_adult);
-      }
+    if (alcoholFilter.value) {
+      matchesAlcohol = alcoholFilter.value === product.is_adult.toString();
     }
 
     if (selectedCategory.value) {
@@ -279,24 +286,6 @@ const toggleFilters = () => {
   filtersVisible.value = !filtersVisible.value;
 };
 
-const updateAlcoholFilter = () => {
-  if (!alcoholFilter.value.includes(true) && !alcoholFilter.value.includes(false)) {
-    alcoholFilter.value = [];
-  } else if (alcoholFilter.value.includes(true) && alcoholFilter.value.includes(false)) {
-    alcoholFilter.value = [];
-  }
-  updateURL();
-};
-
-const updateStockFilter = (value: string) => {
-  if (stockFilter.value === value) {
-    stockFilter.value = null;
-  } else {
-    stockFilter.value = value;
-  }
-  updateURL();
-};
-
 const updateURL = () => {
   const query: Record<string, string | undefined> = {
     search: searchQuery.value || undefined,
@@ -304,10 +293,8 @@ const updateURL = () => {
     category: selectedCategory.value || undefined,
   };
 
-  if (alcoholFilter.value.includes(true)) {
-    query['with-alcohol'] = 'true';
-  } else if (alcoholFilter.value.includes(false)) {
-    query['with-alcohol'] = 'false';
+  if (alcoholFilter.value) {
+    query['with-alcohol'] = alcoholFilter.value;
   }
 
   if (stockFilter.value) {
@@ -332,11 +319,11 @@ const updateURL = () => {
 };
 
 const syncFiltersWithRoute = () => {
-  searchText.value = route.query.search || '';
-  searchQuery.value = route.query.search || '';
-  sortOption.value = route.query.sort || '';
-  selectedCategory.value = route.query.category || '';
-  stockFilter.value = route.query.stock || null;
+  searchText.value = route.query.search as string || '';
+  searchQuery.value = route.query.search as string || '';
+  sortOption.value = route.query.sort as string || '';
+  selectedCategory.value = route.query.category as string || '';
+  stockFilter.value = route.query.stock as string || null;
 
   const minPrice = route.query['min-price'];
   const maxPrice = route.query['max-price'];
@@ -355,14 +342,14 @@ const syncFiltersWithRoute = () => {
 
   if (validateAlcoholFilter(route.query['with-alcohol'] as string)) {
     if (route.query['with-alcohol'] === 'true') {
-      alcoholFilter.value = [true];
+      alcoholFilter.value = 'true';
     } else if (route.query['with-alcohol'] === 'false') {
-      alcoholFilter.value = [false];
+      alcoholFilter.value = 'false';
     } else {
-      alcoholFilter.value = [];
+      alcoholFilter.value = '';
     }
   } else {
-    alcoholFilter.value = [];
+    alcoholFilter.value = '';
   }
 
   if (route.query['stock'] === 'available') {
@@ -370,7 +357,7 @@ const syncFiltersWithRoute = () => {
   } else if (route.query['stock'] === 'unavailable') {
     stockFilter.value = 'unavailable';
   } else {
-    stockFilter.value = null;
+    stockFilter.value = '';
   }
 };
 

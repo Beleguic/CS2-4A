@@ -1,8 +1,6 @@
 const { User, Newsletter, Alert, AlertType, Product, Category } = require('../models');
 const Joi = require('joi');
-const { Op } = require('sequelize');
 
-// User schema validation (backend)
 const userSchema = Joi.object({
   email: Joi.string().email().required(),
   dateOfBirth: Joi.date().required(),
@@ -25,75 +23,27 @@ const filterUserResponse = (user) => {
 
 const isAdmin = (user) => user.role === 'admin';
 
-const updateUser = async (req, res, next) => {
-  try {
-    const filteredBody = filterUserFields(req.body);
-    const { error } = userSchema.validate(filteredBody);
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
-    const user = await User.findByPk(req.params.id);
-    const requestingUser = await User.findByPk(req.userData.userId);
-
-    if (user) {
-      if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
-        return res.status(403).json({ message: "You cannot edit other admin accounts." });
-      }
-
-      // Ne met à jour le mot de passe que s'il est fourni
-      if (!filteredBody.password) {
-        delete filteredBody.password;
-      }
-
-      await user.update(filteredBody);
-
-      // Handle newsletter subscription
-      if (filteredBody.isSubscribedToNewsletter) {
-        await Newsletter.findOrCreate({ where: { user_id: user.id } });
-      } else {
-        await Newsletter.destroy({ where: { user_id: user.id } });
-      }
-
-      res.json(user);
-    } else {
-      res.sendStatus(404);
-    }
-  } catch (e) {
-    console.error('Error updating user:', e);
-    next(e);
-  }
-};
-
 const getAllUsers = async (req, res, next) => {
   try {
     const requestingUser = await User.findByPk(req.userData.userId);
     let users;
 
     if (isAdmin(requestingUser)) {
-      users = await User.findAll({
-        where: {
-          [Op.or]: [
-            { role: { [Op.ne]: 'admin' } },
-            { id: requestingUser.id }
-          ]
-        }
-      });
-    } else {
       users = await User.findAll();
+      return res.status(200).json(users);
+    } else {
+      return res.sendStatus(404);
     }
 
-    res.json(users);
   } catch (e) {
-    console.error('Error fetching users:', e);
-    next(e);
+    return res.sendStatus(404);
+
   }
 };
 
 const getUserById = async (req, res, next) => {
   try {
-    const id = req.params.id;
-    const user = await User.findByPk(id, {
+    const user = await User.findByPk(req.params.id, {
       include: [
         { model: Newsletter, as: 'newsletters', attributes: ['id'] },
         {
@@ -107,24 +57,24 @@ const getUserById = async (req, res, next) => {
         }
       ]
     });
+    
+    if (!user) {
+      return res.sendStatus(404);
+    }
+
     const requestingUser = await User.findByPk(req.userData.userId);
-
-    if (user) {
-      if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
-        return res.status(403).json({ message: "You cannot view other admin accounts." });
-      }
-
+    
+    if (isAdmin(requestingUser) || (requestingUser.id === user.id)) {
       const userResponse = filterUserResponse(user);
       userResponse.isSubscribedToNewsletter = user.newsletters.length > 0;
       userResponse.alerts = user.alerts;
 
-      res.json(userResponse);
+      return res.status(200).json(userResponse);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching user by ID:', e);
-    next(e);
+    return res.sendStatus(404);
   }
 };
 
@@ -133,14 +83,52 @@ const createUser = async (req, res, next) => {
     const filteredBody = filterUserFields(req.body);
     const { error } = userSchema.validate(filteredBody);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      return res.status(400);
     }
 
     const user = await User.create(filteredBody);
-    res.status(201).json(user);
+    return res.status(201).json(user);
   } catch (e) {
-    console.error('Error creating user:', e);
-    next(e);
+    return res.sendStatus(404);
+  }
+};
+
+const updateUser = async (req, res, next) => {
+  try {
+    const filteredBody = filterUserFields(req.body);
+    const { error } = userSchema.validate(filteredBody);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const user = await User.findByPk(req.params.id);
+    const requestingUser = await User.findByPk(req.userData.userId);
+
+    if (!user) {
+      return res.sendStatus(404);
+    }
+
+    if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
+      return res.status(404);
+    }
+
+    if (!filteredBody.password) {
+      delete filteredBody.password;
+    }
+
+    await user.update(filteredBody);
+
+    if (filteredBody.isSubscribedToNewsletter) {
+      await Newsletter.findOrCreate({ where: { user_id: user.id } });
+    } else {
+      await Newsletter.destroy({ where: { user_id: user.id } });
+    }
+
+    const updatedUser = filterUserResponse(user);
+
+    return res.status(200).json(updatedUser);
+  } catch (e) {
+    return res.sendStatus(404);
   }
 };
 
@@ -151,7 +139,7 @@ const deleteUser = async (req, res, next) => {
 
     if (user) {
       if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
-        return res.status(403).json({ message: "You cannot delete other admin accounts." });
+        return res.status(404);
       }
 
       const nbDeleted = await User.destroy({
@@ -168,8 +156,7 @@ const deleteUser = async (req, res, next) => {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting user:', e);
-    next(e);
+    return res.sendStatus(404);
   }
 };
 

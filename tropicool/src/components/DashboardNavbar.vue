@@ -20,14 +20,22 @@
       </button>
       <ul v-if="isMenuVisible"
         class="mt-2 py-2 flex flex-col gap-2 border border-gray-200 z-50 absolute bg-white w-full rounded-md">
-        <li v-for="(route, index) in routes" :key="index">
-          <router-link :to="{ name: route.path }"
+        <li>
+          <router-link :to="{ name: 'Profile' }"
             class="inline-block px-4 py-2 text-black hover:bg-main hover:text-white w-full">
             <div class="flex gap-4 items-center">
-              <component :is="route.icon" class="w-full max-w-5"/>
-              <span>{{ route.text }}</span>
+              <component :is="iconProfile" class="w-full max-w-5"/>
+              <span>Profile</span>
             </div>
           </router-link>
+        </li>
+        <li>
+          <button v-if="auth.isLoggedIn" @click="logout" class="inline-block px-4 py-2 text-black hover:bg-main hover:text-white w-full">
+            <div class="flex gap-4 items-center">
+              <component :is="iconLogout" class="w-full max-w-5"/>
+              <span>Logout</span>
+            </div>
+          </button>
         </li>
       </ul>
     </div>
@@ -36,27 +44,15 @@
 
 <script setup lang="ts">
   import { ref } from 'vue';
-  import iconProfile from '../assets/icons/db-profile.svg'
-  import iconLogout from '../assets/icons/db-logout.svg'
+  import iconProfile from '../assets/icons/db-profile.svg';
+  import iconLogout from '../assets/icons/db-logout.svg';
+  import { useAuthStore } from '../stores/authStore';
 
-  interface Route {
-    path: string;
-    text: string;
-    icon: string;
+  const auth = useAuthStore();
+
+  function logout() {
+      auth.logout();
   }
-
-  const routes: Route[] = [
-    {
-      path: "Profile",
-      text: "Profile",
-      icon: iconProfile
-    },
-    {
-      path: "Logout",
-      text: "Logout",
-      icon: iconLogout
-    }
-  ];
 
   const isMenuVisible = ref<boolean>(false);
 

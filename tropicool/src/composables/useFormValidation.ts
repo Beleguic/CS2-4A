@@ -6,6 +6,7 @@ interface Field {
   name: string;
   label: string;
   required?: boolean;
+  min : number
 }
 
 interface FieldGroup {
@@ -48,15 +49,15 @@ export function useFormValidation(fields: FieldGroup[]) {
           } else {
             fieldSchema = z.string();
             if (subField.required) {
-              fieldSchema = fieldSchema.nonempty(`${subField.label} est requis`);
+              fieldSchema = fieldSchema.min(subField.min, `${subField.label} est requis`);
             }
             if (subField.type === 'email') {
               fieldSchema = fieldSchema.email(`${subField.label} doit être une adresse email valide`);
             }
             if (subField.name === 'password') {
               fieldSchema = fieldSchema.min(12, 'Le mot de passe doit contenir au moins 12 caractères').regex(
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\\-])[A-Za-z\d@$!%*?&_\\-]{12,}$/,
-                'Le mot de passe doit contenir des majuscules, des minuscules, des chiffres et des symboles'
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\\\-./#()[\]])[A-Za-z\d@$!%*?&_\\\-./#()[\]]{12,}$/,
+                'Le mot de passe doit contenir des majuscules, des minuscules, des chiffres et des symboles (@, $, !, %, *, ?, &, _, -, ., /, #, (, ), [, ])'
               );
             }
           }

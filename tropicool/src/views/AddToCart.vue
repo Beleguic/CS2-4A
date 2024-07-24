@@ -34,9 +34,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, defineEmits } from 'vue';
-import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 import { useAddToCartFormValidation } from '../composables/useAddToCartFormValidation';
+import { useToast } from 'vue-toast-notification';
+
+const $toast = useToast();
 
 interface Props {
   item: string;
@@ -77,13 +79,31 @@ const decreaseQuantity = () => {
 
 const checkStock = async (productId: string): Promise<number> => {
   const apiUrl = import.meta.env.VITE_API_URL as string;
+  const params = new URLSearchParams({ product_id: productId });
+
   try {
-    const response = await axios.get(`${apiUrl}/stock`, { params: { product_id: productId } });
-    const stockData = response.data;
+    const response = await fetch(`${apiUrl}/stock?${params.toString()}`, {
+      method: 'GET',
+    });
+
+    if (response.status !== 200) {
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
+    }
+
+    const stockData = await response.json();    
     const latestStock = stockData[stockData.length - 1];
+        
     return latestStock ? latestStock.quantity : 0;
   } catch (error) {
-    console.error("Error fetching stock:", error);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    });
     return 0;
   }
 };
@@ -91,32 +111,39 @@ const checkStock = async (productId: string): Promise<number> => {
 const addToCart = async () => {
   try {
     if (quantity.value > availableStock.value) {
-      message.value = `Stock insuffisant. Disponible: ${availableStock.value}`;
-      messageType.value = 'error';
+      $toast.open({
+        message: 'Stock indisponible',
+        type: 'warning',
+        position: 'bottom-left',
+      });
       return;
     }
 
     const userId = localStorage.getItem('userId');
     if (!userId) {
-      message.value = 'Vous devez être connecté pour ajouter ce produit au panier';
-      messageType.value = 'error';
+      $toast.open({
+        message: 'Vous devez être connectée pour ajouter ce produit au panier',
+        type: 'warning',
+        position: 'bottom-left',
+      });
       return;
     }
 
-    const response = await useAddToCartFormValidation(props.item, quantity.value, userId);
-    message.value = response.message.error ?? response.message.success ?? 'Unexpected response';
-    messageType.value = response.message.error ? 'error' : 'success';
+    useAddToCartFormValidation(props.item, quantity.value, userId);
 
-    if (messageType.value === 'success') {
-      emit('item-added', props.item);
-    }
+    $toast.open({
+        message: 'Produit ajouté au panier avec succès!',
+        type: 'success',
+        position: 'bottom-left',
+      }); 
+
+    emit('item-added', props.item);
   } catch (error) {
-    if (error instanceof Error) {
-      message.value = error.message;
-    } else {
-      message.value = 'An unexpected error occurred';
-    }
-    messageType.value = 'error';
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    });
   }
 };
 
@@ -162,7 +189,6 @@ onMounted(async () => {
   background-color: #fff;
   color: #000;
   text-align: center;
-  -moz-appearance: textfield;
 }
 
 .quantity-input::-webkit-outer-spin-button,

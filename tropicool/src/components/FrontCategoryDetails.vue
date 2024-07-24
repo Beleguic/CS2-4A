@@ -73,8 +73,6 @@ onMounted(async () => {
       method: 'GET',
     });
 
-    console.log('response :', response);
-
     if (!response.ok) {
       $toast.open({
         message: 'Erreur, veuillez recommencer',

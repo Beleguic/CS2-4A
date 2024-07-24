@@ -13,7 +13,7 @@
           </div>
           <div class="grid gap-2">
             <h3>{{ item.name }}</h3>
-            <p>{{ item.price }}€</p>
+            <p><span>{{ item.price }}€</span> - <span>T.V.A : {{ item.tva }}%</span></p>
             <p class="text-gray-600"><span class="bold">Référence : </span>{{ item.reference }}</p>
             <button @click="removeFromCart(item.product_id, item.quantity)" class="border border-red-600 bg-transparent rounded-md text-red-600 hover:bg-red-600 hover:text-white flex gap-2 px-4 py-1 items-center">
               <svg width='8' height='9' viewBox='0 0 8 9' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -39,7 +39,8 @@
           </div>
         </div>
         <div class="flex-1">
-          <span>€{{ (item.price * item.quantity).toFixed(2) }}</span>
+          <span>{{ calculateTotalWithTax(item.price, item.quantity) }} €</span>
+          <p>dont {{ calculateTax(item.price, item.quantity, item.tva) }} € de TVA</p>
         </div>
       </div>
     </div>
@@ -47,57 +48,69 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, defineEmits } from 'vue';
-import { useUpdateCartItemQuantity } from '../composables/useUpdateCartItemQuantity';
-import { useToast } from 'vue-toast-notification';
+  import { defineProps, ref, defineEmits } from 'vue';
+  import { useUpdateCartItemQuantity } from '../composables/useUpdateCartItemQuantity';
+  import { useToast } from 'vue-toast-notification';
 
-const $toast = useToast();
+  const $toast = useToast();
 
-interface CartItem {
-  product_id: string;
-  name: string;
-  image: string;
-  price: number;
-  quantity: number;
-  reference: string;
-}
-
-defineProps<{
-  cartItems: CartItem[];
-  removeFromCart: (productId: string, quantity: number) => void;
-}>();
-
-const emit = defineEmits(['update-cart']);
-
-const { selectedItem, selectedQuantity, selectItem, updateQuantity } = useUpdateCartItemQuantity();
-const originalQuantity = ref<number | null>(null);
-
-const handleUpdateQuantity = async (productId: string) => {
-  const userId = localStorage.getItem('userId');
-  const response = await updateQuantity(productId, userId);
-  if (response.message.success) {
-    emit('update-cart');
-    $toast.open({
-      message: 'Panier mis-à-jour!',
-      type: 'success',
-      position: 'bottom-left',
-    });
-  } else {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    });
+  interface CartItem {
+    product_id: string;
+    name: string;
+    image: string;
+    price: number;
+    quantity: number;
+    reference: string;
+    tva: number;
   }
-};
 
-const cancelUpdate = () => {
-  selectedItem.value = null;
-  selectedQuantity.value = originalQuantity.value ?? 1;
-};
+  defineProps<{
+    cartItems: CartItem[];
+    removeFromCart: (productId: string, quantity: number) => void;
+  }>();
 
-const handleSelectItem = (productId: string, quantity: number) => {
-  originalQuantity.value = quantity;
-  selectItem(productId, quantity);
-};
+  const emit = defineEmits(['update-cart']);
+
+  const { selectedItem, selectedQuantity, selectItem, updateQuantity } = useUpdateCartItemQuantity();
+  const originalQuantity = ref<number | null>(null);
+
+  const handleUpdateQuantity = async (productId: string) => {
+    const userId = localStorage.getItem('userId');
+    const response = await updateQuantity(productId, userId);
+    if (response.message.success) {
+      emit('update-cart');
+      $toast.open({
+        message: 'Panier mise-à-jour!',
+        type: 'success',
+        position: 'bottom-left',
+      });
+    } else {
+      $toast.open({
+        message: response.message.error || 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      });
+    }
+  };
+
+  const cancelUpdate = () => {
+    selectedItem.value = null;
+    selectedQuantity.value = originalQuantity.value ?? 1;
+  };
+
+  const handleSelectItem = (productId: string, quantity: number) => {
+    originalQuantity.value = quantity;
+    selectItem(productId, quantity);
+  };
+
+  const calculateTotalWithTax = (price: number, quantity: number) => {
+    const totalWithoutTax = price * quantity;
+    return (totalWithoutTax).toFixed(2);
+  };
+
+  const calculateTax = (price: number, quantity: number, tva: number) => {
+    const totalWithoutTax = price * quantity;
+    const taxAmount = totalWithoutTax * (tva / 100);
+    return taxAmount.toFixed(2);
+  };
 </script>

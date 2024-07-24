@@ -1,8 +1,6 @@
-import axios from 'axios';
 import { useToast } from 'vue-toast-notification';
 
 const $toast = useToast();
-import { forEachChild } from 'typescript';
 
 interface Product {
   id: string;
@@ -44,59 +42,126 @@ interface CartProductCount {
   total_count: number;
 }
 
-export async function useAddToCartFormValidation(
-  item: string,
-  quantity: number,
-  userId: string | null
-): Promise<{ message: { error?: string; success?: string } }> {
+export async function useAddToCartFormValidation(item: string, quantity: number, userId: string | null): Promise<void> {
   quantity = parseInt(quantity.toString(), 10);
 
   const apiUrl = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem('token');
 
   if (!userId) {
-    return { message: { error: "Veuillez vous connecter" } };
+    $toast.open({
+      message: 'Vous devez être connectée pour ajouter ce produit au panier',
+      type: 'warning',
+      position: 'bottom-left',
+      duration: 5000,
+    });
+    return;
   }
 
   if (!item) {
-    return { message: { error: "Item is required" } };
+    $toast.open({
+      message: 'Veuillez rajouter un produit valide!',
+      type: 'warning',
+      position: 'bottom-left',
+      duration: 5000,
+    });
+    return;
   }
 
   if (isNaN(quantity) || quantity <= 0 || quantity >= 11) {
-    return { message: { error: "La quantité ne doit pas excéder 10 !" } };
+    $toast.open({
+      message: 'La quantité ne peut pas exécéder 10!',
+      type: 'warning',
+      position: 'bottom-left',
+      duration: 5000,
+    });
+    return;
   }
 
   try {
-    const productResponse = await axios.get<Product>(`${apiUrl}/product/${item}`);
-    const product = productResponse.data;
-    if (!product) {
-      return { message: { error: "Veuillez choisir un produit valide" } };
+    const productResponse = await fetch(`${apiUrl}/product/${item}`, {
+      method: "GET",
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+    if (productResponse.status !== 200) {
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
     }
 
-    const stockResponse = await axios.get<Stock[]>(`${apiUrl}/stock`, {
-      params: { product_id: item }
+    const product: Product = await productResponse.json();
+
+    const stockResponse = await fetch(`${apiUrl}/stock?product_id=${item}`, {
+      method : "GET", 
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }, 
     });
-    const stockData = stockResponse.data;
-    console.log('stockData', stockData);
+
+    if (stockResponse.status !== 200) {
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
+    }
+
+    const stockData: Stock[] = await stockResponse.json();
     const latestStock = stockData[stockData.length - 1];
-    console.log('latestStock', latestStock);
 
-    const cartResponseProduct = await axios.get<CartProductCount[]>(`${apiUrl}/cart/product/count`, {
-        params: { product_id: item }
+    const cartResponseProduct = await fetch(`${apiUrl}/carts/product/count?product_id=${item}`, {
+      method : "GET", 
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }, 
+    });
+    if (cartResponseProduct.status !== 200) {
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
       });
-    const numberProductOnCart = cartResponseProduct.data;
-
-    if (!latestStock || (latestStock.quantity - numberProductOnCart.total_count) < quantity) { // 
-      return { message: { error: "Stock indisponible" } };
     }
 
-    const cartResponse = await axios.get<Cart[]>(`${apiUrl}/cart`, {
-      params: { user_id: userId }
+    const numberProductOnCart: CartProductCount[] = await cartResponseProduct.json();
+    const totalProductCount = numberProductOnCart.length ? numberProductOnCart[0].total_count : 0;
+
+    if (!latestStock || (latestStock.quantity - totalProductCount) < quantity) {
+      $toast.open({
+        message: 'Stock indisponible !',
+        type: 'warning',
+        position: 'bottom-left',
+        duration: 5000,
+      });
+      return;
+    }
+
+    const cartResponse = await fetch(`${apiUrl}/carts?user_id=${userId}`, {
+      method : "GET", 
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }, 
     });
-    const cartData = cartResponse.data;
-    console.log(cartData);
+
+    if (cartResponse.status !== 200) {
+      $toast.open({
+        message: 'Erreur! Veuillez recommencer!',
+        type: 'error',
+        position: 'bottom-left',
+      }); 
+    }
+    const cartData: Cart[] = await cartResponse.json();
 
     let activeCart: Cart;
-    // Création d'un nouveau panier si l'utilisateur n'en a pas
+
     if (!cartData || cartData.length === 0) {
       const cartProductsData: CartProduct[] = [{
         product_id: item,
@@ -106,15 +171,34 @@ export async function useAddToCartFormValidation(
         image: product.image,
         reference: product.reference,
         tva: product.tva,
-        is_adult: product.is_adult
+        is_adult: product.is_adult,
       }];
-
-      axios.post(`${apiUrl}/cart/new`, {
-        user_id: userId,
-        cartProductsData: cartProductsData,
+      
+      const newCartResponse = await fetch(`${apiUrl}/carts/new`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          cartProductsData: cartProductsData,
+        }),
       });
 
-      return { message: { success: "Produit ajouté au panier" } };
+      if(newCartResponse.status !== 201) {
+        $toast.open({
+          message: 'Erreur! Veuillez recommencer!',
+          type: 'error',
+          position: 'bottom-left',
+        });
+      }
+
+      $toast.open({
+        message: 'Produit ajouté au panier! Vous avez 15 min pour valider le panier',
+        type: 'success',
+        position: 'bottom-left',
+      });
     } else {
       activeCart = cartData[0];
       const existingProductIndex = activeCart.cartProductsData.findIndex(product => product.product_id === item);
@@ -122,33 +206,68 @@ export async function useAddToCartFormValidation(
       if (existingProductIndex !== -1) {
         const newQuantity = activeCart.cartProductsData[existingProductIndex].quantity + quantity;
         if (newQuantity < 1 || newQuantity > 10) {
-          return { message: { error: "La quantité ne doit pas excéder 10 !" } };
+          $toast.open({
+            message: 'La quantité ne peut pas exécéder 10!',
+            type: 'warning',
+            position: 'bottom-left',
+            duration: 5000,
+          });
+          return;
         }
         activeCart.cartProductsData[existingProductIndex].quantity = newQuantity;
       } else {
         if (quantity < 1 || quantity > 10) {
-          return { message: { error: "La quantité ne doit pas excéder 10 !" } };
+          $toast.open({
+            message: 'La quantité ne peut pas exécéder 10!',
+            type: 'warning',
+            position: 'bottom-left',
+          });
+          return;
         }
         activeCart.cartProductsData.push({
-            product_id: item,
-            name: product.name,
-            quantity: quantity,
-            price: product.price,
-            image: product.image,
-            reference: product.reference,
-            tva: product.tva,
-            is_adult: product.is_adult
+          product_id: item,
+          name: product.name,
+          quantity: quantity,
+          price: product.price,
+          image: product.image,
+          reference: product.reference,
+          tva: product.tva,
+          is_adult: product.is_adult,
         });
       }
 
-      await axios.patch<Cart>(`${apiUrl}/cart/${activeCart.id}`, {
-        user_id: userId,
-        cartProductsData: activeCart.cartProductsData,
+      const responseUpdate = await fetch(`${apiUrl}/carts/${activeCart.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          cartProductsData: activeCart.cartProductsData,
+        }),
+      });
+
+      if (responseUpdate.status !== 200) {
+        $toast.open({
+          message: 'Erreur! Veuillez recommencer!',
+          type: 'error',
+          position: 'bottom-left',
+        });
+        return;
+      }
+      
+      $toast.open({
+        message: 'Produit ajouté avec succès!',
+        type: 'success',
+        position: 'bottom-left',
       });
     }
-
-    return { message: { success: "Produit ajouté au panier !" } };
   } catch (error) {
-    return { message: { error: "Erreur! Veuillez recommencer!" } };
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    });
   }
 }

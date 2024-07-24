@@ -75,6 +75,7 @@ export const useAuthStore = defineStore('auth', {
       this.userId = null;
       this.userRole = null;
       this.isVerified = null;
+
       router.push({ name: 'Login' });
     }
   }

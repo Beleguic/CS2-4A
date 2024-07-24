@@ -1,7 +1,6 @@
-const { Category, Product } = require('../models');
+const { Category, Product, User } = require('../models');
 const Joi = require('joi');
 
-// Category schema validation
 const categorySchema = Joi.object({
   name: Joi.string().min(3).max(30).required(),
   url: Joi.string().regex(/^[a-zA-Z0-9-]+$/).required(),
@@ -10,15 +9,16 @@ const categorySchema = Joi.object({
   is_active: Joi.boolean().optional()
 });
 
+const isAdmin = (user) => user.role === 'admin';
+
 const getAllCategoriesForSelection = async (req, res, next) => {
   try {
     const categories = await Category.findAll({
       attributes: ['id', 'name']
     });
-    res.json(categories);
+    return res.status(200).json(categories);
   } catch (e) {
-    console.error('Error fetching category list:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -52,10 +52,14 @@ const getAllCategories = async (req, res, next) => {
         }
       ] : []
     });
-    res.json(categories);
+
+    if (categories.length <= 0) {
+      return res.sendStatus(404);
+    }
+
+    return res.status(200).json(categories);
   } catch (e) {
-    console.error('Error fetching categories:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
@@ -72,67 +76,83 @@ const getCategoryById = async (req, res, next) => {
     });
 
     if (category) {
-      res.json(category);
+      return res.status(200).json(category);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching category by ID:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
 const createCategory = async (req, res, next) => {
   try {
-    const { error } = categorySchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+    const requestingUser = await User.findByPk(req.userData.userId);
+
+    if (!isAdmin(requestingUser)){
+      return res.sendStatus(404);
     }
 
-    const category = await Category.create(req.body);
-    res.status(201).json(category);
+    const { error } = categorySchema.validate(req.body);
+    if (error) {
+      return res.sendStatus(404).json({ error: error.details[0].message });
+    }
+
+    await Category.create(req.body);
+    return res.sendStatus(201);
   } catch (e) {
-    console.error('Error creating category:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
 const updateCategory = async (req, res, next) => {
   try {
+    const requestingUser = await User.findByPk(req.userData.userId);
+
+    if(!isAdmin(requestingUser)){
+      return res.sendStatus(404);
+    }
+
     const { error } = categorySchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      return res.status(404);
     }
 
     const category = await Category.findByPk(req.params.id);
 
+    console.log("category", category);
+
     if (category) {
-      await category.update(req.body);
-      res.json(category);
+      const awaitCategory = await category.update(req.body);
+      return res.status(200).json(awaitCategory);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error updating category:', e);
-    next(e);
+    return res.sendStatus(500);
   }
 };
 
 const deleteCategory = async (req, res, next) => {
   try {
+    const requestingUser = await User.findByPk(req.userData.userId);
+
+    if(!isAdmin(requestingUser)){
+      return res.sendStatus(404);
+    }
+
     const nbDeleted = await Category.destroy({
       where: {
         id: req.params.id,
       },
     });
     if (nbDeleted === 1) {
-      res.sendStatus(204);
+      return res.sendStatus(204);
     } else {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error deleting category:', e);
-    next(e);
+    return res.status(500);
   }
 };
 

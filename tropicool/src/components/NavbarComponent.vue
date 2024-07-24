@@ -64,7 +64,7 @@
 
   const routesIcon: RouteIcon[] = [
     {
-      path: 'Profile',
+      path: 'FrontProfile',
       icon: iconProfile
     },
     {
