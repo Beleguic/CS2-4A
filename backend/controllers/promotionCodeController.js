@@ -1,14 +1,11 @@
-const { PromotionCode } = require('../models');
+const PromotionCode = require('../mongo/models/PromotionCode');
 const Joi = require('joi');
 
-// PromotionCode schema validation
 const promotionCodeSchema = Joi.object({
   code: Joi.string().required(),
   reduction: Joi.number().required().min(1).max(100),
-  start_at: Joi.date().allow(null),
-  end_at: Joi.date().allow(null),
-  product_id: Joi.string().uuid(),
-  category_id: Joi.string().uuid().allow(null),
+  start_at: Joi.date().optional(),
+  end_at: Joi.date().optional()
 });
 
 const getAllPromotionCodes = async (req, res, next) => {
@@ -18,12 +15,11 @@ const getAllPromotionCodes = async (req, res, next) => {
     let queryOptions = {};
 
     if (code) {
-      queryOptions.where = { code: code };
+      queryOptions = { code: code };
     }
 
-    const codes = await PromotionCode.findAll(queryOptions);
-
-    res.json(codes);
+    const codes = await PromotionCode.find(queryOptions);
+    res.status(200).json(codes);
   } catch (e) {
     console.error('Error fetching promotion codes:', e);
     next(e);
@@ -33,11 +29,11 @@ const getAllPromotionCodes = async (req, res, next) => {
 const getPromotionCodeById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const promotionCode = await PromotionCode.findByPk(id);
+    const promotionCode = await PromotionCode.findById(id);
     if (promotionCode) {
-      res.json(promotionCode);
+      res.status(200).json(promotionCode);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Promotion code not found' });
     }
   } catch (e) {
     console.error('Error fetching promotion code by ID:', e);
@@ -47,15 +43,14 @@ const getPromotionCodeById = async (req, res, next) => {
 
 const createPromotionCode = async (req, res, next) => {
   try {
-    console.log("reqbody :", req.body);
     const { error } = promotionCodeSchema.validate(req.body);
     if (error) {
-      console.log('Validation error:', error.details);
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const promotionCode = await PromotionCode.create(req.body);
-    res.status(201).json(promotionCode);
+    const code = new PromotionCode(req.body);
+    await code.save();
+    res.status(201).json(code);
   } catch (e) {
     console.error('Error creating promotion code:', e);
     next(e);
@@ -69,13 +64,13 @@ const updatePromotionCode = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const promotionCode = await PromotionCode.findByPk(req.params.id);
-
+    const promotionCode = await PromotionCode.findById(req.params.id);
     if (promotionCode) {
-      await promotionCode.update(req.body);
-      res.json(promotionCode);
+      Object.assign(promotionCode, req.body);
+      await promotionCode.save();
+      res.status(200).json(promotionCode);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Promotion code not found' });
     }
   } catch (e) {
     console.error('Error updating promotion code:', e);
@@ -85,15 +80,12 @@ const updatePromotionCode = async (req, res, next) => {
 
 const deletePromotionCode = async (req, res, next) => {
   try {
-    const nbDeleted = await PromotionCode.destroy({
-      where: {
-        id: req.params.id,
-      },
-    });
-    if (nbDeleted === 1) {
-      res.sendStatus(204);
+    const code = await PromotionCode.findById(req.params.id);
+    if (code) {
+      await code.remove();
+      res.status(204).send();
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Promotion code not found' });
     }
   } catch (e) {
     console.error('Error deleting promotion code:', e);

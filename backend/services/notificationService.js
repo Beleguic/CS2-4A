@@ -1,23 +1,19 @@
 const { sendEmail } = require('./mailService');
+const Alert = require('../mongo/models/Alert');
+const AlertType = require('../mongo/models/AlertType');
+const User = require('../mongo/models/User');
+const Product = require('../mongo/models/Product');
 
 const sendNewProductAlerts = async (categoryProduct) => {
-  const { Alert, AlertType, User } = require('../models');
   try {
-    const alertType = await AlertType.findOne({ where: { type: 'nouveau produit dans la catégorie' } });
+    const alertType = await AlertType.findOne({ type: 'nouveau produit dans la catégorie' });
     if (!alertType) {
       throw new Error('Type d\'alerte pour nouveau produit dans la catégorie introuvable');
     }
 
-    const alerts = await Alert.findAll({
-      where: {
-        category_id: categoryProduct.category_id,
-        alert_type_id: alertType.id,
-      },
-      include: [
-        { model: User, as: 'user', attributes: ['email', 'username'] },
-        { model: AlertType, as: 'alertType', attributes: ['type'] },
-      ],
-    });
+    const alerts = await Alert.find({ category_id: categoryProduct.category_id, alert_type_id: alertType._id })
+      .populate('user')
+      .populate('alertType');
 
     for (const alert of alerts) {
       const user = alert.user;
@@ -34,23 +30,15 @@ const sendNewProductAlerts = async (categoryProduct) => {
 };
 
 const sendRestockAlerts = async (stock) => {
-  const { Alert, AlertType, User, Product } = require('../models');
   try {
-    const alertType = await AlertType.findOne({ where: { type: 'restock' } });
+    const alertType = await AlertType.findOne({ type: 'restock' });
     if (!alertType) {
       throw new Error('Type d\'alerte pour restock introuvable');
     }
 
-    const alerts = await Alert.findAll({
-      where: {
-        product_id: stock.product_id,
-        alert_type_id: alertType.id,
-      },
-      include: [
-        { model: User, as: 'user', attributes: ['email', 'username'] },
-        { model: Product, as: 'product', attributes: ['name'] },
-      ],
-    });
+    const alerts = await Alert.find({ product_id: stock.product_id, alert_type_id: alertType._id })
+      .populate('user')
+      .populate('product');
 
     for (const alert of alerts) {
       const user = alert.user;
@@ -68,23 +56,15 @@ const sendRestockAlerts = async (stock) => {
 };
 
 const sendPromotionAlerts = async (productPromotion) => {
-  const { Alert, AlertType, User, Product } = require('../models');
   try {
-    const alertType = await AlertType.findOne({ where: { type: 'promotion' } });
+    const alertType = await AlertType.findOne({ type: 'promotion' });
     if (!alertType) {
       throw new Error('Type d\'alerte pour promotion introuvable');
     }
 
-    const alerts = await Alert.findAll({
-      where: {
-        product_id: productPromotion.product_id,
-        alert_type_id: alertType.id,
-      },
-      include: [
-        { model: User, as: 'user', attributes: ['email', 'username'] },
-        { model: Product, as: 'product', attributes: ['name'] },
-      ],
-    });
+    const alerts = await Alert.find({ product_id: productPromotion.product_id, alert_type_id: alertType._id })
+      .populate('user')
+      .populate('product');
 
     for (const alert of alerts) {
       const user = alert.user;
@@ -100,24 +80,15 @@ const sendPromotionAlerts = async (productPromotion) => {
     console.error('Erreur lors de l\'envoi des notifications de promotion par email:', error);
   }
 };
-
 const sendPriceChangeAlerts = async (product) => {
-  const { Alert, AlertType, User } = require('../models');
   try {
-    const alertType = await AlertType.findOne({ where: { type: 'changement de prix' } });
+    const alertType = await AlertType.findOne({ type: 'changement de prix' });
     if (!alertType) {
       throw new Error('Type d\'alerte pour changement de prix introuvable');
     }
 
-    const alerts = await Alert.findAll({
-      where: {
-        product_id: product.id,
-        alert_type_id: alertType.id,
-      },
-      include: [
-        { model: User, as: 'user', attributes: ['email', 'username'] },
-      ],
-    });
+    const alerts = await Alert.find({ product_id: product._id, alert_type_id: alertType._id })
+      .populate('user');
 
     for (const alert of alerts) {
       const user = alert.user;

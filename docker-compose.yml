@@ -4,7 +4,7 @@ services:
   mongo:
     image: mongo
     ports:
-      - 127.0.0.1:27018:27018
+      - 127.0.0.1:27018:27017
     volumes:
       - mongo-data:/data/db
       - ./SampleCollections:/SampleCollections
@@ -17,7 +17,7 @@ services:
     image: node:20.0.0-alpine
     environment:
       PORT: 3000
-      MONGO_URL: mongodb://root:password@mongo:27018/app?authSource=admin
+      MONGO_URL: mongodb://root:password@mongo:27017/app?authSource=admin
       DATABASE_URL: postgres://root:password@postgres:5432/app
       JWT_SECRET: secret
     ports:
@@ -53,26 +53,26 @@ services:
       - 8080:8080
 
   poste:
-     image: node:20.0.0-alpine
-     environment:
-       PORT: 3001
-       DATABASE_URL_POSTE: postgres://root:password@postgres-poste:5432/poste
-       JWT_SECRET: posteAPI
-     ports:
-       - 127.0.0.1:3001:3001
-     volumes:
-       - ./poste:/home/node/poste
-     working_dir: /home/node/poste
-     command: sh -c "npm install && npm run dev node --watch"
+    image: node:20.0.0-alpine
+    environment:
+      PORT: 3001
+      DATABASE_URL_POSTE: postgres://root:password@postgres-poste:5432/poste
+      JWT_SECRET: posteAPI
+    ports:
+      - 127.0.0.1:3001:3001
+    volumes:
+      - ./poste:/home/node/poste
+    working_dir: /home/node/poste
+    command: sh -c "npm install && npm run dev node --watch"
 
   postgres-poste:
-     image: postgres
-     volumes:
-       - postgres-poste-data:/var/lib/postgresql/data
-     environment:
-       POSTGRES_USER: root
-       POSTGRES_PASSWORD: password
-       POSTGRES_DB: poste
+    image: postgres
+    volumes:
+      - postgres-poste-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: poste
 
 volumes:
   mongo-data: {}

@@ -1,8 +1,12 @@
-const { User, Newsletter, Alert, AlertType, Product, Category } = require('../models');
+const { User: UserPostgres, Newsletter: NewsletterPostgres } = require('../models');
+const NewsletterMongo = require('../mongo/models/Newsletter');
+const UserMongo = require('../mongo/models/User');
+const Alert = require('../mongo/models/Alert');
 const Joi = require('joi');
 const { Op } = require('sequelize');
+const mongoose = require('mongoose'); // Ajout de mongoose
 
-// User schema validation (backend)
+// User schema validation
 const userSchema = Joi.object({
   email: Joi.string().email().required(),
   dateOfBirth: Joi.date().required(),
@@ -33,26 +37,24 @@ const updateUser = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const user = await User.findByPk(req.params.id);
-    const requestingUser = await User.findByPk(req.userData.userId);
+    const user = await UserPostgres.findByPk(req.params.id);
+    const requestingUser = await UserPostgres.findByPk(req.userData.userId);
 
     if (user) {
       if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
         return res.status(403).json({ message: "You cannot edit other admin accounts." });
       }
 
-      // Ne met à jour le mot de passe que s'il est fourni
       if (!filteredBody.password) {
         delete filteredBody.password;
       }
 
       await user.update(filteredBody);
 
-      // Handle newsletter subscription
       if (filteredBody.isSubscribedToNewsletter) {
-        await Newsletter.findOrCreate({ where: { user_id: user.id } });
+        await NewsletterPostgres.findOrCreate({ where: { user_id: user.id } });
       } else {
-        await Newsletter.destroy({ where: { user_id: user.id } });
+        await NewsletterPostgres.destroy({ where: { user_id: user.id } });
       }
 
       res.json(user);
@@ -67,20 +69,30 @@ const updateUser = async (req, res, next) => {
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const requestingUser = await User.findByPk(req.userData.userId);
+    const requestingUser = await UserPostgres.findByPk(req.userData.userId);
     let users;
 
     if (isAdmin(requestingUser)) {
-      users = await User.findAll({
-        where: {
-          [Op.or]: [
-            { role: { [Op.ne]: 'admin' } },
-            { id: requestingUser.id }
-          ]
-        }
-      });
+      users = await UserMongo.find({
+        $or: [
+          { role: { $ne: 'admin' } },
+          { _id: requestingUser.id }
+        ]
+      }).populate({
+        path: 'alerts',
+        populate: [
+          { path: 'product_id', select: 'name' },
+          { path: 'category_id', select: 'name' }
+        ]
+      }).populate('newsletters');
     } else {
-      users = await User.findAll();
+      users = await UserMongo.find().populate({
+        path: 'alerts',
+        populate: [
+          { path: 'product_id', select: 'name' },
+          { path: 'category_id', select: 'name' }
+        ]
+      }).populate('newsletters');
     }
 
     res.json(users);
@@ -93,33 +105,41 @@ const getAllUsers = async (req, res, next) => {
 const getUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const user = await User.findByPk(id, {
-      include: [
-        { model: Newsletter, as: 'newsletters', attributes: ['id'] },
-        {
-          model: Alert,
-          as: 'alerts',
-          include: [
-            { model: AlertType, as: 'alertType', attributes: ['type'] },
-            { model: Product, as: 'product', attributes: ['id', 'name'] },
-            { model: Category, as: 'category', attributes: ['id', 'name'] }
-          ]
-        }
-      ]
-    });
-    const requestingUser = await User.findByPk(req.userData.userId);
+    console.log(`Fetching user by ID: ${id}`);
+
+    const user = await UserMongo.findById(id)
+      .populate({
+        path: 'alerts',
+        populate: [
+          { path: 'alert_type_id', select: 'type' },
+          { path: 'product_id', select: 'name' },
+          { path: 'category_id', select: 'name' }
+        ]
+      });
+
+    const requestingUser = await UserPostgres.findByPk(req.userData.userId);
 
     if (user) {
+      console.log(`User found in MongoDB: ${user}`);
+
       if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
         return res.status(403).json({ message: "You cannot view other admin accounts." });
       }
 
-      const userResponse = filterUserResponse(user);
-      userResponse.isSubscribedToNewsletter = user.newsletters.length > 0;
-      userResponse.alerts = user.alerts;
+      const newsletterSubscription = await NewsletterMongo.findOne({ user_id: id });
+      const isSubscribedToNewsletter = !!newsletterSubscription;
+
+      const userResponse = {
+        ...filterUserResponse(user),
+        alerts: user.alerts,
+        isSubscribedToNewsletter
+      };
+
+      console.log('User response:', userResponse);
 
       res.json(userResponse);
     } else {
+      console.log('User not found in MongoDB');
       res.sendStatus(404);
     }
   } catch (e) {
@@ -127,6 +147,8 @@ const getUserById = async (req, res, next) => {
     next(e);
   }
 };
+
+
 
 const createUser = async (req, res, next) => {
   try {
@@ -136,7 +158,7 @@ const createUser = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const user = await User.create(filteredBody);
+    const user = await UserPostgres.create(filteredBody);
     res.status(201).json(user);
   } catch (e) {
     console.error('Error creating user:', e);
@@ -146,15 +168,15 @@ const createUser = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   try {
-    const user = await User.findByPk(req.params.id);
-    const requestingUser = await User.findByPk(req.userData.userId);
+    const user = await UserPostgres.findByPk(req.params.id);
+    const requestingUser = await UserPostgres.findByPk(req.userData.userId);
 
     if (user) {
       if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
         return res.status(403).json({ message: "You cannot delete other admin accounts." });
       }
 
-      const nbDeleted = await User.destroy({
+      const nbDeleted = await UserPostgres.destroy({
         where: {
           id: req.params.id,
         },
@@ -173,10 +195,70 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+const updateUserProfile = async (req, res) => {
+  const userId = req.params.id;
+  const { email, username, firstName, lastName, dateOfBirth, isSubscribedToNewsletter } = req.body;
+
+  console.log(`Starting update for userId: ${userId}`);
+  console.log('Request body:', req.body);
+
+  try {
+    const userPostgres = await UserPostgres.findByPk(userId);
+    if (!userPostgres) {
+      console.log('User not found in PostgreSQL');
+      return res.status(404).json({ message: 'User not found in PostgreSQL' });
+    }
+
+    console.log('Updating user in PostgreSQL');
+    await userPostgres.update({
+      email,
+      username,
+      firstName,
+      lastName,
+      dateOfBirth,
+      isSubscribedToNewsletter
+    });
+
+    console.log('Fetching user from MongoDB');
+    const userMongo = await UserMongo.findById(userId);
+    if (userMongo) {
+      console.log('Updating user in MongoDB');
+      userMongo.email = email;
+      userMongo.username = username;
+      userMongo.firstName = firstName;
+      userMongo.lastName = lastName;
+      userMongo.dateOfBirth = dateOfBirth;
+      userMongo.isSubscribedToNewsletter = isSubscribedToNewsletter;
+      await userMongo.save();
+
+      if (isSubscribedToNewsletter) {
+        console.log('Subscribing user to newsletter in MongoDB');
+        let newsletter = await NewsletterMongo.findOne({ user_id: userId });
+        if (!newsletter) {
+          newsletter = new NewsletterMongo({ _id: new mongoose.Types.ObjectId(), user_id: userId });
+        }
+        await newsletter.save();
+      } else {
+        console.log('Unsubscribing user from newsletter in MongoDB');
+        await NewsletterMongo.deleteOne({ user_id: userId });
+      }
+    } else {
+      console.log('User not found in MongoDB');
+    }
+
+    console.log('Profile updated successfully');
+    res.json({ message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'An error occurred while updating the profile', error: error.message });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  updateUserProfile,
 };

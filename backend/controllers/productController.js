@@ -1,11 +1,12 @@
-const { join } = require('path');
-const { Product, Stock, Category } = require('../models');
+const path = require('path');
+const fs = require('fs');
+const Product = require('../mongo/models/Product');
 const Joi = require('joi');
 
 const productSchema = Joi.object({
   name: Joi.string().min(3).max(255).required(),
   price: Joi.number().greater(0).required(),
-  image: Joi.string().optional(), // L'image devient optionnelle car elle sera gérée par Multer
+  image: Joi.string().optional(),
   is_active: Joi.boolean().optional(),
   description: Joi.string().min(3).required(),
   is_adult: Joi.boolean().optional(),
@@ -15,25 +16,12 @@ const productSchema = Joi.object({
 
 const getAllProductsWithStock = async (req, res, next) => {
   try {
-    const products = await Product.findAll({
-      attributes: ['id', 'name'],
-      include: [
-        {
-          model: Stock,
-          as: 'stocks',
-          attributes: ['quantity']
-        }
-      ]
-    });
-
-    const productsWithStock = products.map(product => {
-      return {
-        id: product.id,
-        name: product.name,
-        stock: product.stocks.reduce((acc, stock) => acc + stock.quantity, 0)
-      };
-    });
-
+    const products = await Product.find().populate('stocks', 'quantity');
+    const productsWithStock = products.map(product => ({
+      id: product.id,
+      name: product.name,
+      stock: product.stocks.reduce((acc, stock) => acc + stock.quantity, 0),
+    }));
     res.json(productsWithStock);
   } catch (e) {
     console.error('Error fetching products with stock:', e);
@@ -43,9 +31,7 @@ const getAllProductsWithStock = async (req, res, next) => {
 
 const getAllProductsForSelection = async (req, res, next) => {
   try {
-    const products = await Product.findAll({
-      attributes: ['id', 'name']
-    });
+    const products = await Product.find().select('id name');
     res.json(products);
   } catch (e) {
     console.error('Error fetching product list:', e);
@@ -57,49 +43,29 @@ const getAllProducts = async (req, res, next) => {
   const isFrontend = req.query.frontend === 'true';
   const isSorting = req.query.sorting === 'true';
   const sortField = req.query.sortField || 'name';
-  const sortOrder = req.query.sortOrder === 'desc' ? 'DESC' : 'ASC';
+  const sortOrder = req.query.sortOrder === 'desc' ? 'desc' : 'asc';
   try {
     if (isFrontend && isSorting) {
-      const products = await Product.findAll({
-        where: {
-          is_active: true
-        },
-        include: [
-          {
-            model: Category,
-            as: 'categories',
-            through: {
-              attributes: []
-            },
-            attributes: ['id', 'name']
-          },
-          {
-            model: Stock,
-            as: 'stocks',
-            attributes: ['quantity']
-          }
-        ],
-        order: [[sortField, sortOrder]]
-      });
+      const products = await Product.find({ is_active: true })
+        .populate('categories', 'id name')
+        .populate('stocks', 'quantity')
+        .sort({ [sortField]: sortOrder });
 
-      const productsWithStock = products.map(product => {
-        const totalStock = product.stocks.reduce((total, stock) => total + stock.quantity, 0);
-        return {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          image: product.image,
-          is_active: product.is_active,
-          is_adult: product.is_adult,
-          created_at: product.created_at,
-          updated_at: product.updated_at,
-          reference: product.reference,
-          tva: product.tva,
-          categories: product.categories,
-          stock: totalStock
-        };
-      });
+      const productsWithStock = products.map(product => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        description: product.description,
+        image: product.image,
+        is_active: product.is_active,
+        is_adult: product.is_adult,
+        created_at: product.created_at,
+        updated_at: product.updated_at,
+        reference: product.reference,
+        tva: product.tva,
+        categories: product.categories,
+        stock: product.stocks.reduce((total, stock) => total + stock.quantity, 0),
+      }));
 
       res.json(productsWithStock);
     } else {
@@ -107,17 +73,14 @@ const getAllProducts = async (req, res, next) => {
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
 
-      const { count, rows } = await Product.findAndCountAll({
-        offset: offset,
-        limit: limit,
-        order: [[sortField, sortOrder]]
-      });
+      const count = await Product.countDocuments();
+      const products = await Product.find().skip(offset).limit(limit).sort({ [sortField]: sortOrder });
 
       res.json({
         totalItems: count,
         totalPages: Math.ceil(count / limit),
         currentPage: page,
-        products: rows
+        products,
       });
     }
   } catch (e) {
@@ -130,18 +93,13 @@ const getProductById = async (req, res, next) => {
   try {
     const id = req.params.id;
     const isFrontend = req.query.frontend === 'true';
-    const whereCondition = isFrontend
-      ? { is_active: true, name: id }
-      : { id: id };
+    const whereCondition = isFrontend ? { is_active: true, name: id } : { _id: id };
 
-    const product = await Product.findOne({
-      where: whereCondition,
-    });
-
+    const product = await Product.findOne(whereCondition);
     if (product) {
       res.json(product);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Product not found' });
     }
   } catch (e) {
     console.error('Error fetching product by ID:', e);
@@ -162,13 +120,15 @@ const createProduct = async (req, res, next) => {
       image,
     };
 
-    const product = await Product.create(newProductData);
+    const product = new Product(newProductData);
+    await product.save();
     res.status(201).json(product);
   } catch (e) {
     console.error('Error creating product:', e);
     next(e);
   }
 };
+
 
 const updateProduct = async (req, res, next) => {
   try {
@@ -179,13 +139,14 @@ const updateProduct = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const product = await Product.findByPk(req.params.id);
+    const product = await Product.findById(req.params.id);
     if (product) {
-      const image = req.file ? req.file.path : product.image; // Conserve l'ancienne image si une nouvelle n'est pas fournie
-      await product.update({ ...payload, image });
+      const image = req.file ? req.file.path : product.image;
+      Object.assign(product, payload, { image });
+      await product.save();
       res.json(product);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Product not found' });
     }
   } catch (e) {
     console.error('Error updating product:', e);
@@ -195,15 +156,12 @@ const updateProduct = async (req, res, next) => {
 
 const deleteProduct = async (req, res, next) => {
   try {
-    const nbDeleted = await Product.destroy({
-      where: {
-        id: req.params.id,
-      },
-    });
-    if (nbDeleted === 1) {
-      res.sendStatus(204);
+    const product = await Product.findById(req.params.id);
+    if (product) {
+      await product.remove();
+      res.status(204).send();
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Product not found' });
     }
   } catch (e) {
     console.error('Error deleting product:', e);

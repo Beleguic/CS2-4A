@@ -52,13 +52,13 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' : route.name?.includes('Edit') ? 'edit' : 'delete');
 
 const fields = [
-  {  
+  {
     field: [
-      [{name: 'name', label: 'Nom de la catégorie', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255}], 
-      [{name: 'url', label: 'URL de la catégorie', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255}],
-      [{name: 'description', label: 'Description', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255}],
-      [{name: 'image', label: 'Image', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255}],
-      [{name: 'is_active', label: 'Statut', type: 'checkbox', required: false, placeholder: '', color: 'gray-700', textOn: 'Activé', textOff: 'Désactivé' }],
+      { name: 'name', label: 'Nom de la catégorie', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255 },
+      { name: 'url', label: 'URL de la catégorie', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255 },
+      { name: 'description', label: 'Description', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255 },
+      { name: 'image', label: 'Image', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255 },
+      { name: 'is_active', label: 'Statut', type: 'checkbox', required: false, placeholder: '', color: 'gray-700', textOn: 'Activé', textOff: 'Désactivé' },
     ],
   },
 ];
@@ -82,7 +82,7 @@ const submitForm = async (formData: Category) => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/category/new` : `${apiUrl}/category/${route.params.id}`;
 
-    const { id, createdAt, updatedAt, created_at, updated_at, ...payload } = formData;
+    const { id, createdAt, updatedAt, ...payload } = formData;
 
     const response = await fetch(url, {
       method,
@@ -91,9 +91,11 @@ const submitForm = async (formData: Category) => {
       },
       body: JSON.stringify(payload),
     });
+
     if (!response.ok) {
       throw new Error('Error saving category');
     }
+
     window.dispatchEvent(new CustomEvent(`category-${mode.value === 'new' ? 'added' : 'updated'}`));
     setTimeout(() => {
       router.push({ name: 'DBCategoryIndex' });

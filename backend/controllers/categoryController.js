@@ -1,7 +1,7 @@
-const { Category, Product } = require('../models');
+const Category = require('../mongo/models/Category');
 const Joi = require('joi');
 
-// Category schema validation
+// Schéma de validation de catégorie
 const categorySchema = Joi.object({
   name: Joi.string().min(3).max(30).required(),
   url: Joi.string().regex(/^[a-zA-Z0-9-]+$/).required(),
@@ -12,10 +12,8 @@ const categorySchema = Joi.object({
 
 const getAllCategoriesForSelection = async (req, res, next) => {
   try {
-    const categories = await Category.findAll({
-      attributes: ['id', 'name']
-    });
-    res.json(categories);
+    const categories = await Category.find().select('id name');
+    res.status(200).json(categories);
   } catch (e) {
     console.error('Error fetching category list:', e);
     next(e);
@@ -39,20 +37,10 @@ const getAllCategories = async (req, res, next) => {
   const attributesCondition = isFrontend && isSorting ? ['name'] : undefined;
 
   try {
-    const categories = await Category.findAll({
-      where: {
-        ...whereCondition
-      },
-      attributes: attributesCondition,
-      include: isFrontend ? [
-        {
-          model: Product,
-          as: 'products',
-          through: { attributes: [] }
-        }
-      ] : []
-    });
-    res.json(categories);
+    const categories = await Category.find(whereCondition)
+      .select(attributesCondition)
+      .populate(isFrontend ? { path: 'products', select: 'id name' } : null);
+    res.status(200).json(categories);
   } catch (e) {
     console.error('Error fetching categories:', e);
     next(e);
@@ -61,24 +49,14 @@ const getAllCategories = async (req, res, next) => {
 
 const getCategoryById = async (req, res, next) => {
   try {
-    const id = req.params.id;
-    const isFrontend = req.query.frontend === 'true';
-    const whereCondition = isFrontend
-      ? { is_active: true, name: id }
-      : { id: id };
-
-    const category = await Category.findOne({
-      where: whereCondition,
-    });
-
-    if (category) {
-      res.json(category);
-    } else {
-      res.sendStatus(404);
+    const category = await Category.findById(req.params.id).populate('products');
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
     }
-  } catch (e) {
-    console.error('Error fetching category by ID:', e);
-    next(e);
+    res.json(category);
+  } catch (error) {
+    console.error('Error fetching category by ID:', error);
+    next(error);
   }
 };
 
@@ -89,7 +67,8 @@ const createCategory = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const category = await Category.create(req.body);
+    const category = new Category(req.body);
+    await category.save();
     res.status(201).json(category);
   } catch (e) {
     console.error('Error creating category:', e);
@@ -104,13 +83,13 @@ const updateCategory = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const category = await Category.findByPk(req.params.id);
-
+    const category = await Category.findById(req.params.id);
     if (category) {
-      await category.update(req.body);
-      res.json(category);
+      Object.assign(category, req.body);
+      await category.save();
+      res.status(200).json(category);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Category not found' });
     }
   } catch (e) {
     console.error('Error updating category:', e);
@@ -120,15 +99,12 @@ const updateCategory = async (req, res, next) => {
 
 const deleteCategory = async (req, res, next) => {
   try {
-    const nbDeleted = await Category.destroy({
-      where: {
-        id: req.params.id,
-      },
-    });
-    if (nbDeleted === 1) {
-      res.sendStatus(204);
+    const category = await Category.findById(req.params.id);
+    if (category) {
+      await category.remove();
+      res.status(204).send();
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Category not found' });
     }
   } catch (e) {
     console.error('Error deleting category:', e);

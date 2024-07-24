@@ -1,25 +1,16 @@
-const { ProductPromotion, Product } = require('../models');
+const ProductPromotion = require('../mongo/models/ProductPromotion');
 const Joi = require('joi');
 
-// ProductPromotion schema validation
 const productPromotionSchema = Joi.object({
-  product_id: Joi.string().uuid().required(),
+  product_id: Joi.string().required(),
   start_at: Joi.date().required(),
   end_at: Joi.date().required(),
 });
 
-// Function to filter out disallowed fields
-const filterPromotionFields = (promotion) => {
-  const { product, ...filteredPromotion } = promotion;
-  return filteredPromotion;
-};
-
 const getAllProductPromotions = async (req, res, next) => {
   try {
-    const productPromotions = await ProductPromotion.findAll({
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }]
-    });
-    res.json(productPromotions);
+    const productPromotions = await ProductPromotion.find().populate('product_id', 'id name');
+    res.status(200).json(productPromotions);
   } catch (e) {
     console.error('Error fetching product promotions:', e);
     next(e);
@@ -29,14 +20,12 @@ const getAllProductPromotions = async (req, res, next) => {
 const getProductPromotionById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const productPromotion = await ProductPromotion.findByPk(id, {
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }]
-    });
+    const productPromotion = await ProductPromotion.findById(id).populate('product_id', 'id name');
 
     if (productPromotion) {
-      res.json(productPromotion);
+      res.status(200).json(productPromotion);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Promotion not found' });
     }
   } catch (e) {
     console.error('Error fetching product promotion by ID:', e);
@@ -51,8 +40,9 @@ const createProductPromotion = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const productPromotion = await ProductPromotion.create(req.body);
-    res.status(201).json(productPromotion);
+    const promotion = new ProductPromotion(req.body);
+    await promotion.save();
+    res.status(201).json(promotion);
   } catch (e) {
     console.error('Error creating product promotion:', e);
     next(e);
@@ -61,19 +51,19 @@ const createProductPromotion = async (req, res, next) => {
 
 const updateProductPromotion = async (req, res, next) => {
   try {
-    const filteredBody = filterPromotionFields(req.body); // Filter the fields
-    const { error } = productPromotionSchema.validate(filteredBody);
+    const { error } = productPromotionSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const productPromotion = await ProductPromotion.findByPk(req.params.id);
+    const productPromotion = await ProductPromotion.findById(req.params.id);
 
     if (productPromotion) {
-      await productPromotion.update(filteredBody);
-      res.json(productPromotion);
+      Object.assign(productPromotion, req.body);
+      await productPromotion.save();
+      res.status(200).json(productPromotion);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Promotion not found' });
     }
   } catch (e) {
     console.error('Error updating product promotion:', e);
@@ -83,15 +73,12 @@ const updateProductPromotion = async (req, res, next) => {
 
 const deleteProductPromotion = async (req, res, next) => {
   try {
-    const nbDeleted = await ProductPromotion.destroy({
-      where: {
-        id: req.params.id,
-      },
-    });
-    if (nbDeleted === 1) {
-      res.sendStatus(204);
+    const promotion = await ProductPromotion.findById(req.params.id);
+    if (promotion) {
+      await promotion.remove();
+      res.status(204).send();
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Promotion not found' });
     }
   } catch (e) {
     console.error('Error deleting product promotion:', e);

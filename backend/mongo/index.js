@@ -1,21 +1,12 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const connection = require("./db");
+const mongoose = require('mongoose');
 
-const files = fs.readdirSync(__dirname);
-const db = {
-  connection,
+const connectToMongoDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URL);
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('Error connecting to MongoDB:', error.message);
+  }
 };
-for (const file of files) {
-  if (["index.js", "db.js"].includes(file)) continue;
-  const model = require(path.join(__dirname, file))(connection);
-  db[model.modelName] = model;
-}
 
-for (let modelName in db) {
-  if (db[modelName] === connection) continue;
-  if (db[modelName].associateToto) db[modelName].associateToto(db);
-}
-
-console.log('db', db);
-module.exports = db;
+module.exports = connectToMongoDB;
