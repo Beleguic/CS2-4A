@@ -7,6 +7,14 @@ module.exports = function (sequelize) {
       const salt = await bcrypt.genSalt();
       return bcrypt.hash(password, salt);
     }
+
+    static associate(models) {
+      PasswordHistory.belongsTo(models.User, {
+        foreignKey: 'user_id',
+        as: 'user',
+        onDelete: 'CASCADE',
+      });
+    }
   }
 
   PasswordHistory.init({
