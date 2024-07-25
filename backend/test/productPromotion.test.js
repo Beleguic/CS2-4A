@@ -1,6 +1,16 @@
 const request = require('supertest');
-const app = require('../server');
+const express = require('express');
+const productPromotionController = require('../controllers/productPromotionController');
 const { ProductPromotion, Product, syncDB, closeDB } = require('../models');
+
+const app = express();
+app.use(express.json());
+
+app.get('/product-promotions', productPromotionController.getAllProductPromotions);
+app.get('/product-promotions/:id', productPromotionController.getProductPromotionById);
+app.post('/product-promotions/new', productPromotionController.createProductPromotion);
+app.patch('/product-promotions/:id', productPromotionController.updateProductPromotion);
+app.delete('/product-promotions/:id', productPromotionController.deleteProductPromotion);
 
 describe('ProductPromotion Model and API', () => {
   let testProduct;
@@ -18,9 +28,15 @@ describe('ProductPromotion Model and API', () => {
       name: `Test Product ${Math.random()}`,
       description: 'This is a test product',
       price: 100.00,
-      brand: 'Test Brand',
-      image: 'test-image-url'
+      image: 'test-image-url',
+      reference: `Ref${Math.random()}`,
+      tva: 20.0
     });
+  });
+
+  afterEach(async () => {
+    await ProductPromotion.destroy({ where: {} });
+    await Product.destroy({ where: {} });
   });
 
   it('should create a new product promotion', async () => {
@@ -31,8 +47,10 @@ describe('ProductPromotion Model and API', () => {
     };
 
     const res = await request(app)
-      .post('/product_promotion/new')
+      .post('/product-promotions/new')
       .send(productPromotionData);
+
+    console.log('Create Response:', res.body);
 
     expect(res.statusCode).toEqual(201);
     expect(res.body).toHaveProperty('id');
@@ -40,7 +58,8 @@ describe('ProductPromotion Model and API', () => {
   });
 
   it('should get all product promotions', async () => {
-    const res = await request(app).get('/product_promotion');
+    const res = await request(app).get('/product-promotions');
+    console.log('Get All Response:', res.body);
     expect(res.statusCode).toEqual(200);
   });
 
@@ -52,7 +71,8 @@ describe('ProductPromotion Model and API', () => {
     };
     const createdProductPromotion = await ProductPromotion.create(productPromotionData);
 
-    const res = await request(app).get(`/product_promotion/${createdProductPromotion.id}`);
+    const res = await request(app).get(`/product-promotions/${createdProductPromotion.id}`);
+    console.log('Get By ID Response:', res.body);
     expect(res.statusCode).toEqual(200);
     expect(res.body).toHaveProperty('id', createdProductPromotion.id);
   });
@@ -71,11 +91,13 @@ describe('ProductPromotion Model and API', () => {
     };
 
     const res = await request(app)
-      .patch(`/product_promotion/${createdProductPromotion.id}`)
+      .patch(`/product-promotions/${createdProductPromotion.id}`)
       .send(updatedData);
 
-    console.log('Product Promotion Update Response:', res.body);
+    console.log('Update Response:', res.body);
     expect(res.statusCode).toEqual(200);
+    expect(res.body).toHaveProperty('id', createdProductPromotion.id);
+    expect(new Date(res.body.end_at)).toEqual(updatedData.end_at);
   });
 
   it('should delete a product promotion', async () => {
@@ -86,7 +108,8 @@ describe('ProductPromotion Model and API', () => {
     };
     const createdProductPromotion = await ProductPromotion.create(productPromotionData);
 
-    const res = await request(app).delete(`/product_promotion/${createdProductPromotion.id}`);
+    const res = await request(app).delete(`/product-promotions/${createdProductPromotion.id}`);
+    console.log('Delete Response:', res.body);
     expect(res.statusCode).toEqual(204);
   });
 });

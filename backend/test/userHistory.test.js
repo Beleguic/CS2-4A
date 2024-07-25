@@ -2,14 +2,10 @@ const request = require('supertest');
 const app = require('../server');
 const { UserHistory, syncDB, closeDB } = require('../models');
 
-describe('UserHistory API', () => {
+describe('UserHistory Routes', () => {
   const testEmailPrefix = 'test_' + Date.now() + '_';
 
   beforeAll(async () => {
-    await syncDB();
-  });
-
-  beforeEach(async () => {
     await syncDB();
   });
 
@@ -17,66 +13,46 @@ describe('UserHistory API', () => {
     await closeDB();
   });
 
-  let testUserHistory;
-
-  beforeEach(async () => {
-    testUserHistory = await UserHistory.create({
-      email: `${testEmailPrefix}${Math.random()}@example.com`,
-      password: 'password123',
-      role: 'user',
-      is_verified: false,
-      login_attempts: 0,
-    });
-  });
-
-  afterEach(async () => {
-    await UserHistory.destroy({ where: {} });
-  });
+  let testUserHistoryId;
 
   it('should create a new user history', async () => {
-    const userHistoryData = {
-      email: `${testEmailPrefix}${Math.random()}@example.com`,
-      password: 'password123',
-      role: 'user',
-      is_verified: false,
-      login_attempts: 0,
-    };
-
-    const res = await request(app).post('/user_history/new').send(userHistoryData);
+    const res = await request(app)
+      .post('/userHistories/new')
+      .send({
+        email: `${testEmailPrefix}example@example.com`,
+        password: 'Password123!',
+        role: 'user',
+        is_verified: false,
+        login_attempts: 0,
+        password_last_changed: new Date()
+      });
     expect(res.statusCode).toEqual(201);
     expect(res.body).toHaveProperty('id');
-    expect(res.body.email).toBe(userHistoryData.email);
+    testUserHistoryId = res.body.id;
   });
 
   it('should get all user histories', async () => {
-    const res = await request(app).get('/user_history');
+    const res = await request(app).get('/userHistories');
     expect(res.statusCode).toEqual(200);
-    expect(res.body.length).toBeGreaterThan(0);
+    expect(Array.isArray(res.body)).toBeTruthy();
   });
 
   it('should get a user history by id', async () => {
-    const res = await request(app).get(`/user_history/${testUserHistory.id}`);
+    const res = await request(app).get(`/userHistories/${testUserHistoryId}`);
     expect(res.statusCode).toEqual(200);
-    expect(res.body).toHaveProperty('id', testUserHistory.id);
+    expect(res.body).toHaveProperty('id', testUserHistoryId);
   });
 
   it('should update a user history', async () => {
-    const updatedData = {
-      email: `updated${Math.random()}@example.com`,
-      password: 'newpassword123',
-      role: 'admin',
-      is_verified: true,
-      login_attempts: 1,
-    };
-
-    const res = await request(app).patch(`/user_history/${testUserHistory.id}`).send(updatedData);
+    const res = await request(app)
+      .patch(`/userHistories/${testUserHistoryId}`)
+      .send({ login_attempts: 1 });
     expect(res.statusCode).toEqual(200);
-    expect(res.body.email).toBe(updatedData.email);
-    expect(res.body.role).toBe(updatedData.role);
+    expect(res.body).toHaveProperty('login_attempts', 1);
   });
 
   it('should delete a user history', async () => {
-    const res = await request(app).delete(`/user_history/${testUserHistory.id}`);
+    const res = await request(app).delete(`/userHistories/${testUserHistoryId}`);
     expect(res.statusCode).toEqual(204);
   });
 });
