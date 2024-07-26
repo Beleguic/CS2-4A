@@ -12,7 +12,8 @@ const AlertType = require('../mongo/models/AlertType');
 const ProductPromotion = require('../mongo/models/ProductPromotion');
 const PromotionCode = require('../mongo/models/PromotionCode');
 const Stock = require('../mongo/models/Stock');
-const Newsletter = require('../mongo/models/Newsletter'); // Importer le modèle Newsletter
+const Newsletter = require('../mongo/models/Newsletter');
+const CategoryProduct = require('../mongo/models/CategoryProduct');
 
 // Configuration PostgreSQL
 const pgClient = new Client({
@@ -55,44 +56,52 @@ const migrateTableToMongo = async (pgClient, mongoModel, tableName, idField) => 
 
     for (const row of res.rows) {
       const document = { ...row };
-      document._id = document[idField]; // Utiliser _id pour MongoDB
-      delete document[idField]; // Supprimer l'ancien champ id
 
-      if (!document._id) {
-        console.error(`Skipping document with null ${idField} in table ${tableName}`);
-        continue;
-      }
+      if (tableName !== 'users') {
+        // Convertir l'UUID en ObjectId pour MongoDB
+        document._id = new mongoose.Types.ObjectId(document[idField].replace(/-/g, ''));
+        delete document[idField];
 
-      // Gestion des duplications spécifiques
-      if (tableName === 'products') {
-        // Supprimez les produits en double par nom
-        const existingProduct = await mongoModel.findOne({ name: document.name });
-        if (existingProduct) {
-          console.error(`Skipping duplicate product with name: ${document.name}`);
+        if (!document._id) {
+          console.error(`Skipping document with null ${idField} in table ${tableName}`);
           continue;
         }
-      }
 
-      if (tableName === 'alerts') {
-        // Convertir les champs UUID en ObjectId pour MongoDB
-        if (document.alert_type_id) {
-          try {
-            document.alert_type_id = mongoose.Types.ObjectId(document.alert_type_id);
-          } catch (err) {
-            console.error(`Skipping alert with invalid alert_type_id: ${document.alert_type_id}`);
+        // Gestion des duplications spécifiques
+        if (tableName === 'products') {
+          // Supprimez les produits en double par nom
+          const existingProduct = await mongoModel.findOne({ name: document.name });
+          if (existingProduct) {
+            console.error(`Skipping duplicate product with name: ${document.name}`);
             continue;
           }
         }
-      }
 
-      if (tableName === 'stocks' && document.product_id) {
-        // Convertir product_id en ObjectId
-        try {
-          document.product_id = mongoose.Types.ObjectId(document.product_id);
-        } catch (err) {
-          console.error(`Skipping stock with invalid product_id: ${document.product_id}`);
-          continue;
+        if (tableName === 'alerts') {
+          // Convertir les champs UUID en ObjectId pour MongoDB
+          if (document.alert_type_id) {
+            try {
+              document.alert_type_id = new mongoose.Types.ObjectId(document.alert_type_id.replace(/-/g, ''));
+            } catch (err) {
+              console.error(`Skipping alert with invalid alert_type_id: ${document.alert_type_id}`);
+              continue;
+            }
+          }
         }
+
+        if (tableName === 'stocks' && document.product_id) {
+          // Convertir product_id en ObjectId
+          try {
+            document.product_id = new mongoose.Types.ObjectId(document.product_id.replace(/-/g, ''));
+          } catch (err) {
+            console.error(`Skipping stock with invalid product_id: ${document.product_id}`);
+            continue;
+          }
+        }
+      } else {
+        // Exclure la conversion pour le modèle User, utiliser l'UUID comme chaîne de caractères
+        document._id = document[idField];
+        delete document[idField];
       }
 
       try {
@@ -108,6 +117,7 @@ const migrateTableToMongo = async (pgClient, mongoModel, tableName, idField) => 
   }
 };
 
+
 const migrateAllTablesToMongo = async () => {
   try {
     await pgClient.connect();
@@ -121,7 +131,16 @@ const migrateAllTablesToMongo = async () => {
     await migrateTableToMongo(pgClient, ProductPromotion, 'product_promotions', 'id');
     await migrateTableToMongo(pgClient, PromotionCode, 'promotion_codes', 'id');
     await migrateTableToMongo(pgClient, Stock, 'stocks', 'id');
-    await migrateTableToMongo(pgClient, Newsletter, 'newsletters', 'id'); // Inclure la table newsletters
+
+    // Vérifiez si la table category_products existe avant de migrer
+    try {
+      const res = await pgClient.query(`SELECT * FROM category_products LIMIT 1`);
+      await migrateTableToMongo(pgClient, CategoryProduct, 'category_products', 'id');
+    } catch (err) {
+      console.error(`Error during migration of table category_products: ${err.message}`);
+    }
+
+    await migrateTableToMongo(pgClient, Newsletter, 'newsletters', 'id');
 
   } finally {
     try {
@@ -140,7 +159,7 @@ const migrateAllTablesToMongo = async () => {
 };
 
 runPostgresMigration().then(() => {
-  mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+  mongoose.connect(process.env.MONGO_URL)
     .then(migrateAllTablesToMongo)
     .catch(err => console.error('Error connecting to MongoDB:', err.message));
 });

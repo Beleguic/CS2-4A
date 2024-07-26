@@ -1,5 +1,7 @@
-const Category = require('../mongo/models/Category');
+const { Category: CategoryPostgres, sequelize } = require('../models');
+const CategoryMongo = require('../mongo/models/Category');
 const Joi = require('joi');
+const mongoose = require('mongoose');
 
 // Schéma de validation de catégorie
 const categorySchema = Joi.object({
@@ -12,7 +14,7 @@ const categorySchema = Joi.object({
 
 const getAllCategoriesForSelection = async (req, res, next) => {
   try {
-    const categories = await Category.find().select('id name');
+    const categories = await CategoryMongo.find({}, { _id: 1, name: 1 });
     res.status(200).json(categories);
   } catch (e) {
     console.error('Error fetching category list:', e);
@@ -37,9 +39,7 @@ const getAllCategories = async (req, res, next) => {
   const attributesCondition = isFrontend && isSorting ? ['name'] : undefined;
 
   try {
-    const categories = await Category.find(whereCondition)
-      .select(attributesCondition)
-      .populate(isFrontend ? { path: 'products', select: 'id name' } : null);
+    const categories = await CategoryMongo.find(whereCondition, attributesCondition);
     res.status(200).json(categories);
   } catch (e) {
     console.error('Error fetching categories:', e);
@@ -49,7 +49,7 @@ const getAllCategories = async (req, res, next) => {
 
 const getCategoryById = async (req, res, next) => {
   try {
-    const category = await Category.findById(req.params.id).populate('products');
+    const category = await CategoryMongo.findById(req.params.id);
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
     }
@@ -61,54 +61,82 @@ const getCategoryById = async (req, res, next) => {
 };
 
 const createCategory = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { error } = categorySchema.validate(req.body);
     if (error) {
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const category = new Category(req.body);
-    await category.save();
-    res.status(201).json(category);
+    const categoryMongo = new CategoryMongo(req.body);
+    await categoryMongo.save({ session });
+
+    await session.commitTransaction();
+    res.status(201).json(categoryMongo);
   } catch (e) {
     console.error('Error creating category:', e);
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const updateCategory = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { error } = categorySchema.validate(req.body);
     if (error) {
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const category = await Category.findById(req.params.id);
-    if (category) {
-      Object.assign(category, req.body);
-      await category.save();
-      res.status(200).json(category);
-    } else {
-      res.status(404).json({ message: 'Category not found' });
+    const categoryMongo = await CategoryMongo.findById(req.params.id).session(session);
+    if (!categoryMongo) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Category not found' });
     }
+
+    Object.assign(categoryMongo, req.body);
+    await categoryMongo.save({ session });
+
+    await session.commitTransaction();
+    res.json(categoryMongo);
   } catch (e) {
     console.error('Error updating category:', e);
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const deleteCategory = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const category = await Category.findById(req.params.id);
-    if (category) {
-      await category.remove();
-      res.status(204).send();
-    } else {
-      res.status(404).json({ message: 'Category not found' });
+    const categoryMongo = await CategoryMongo.findById(req.params.id).session(session);
+    if (!categoryMongo) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Category not found' });
     }
+
+    await categoryMongo.remove({ session });
+
+    await session.commitTransaction();
+    res.status(204).send();
   } catch (e) {
     console.error('Error deleting category:', e);
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 

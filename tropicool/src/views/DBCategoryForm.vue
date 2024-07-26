@@ -53,11 +53,12 @@ const mode = ref<'new' | 'edit' | 'delete'>(route.name?.includes('New') ? 'new' 
 
 const fields = [
   {
+    header: '',
     field: [
-      { name: 'name', label: 'Nom de la catégorie', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255 },
-      { name: 'url', label: 'URL de la catégorie', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255 },
-      { name: 'description', label: 'Description', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255 },
-      { name: 'image', label: 'Image', type: 'text', required: true, placeholder: '', color: 'gray-700', min: 3, max: 255 },
+      { name: 'name', label: 'Nom de la catégorie', type: 'text', required: true, placeholder: '', color: 'gray-700' },
+      { name: 'url', label: 'URL de la catégorie', type: 'text', required: true, placeholder: '', color: 'gray-700' },
+      { name: 'description', label: 'Description', type: 'text', required: true, placeholder: '', color: 'gray-700' },
+      { name: 'image', label: 'Image', type: 'text', required: true, placeholder: '', color: 'gray-700' },
       { name: 'is_active', label: 'Statut', type: 'checkbox', required: false, placeholder: '', color: 'gray-700', textOn: 'Activé', textOff: 'Désactivé' },
     ],
   },

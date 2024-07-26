@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const { sendPromotionCodeAlerts } = require('../../services/notificationService'); // Assurez-vous que ce chemin est correct
 
 const promotionCodeSchema = new mongoose.Schema({
-  _id: { type: String, required: true, unique: true },
   code: { type: String, required: true },
   reduction: { type: Number, required: true, min: 1, max: 100 },
   start_at: { type: Date, required: false },

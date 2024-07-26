@@ -25,19 +25,21 @@ interface CategoryProduct {
   category: {
     id: string;
     name: string;
-  };
+  } | null;
   product: {
     id: string;
     name: string;
-  };
+  } | null;
+  categoryName?: string;
+  productName?: string;
 }
 
 const datas = ref<CategoryProduct[]>([]);
 
 const columns = [
   { key: 'id', label: 'ID' },
-  { key: 'productName', label: 'Produit' }, // Flattened key for product name
-  { key: 'categoryName', label: 'Catégorie' }, // Flattened key for category name
+  { key: 'productName', label: 'Produit' },
+  { key: 'categoryName', label: 'Catégorie' },
   { key: 'actions', label: 'Actions' },
 ];
 
@@ -46,16 +48,16 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 const fetchCategoryProducts = async () => {
   try {
     const response = await axios.get<CategoryProduct[]>(`${apiUrl}/category_product/`);
-    console.log('Fetched Category Products:', response.data); // Log the response data to verify structure
+    console.log('Fetched Category Products:', response.data);
 
     // Map data to include categoryName and productName at the top level
     datas.value = response.data.map(item => ({
       ...item,
-      categoryName: item.category.name,
-      productName: item.product.name
+      categoryName: item.category_id ? item.category_id.name : 'Unknown Category',
+      productName: item.product_id ? item.product_id.name : 'Unknown Product'
     }));
 
-    console.log('Mapped Category Products:', datas.value); // Log the mapped data
+    console.log('Mapped Category Products:', datas.value);
   } catch (error) {
     console.error('Error fetching category products:', error);
   }

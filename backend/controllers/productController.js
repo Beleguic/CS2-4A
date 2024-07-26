@@ -1,7 +1,9 @@
-const path = require('path');
-const fs = require('fs');
-const Product = require('../mongo/models/Product');
+const { Product: ProductPostgres, sequelize } = require('../models');
+const ProductMongo = require('../mongo/models/Product');
+const Stock = require('../mongo/models/Stock');
 const Joi = require('joi');
+const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
 
 const productSchema = Joi.object({
   name: Joi.string().min(3).max(255).required(),
@@ -16,9 +18,9 @@ const productSchema = Joi.object({
 
 const getAllProductsWithStock = async (req, res, next) => {
   try {
-    const products = await Product.find().populate('stocks', 'quantity');
+    const products = await ProductMongo.find().populate('stocks', 'quantity');
     const productsWithStock = products.map(product => ({
-      id: product.id,
+      id: product._id,
       name: product.name,
       stock: product.stocks.reduce((acc, stock) => acc + stock.quantity, 0),
     }));
@@ -31,7 +33,7 @@ const getAllProductsWithStock = async (req, res, next) => {
 
 const getAllProductsForSelection = async (req, res, next) => {
   try {
-    const products = await Product.find().select('id name');
+    const products = await ProductMongo.find().select('id name');
     res.json(products);
   } catch (e) {
     console.error('Error fetching product list:', e);
@@ -46,13 +48,13 @@ const getAllProducts = async (req, res, next) => {
   const sortOrder = req.query.sortOrder === 'desc' ? 'desc' : 'asc';
   try {
     if (isFrontend && isSorting) {
-      const products = await Product.find({ is_active: true })
+      const products = await ProductMongo.find({ is_active: true })
         .populate('categories', 'id name')
         .populate('stocks', 'quantity')
         .sort({ [sortField]: sortOrder });
 
       const productsWithStock = products.map(product => ({
-        id: product.id,
+        id: product._id,
         name: product.name,
         price: product.price,
         description: product.description,
@@ -73,8 +75,8 @@ const getAllProducts = async (req, res, next) => {
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
 
-      const count = await Product.countDocuments();
-      const products = await Product.find().skip(offset).limit(limit).sort({ [sortField]: sortOrder });
+      const count = await ProductMongo.countDocuments();
+      const products = await ProductMongo.find().skip(offset).limit(limit).sort({ [sortField]: sortOrder });
 
       res.json({
         totalItems: count,
@@ -95,7 +97,7 @@ const getProductById = async (req, res, next) => {
     const isFrontend = req.query.frontend === 'true';
     const whereCondition = isFrontend ? { is_active: true, name: id } : { _id: id };
 
-    const product = await Product.findOne(whereCondition);
+    const product = await ProductMongo.findOne(whereCondition);
     if (product) {
       res.json(product);
     } else {
@@ -108,64 +110,118 @@ const getProductById = async (req, res, next) => {
 };
 
 const createProduct = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
     const { error } = productSchema.validate(req.body);
     if (error) {
+      await transaction.rollback();
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
 
     const image = req.file ? req.file.path : null;
     const newProductData = {
       ...req.body,
+      _id: uuidv4(),
       image,
     };
 
-    const product = new Product(newProductData);
-    await product.save();
-    res.status(201).json(product);
+    // Créer le produit dans PostgreSQL
+    const newProductPostgres = await ProductPostgres.create(newProductData, { transaction });
+
+    // Créer le produit dans MongoDB
+    const newProductMongo = new ProductMongo(newProductData);
+    await newProductMongo.save({ session });
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.status(201).json(newProductPostgres);
   } catch (e) {
     console.error('Error creating product:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
-
 const updateProduct = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
     const { created_at, updated_at, ...payload } = req.body;
-
     const { error } = productSchema.validate(payload);
     if (error) {
+      await transaction.rollback();
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const product = await Product.findById(req.params.id);
-    if (product) {
-      const image = req.file ? req.file.path : product.image;
-      Object.assign(product, payload, { image });
-      await product.save();
-      res.json(product);
-    } else {
-      res.status(404).json({ message: 'Product not found' });
+    const productPostgres = await ProductPostgres.findByPk(req.params.id);
+    if (!productPostgres) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Product not found in PostgreSQL' });
     }
+
+    const image = req.file ? req.file.path : productPostgres.image;
+    await productPostgres.update({ ...payload, image }, { transaction });
+
+    const productMongo = await ProductMongo.findById(req.params.id).session(session);
+    if (productMongo) {
+      Object.assign(productMongo, { ...payload, image });
+      await productMongo.save({ session });
+    }
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.json(productPostgres);
   } catch (e) {
     console.error('Error updating product:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const deleteProduct = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
-    const product = await Product.findById(req.params.id);
-    if (product) {
-      await product.remove();
-      res.status(204).send();
-    } else {
-      res.status(404).json({ message: 'Product not found' });
+    const productPostgres = await ProductPostgres.findByPk(req.params.id);
+    if (!productPostgres) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Product not found in PostgreSQL' });
     }
+
+    await productPostgres.destroy({ transaction });
+
+    const productMongo = await ProductMongo.findById(req.params.id).session(session);
+    if (productMongo) {
+      await productMongo.remove({ session });
+    }
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.status(204).send();
   } catch (e) {
     console.error('Error deleting product:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 

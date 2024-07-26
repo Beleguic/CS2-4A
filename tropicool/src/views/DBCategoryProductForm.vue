@@ -69,10 +69,9 @@ const generateFields = () => [
 
 const fetchProducts = async () => {
   try {
-    const response = await fetch(`${apiUrl}/product/list`);
-    if (response.ok) {
-      const data = await response.json();
-      products.value = data.map((product: Product) => ({ value: product.id, label: product.name }));
+    const response = await axios.get<{ products: Product[] }>(`${apiUrl}/product`);
+    if (response.status === 200) {
+      products.value = response.data.products.map((product: Product) => ({ value: product._id, label: product.name }));
     } else {
       console.error('Error fetching products');
     }
@@ -83,10 +82,9 @@ const fetchProducts = async () => {
 
 const fetchCategories = async () => {
   try {
-    const response = await fetch(`${apiUrl}/category/list`);
-    if (response.ok) {
-      const data = await response.json();
-      categories.value = data.map((category: Category) => ({ value: category.id, label: category.name }));
+    const response = await axios.get<{ categories: Category[] }>(`${apiUrl}/category`);
+    if (response.status === 200) {
+      categories.value = response.data.map((category: Category) => ({ value: category._id, label: category.name }));
     } else {
       console.error('Error fetching categories');
     }
@@ -96,7 +94,6 @@ const fetchCategories = async () => {
 };
 
 onMounted(async () => {
-
   await fetchProducts();
   await fetchCategories();
 
@@ -105,19 +102,10 @@ onMounted(async () => {
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
       const response = await axios.get<CategoryProduct>(`${apiUrl}/category_product/${route.params.id}`);
-      const { category, product, ...rest } = response.data; // Exclude category and product from the data
-      categoryProduct.value = rest;
+      categoryProduct.value = response.data;
     } catch (error) {
       console.error('Error fetching category product:', error);
     }
-  }
-  try {
-    const categoryResponse = await axios.get<Category[]>(`${apiUrl}/category`);
-    const productResponse = await axios.get<Product[]>(`${apiUrl}/product`);
-    categories.value = categoryResponse.data;
-    products.value = productResponse.data;
-  } catch (error) {
-    console.error('Error fetching categories or products:', error);
   }
 });
 

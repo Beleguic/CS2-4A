@@ -19,88 +19,83 @@ const transporter = nodemailer.createTransport({
 });
 
 const register = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+  
+  try {
     const { email, password, lastName, firstName, username, dateOfBirth } = req.body;
-    const transaction = await sequelize.transaction();
-    try {
-      if (!email || !password || !lastName || !firstName || !username || !dateOfBirth) {
-        return res.status(400).json({ message: 'All fields are required.' });
-      }
-  
-      const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-  
-      console.log('Hashing password');
-      const hashedPassword = await bcrypt.hash(password, 10);
-  
-      console.log('Creating user in PostgreSQL');
-      const newUserPostgres = await UserPostgres.create({
-        email,
-        password: hashedPassword,
-        verification_token: verificationToken,
-        password_last_changed: new Date(),
-        lock_until: new Date('9999-12-31'),
-        lastName,
-        firstName,
-        username,
-        dateOfBirth
-      }, { transaction });
-  
-      console.log('Creating password history in PostgreSQL');
-      await PasswordHistory.create({
-        user_id: newUserPostgres.id,
-        hashed_password: hashedPassword
-      }, { transaction });
-  
-      const newUserMongo = new User({
-        _id: newUserPostgres.id,
-        email,
-        dateOfBirth,
-        password: hashedPassword,
-        username,
-        firstName,
-        lastName,
-        is_verified: false,
-        verification_token: verificationToken,
-      });
-  
-      console.log('Saving user in MongoDB');
-      await newUserMongo.save();
-  
-      console.log('Committing transaction in PostgreSQL');
-      await transaction.commit(); // Commit transaction
-  
-      const emailContent = `
-        <div>
-          <h1>Bienvenue sur Troupicool, ${email} !</h1>
-          <p>Nous sommes ravis de vous compter parmi nous.</p>
-          <p>Veuillez cliquer sur le lien ci-dessous pour vérifier votre compte :</p>
-          <a href="${process.env.FRONT_END_URL}/verify-account?token=${verificationToken}">Vérifier mon compte</a>
-          <p>Si vous n'avez pas créé de compte sur notre site, veuillez ignorer cet e-mail.</p>
-        </div>
-      `;
-  
-      try {
-        console.log('Sending verification email');
-        await sendEmail(email, 'Bienvenue sur Troupicool!', emailContent);
-        res.status(201).json({
-          message: "Votre compte a été créé avec succès. Veuillez vérifier votre e-mail pour activer votre compte. Tant que vous n'aurez pas confirmé, votre compte restera bloqué.",
-          user: newUserPostgres
-        });
-      } catch (error) {
-        console.error('Erreur lors de l\'envoi de l\'e-mail:', error);
-        res.status(500).json({
-          message: "Utilisateur créé, mais l'envoi de l'email a échoué.",
-          emailError: error.message,
-          userId: newUserPostgres.id,
-          token: verificationToken
-        });
-      }
-    } catch (error) {
-      console.log('Rolling back transaction in PostgreSQL');
-      await transaction.rollback(); // Rollback transaction
-      console.error('Erreur lors de la création de l\'utilisateur:', error);
-      res.status(500).json({ message: 'Erreur lors de la création de l’utilisateur', error: error.message });
+
+    if (!email || !password || !lastName || !firstName || !username || !dateOfBirth) {
+      return res.status(400).json({ message: 'All fields are required.' });
     }
-  };
+
+    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Création de l'utilisateur dans PostgreSQL
+    const newUserPostgres = await UserPostgres.create({
+      email,
+      password: hashedPassword,
+      verification_token: verificationToken,
+      password_last_changed: new Date(),
+      lock_until: new Date('9999-12-31'),
+      lastName,
+      firstName,
+      username,
+      dateOfBirth
+    }, { transaction });
+
+    // Création de l'historique des mots de passe dans PostgreSQL
+    await PasswordHistory.create({
+      user_id: newUserPostgres.id,
+      hashed_password: hashedPassword
+    }, { transaction });
+
+    // Création de l'utilisateur dans MongoDB
+    const newUserMongo = new User({
+      _id: newUserPostgres.id,
+      email,
+      dateOfBirth,
+      password: hashedPassword,
+      username,
+      firstName,
+      lastName,
+      is_verified: false,
+      verification_token: verificationToken,
+    });
+    await newUserMongo.save({ session });
+
+    // Commit des transactions
+    await transaction.commit();
+    await session.commitTransaction();
+
+    // Envoi de l'email de vérification
+    const emailContent = `
+      <div>
+        <h1>Bienvenue sur Troupicool, ${email} !</h1>
+        <p>Nous sommes ravis de vous compter parmi nous.</p>
+        <p>Veuillez cliquer sur le lien ci-dessous pour vérifier votre compte :</p>
+        <a href="${process.env.FRONT_END_URL}/verify-account?token=${verificationToken}">Vérifier mon compte</a>
+        <p>Si vous n'avez pas créé de compte sur notre site, veuillez ignorer cet e-mail.</p>
+      </div>
+    `;
+    await sendEmail(email, 'Bienvenue sur Troupicool!', emailContent);
+
+    res.status(201).json({
+      message: "Votre compte a été créé avec succès. Veuillez vérifier votre e-mail pour activer votre compte. Tant que vous n'aurez pas confirmé, votre compte restera bloqué.",
+      user: newUserPostgres
+    });
+
+  } catch (error) {
+    await transaction.rollback();
+    await session.abortTransaction();
+    console.error('Erreur lors de la création de l\'utilisateur:', error);
+    res.status(500).json({ message: 'Erreur lors de la création de l’utilisateur', error: error.message });
+  } finally {
+    session.endSession();
+  }
+};
   
   const login = async (req, res) => {
     const { email, password } = req.body;
@@ -271,46 +266,54 @@ const resetPassword = async (req, res) => {
 };
 
 const verifyAccount = async (req, res) => {
-    const transaction = await sequelize.transaction();
-    try {
-      const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
-      const userPostgres = await UserPostgres.findOne({ where: { verification_token: req.params.token } }, { transaction });
-  
-      if (!userPostgres) {
-        await transaction.rollback();
-        return res.status(404).json({ message: 'User not found or invalid token.' });
-      }
-  
-      const userMongo = await User.findById(userPostgres.id);
-      if (!userMongo) {
-        await transaction.rollback();
-        return res.status(404).json({ message: 'User not found in MongoDB.' });
-      }
-  
-      userPostgres.is_verified = true;
-      userPostgres.verification_token = null;
-      userPostgres.lock_until = null;
-      await userPostgres.save({ transaction });
-  
-      userMongo.is_verified = true;
-      userMongo.verification_token = null;
-      userMongo.lock_until = null;
-      await userMongo.save();
-  
-      await transaction.commit();
-      res.status(200).json({ message: 'Account verified successfully!' });
-    } catch (error) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
+  try {
+    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+    const userPostgres = await UserPostgres.findOne({ where: { verification_token: req.params.token } }, { transaction });
+
+    if (!userPostgres) {
       await transaction.rollback();
-      if (error instanceof jwt.JsonWebTokenError) {
-        return res.status(401).json({ message: 'Invalid verification token.' });
-      }
-      console.error('Error during account verification:', error);
-      res.status(500).json({ message: 'An error occurred during account verification.' });
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'User not found or invalid token.' });
     }
-  };
-  
-  
-  
+
+    const userMongo = await User.findById(userPostgres.id).session(session);
+    if (!userMongo) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'User not found in MongoDB.' });
+    }
+
+    userPostgres.is_verified = true;
+    userPostgres.verification_token = null;
+    userPostgres.lock_until = null;
+    await userPostgres.save({ transaction });
+
+    userMongo.is_verified = true;
+    userMongo.verification_token = null;
+    userMongo.lock_until = null;
+    await userMongo.save({ session });
+
+    await transaction.commit();
+    await session.commitTransaction();
+
+    res.status(200).json({ message: 'Account verified successfully!' });
+
+  } catch (error) {
+    await transaction.rollback();
+    await session.abortTransaction();
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: 'Invalid verification token.' });
+    }
+    console.error('Error during account verification:', error);
+    res.status(500).json({ message: 'An error occurred during account verification.' });
+  } finally {
+    session.endSession();
+  }
+};
 
 const logout = (req, res) => {
     req.session.destroy(err => {

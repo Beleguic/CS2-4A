@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const { sendPromotionAlerts } = require('../../services/notificationService'); // Assurez-vous que ce chemin est correct
 
 const productPromotionSchema = new mongoose.Schema({
-  _id: { type: String, required: true, unique: true },
   product_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
   start_at: { type: Date, default: Date.now },
   end_at: { type: Date, default: Date.now }

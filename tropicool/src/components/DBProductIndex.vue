@@ -19,7 +19,6 @@
     </div>
   </section>
 </template>
-
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';

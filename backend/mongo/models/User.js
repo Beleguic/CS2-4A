@@ -1,9 +1,13 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema;
+const { v4: uuidv4 } = require('uuid');
 
 const userSchema = new Schema({
-  _id: { type: String, required: true }, // Utiliser _id comme clé primaire
+  _id: {
+    type: String,
+    default: uuidv4
+  },
   email: { type: String, required: true, unique: true },
   dateOfBirth: { type: Date, required: true },
   password: { type: String, required: true },

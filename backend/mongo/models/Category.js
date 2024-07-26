@@ -8,8 +8,7 @@ const categorySchema = new Schema({
   image: { type: String, required: true },
   is_active: { type: Boolean, default: true },
   created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now },
-  products: [{ type: Schema.Types.ObjectId, ref: 'Product' }]
+  updated_at: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('Category', categorySchema);

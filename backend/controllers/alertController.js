@@ -1,6 +1,7 @@
-const { Alert: AlertPostgres, Product, Category, User, AlertType } = require('../models');
+const { Alert: AlertPostgres, Product, Category, User, AlertType, sequelize } = require('../models');
 const AlertMongo = require('../mongo/models/Alert');
 const Joi = require('joi');
+const mongoose = require('mongoose');
 
 // Alert schema validation
 const alertSchema = Joi.object({
@@ -53,56 +54,110 @@ const getAlertById = async (req, res, next) => {
 };
 
 const createAlert = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
     const { error } = alertSchema.validate(req.body);
     if (error) {
+      await transaction.rollback();
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
-    const alert = await AlertPostgres.create(req.body);
-    res.status(201).json(alert);
+
+    const alertPostgres = await AlertPostgres.create(req.body, { transaction });
+
+    const alertMongo = new AlertMongo({
+      _id: alertPostgres.id,
+      ...req.body
+    });
+    await alertMongo.save({ session });
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.status(201).json(alertPostgres);
   } catch (e) {
     console.error('Error creating alert:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const updateAlert = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
     const { error } = alertSchema.validate(req.body);
     if (error) {
+      await transaction.rollback();
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const alert = await AlertPostgres.findByPk(req.params.id);
-
-    if (alert) {
-      await alert.update(req.body);
-      await AlertMongo.updateOne({ _id: req.params.id }, req.body);
-      res.status(200).json(alert);
-    } else {
-      res.status(404).json({ message: 'Alert not found' });
+    const alertPostgres = await AlertPostgres.findByPk(req.params.id);
+    if (!alertPostgres) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Alert not found in PostgreSQL' });
     }
+
+    await alertPostgres.update(req.body, { transaction });
+
+    const alertMongo = await AlertMongo.findById(req.params.id).session(session);
+    if (alertMongo) {
+      Object.assign(alertMongo, req.body);
+      await alertMongo.save({ session });
+    }
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.status(200).json(alertPostgres);
   } catch (e) {
     console.error('Error updating alert:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const deleteAlert = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const alert = await AlertPostgres.findByPk(id);
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
 
-    if (alert) {
-      await alert.destroy();
-      await AlertMongo.deleteOne({ _id: id });
-      res.status(204).send();
-    } else {
-      res.status(404).json({ message: 'Alert not found' });
+  try {
+    const alertPostgres = await AlertPostgres.findByPk(req.params.id);
+    if (!alertPostgres) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Alert not found in PostgreSQL' });
     }
+
+    await alertPostgres.destroy({ transaction });
+
+    const alertMongo = await AlertMongo.findById(req.params.id).session(session);
+    if (alertMongo) {
+      await alertMongo.remove({ session });
+    }
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.status(204).send();
   } catch (e) {
     console.error('Error deleting alert:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
