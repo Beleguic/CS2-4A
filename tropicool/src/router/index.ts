@@ -48,8 +48,7 @@ import Search from '../views/Search.vue';
 import DBStockView from "../views/DBStockView.vue";
 import DBStockGraph from "../views/DBStockGraph.vue";
 import AddAlert from '../views/AddAlert.vue';
-import NotFound from '../views/NotFound.vue';  // Import the NotFound component
-
+import NotFound from '../views/NotFound.vue';
 import Payment from '../components/Payment.vue';
 import Confirmation from '../views/Confirmation.vue';
 
@@ -488,6 +487,7 @@ const routes: Array<RouteRecordRaw> = [
         path: 'user',
         name: 'DBUserIndex',
         component: DBUserIndex,
+        props: true,
         beforeEnter: (to, from, next) => verifyRole(to, from, next, ['admin']),
       },
       {

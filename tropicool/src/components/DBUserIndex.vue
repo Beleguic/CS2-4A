@@ -19,31 +19,34 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import dayjs from 'dayjs';
 import Table from '../components/TableComponent.vue';
+import axios from 'axios';
 
 interface User {
-  id: string;
+  _id: string;
   email: string;
   username: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  is_verified: boolean;
-  login_attempts: number;
-  dateOfBirth: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+  is_verified?: boolean;
+  isSubscribedToNewsletter?: boolean;
+  login_attempts?: number;
+  dateOfBirth?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 const datas = ref<User[]>([]);
 
 const columns = [
-  { key: 'id', label: 'ID' },
+  { key: '_id', label: 'ID' },
   { key: 'email', label: 'Email' },
   { key: 'username', label: 'Login' },
   { key: 'firstName', label: 'Prénom' },
   { key: 'lastName', label: 'Nom' },
   { key: 'role', label: 'Rôle' },
   { key: 'is_verified', label: 'Vérifié' },
+  { key: 'isSubscribedToNewsletter', label: 'Newsletter' },
   { key: 'login_attempts', label: 'Tentatives de connexion' },
   { key: 'dateOfBirth', label: 'Date de naissance' },
   { key: 'created_at', label: 'Créé le' },
@@ -60,30 +63,29 @@ const fetchUsers = async () => {
       throw new Error('No token found in localStorage');
     }
 
-    const response = await fetch(`${apiUrl}/users/`, {
-      method: 'GET',
+    const response = await axios.get<User[]>(`${apiUrl}/users/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
       }
     });
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error('Failed to fetch users');
     }
 
-    const data: User[] = await response.json();
+    const data: User[] = response.data;
     console.log('Fetched Users:', data);
 
-    // Flatten the data and format the dates
     datas.value = data.map(user => ({
       ...user,
-      dateOfBirth: dayjs(user.dateOfBirth).format('DD/MM/YYYY'),
+      dateOfBirth: user.dateOfBirth ? dayjs(user.dateOfBirth).format('DD/MM/YYYY') : 'N/A',
       created_at: dayjs(user.created_at).format('DD/MM/YYYY HH:mm'),
-      updated_at: dayjs(user.updated_at).format('DD/MM/YYYY HH:mm')
+      updated_at: user.updated_at ? dayjs(user.updated_at).format('DD/MM/YYYY HH:mm') : 'N/A',
+      isSubscribedToNewsletter: user.isSubscribedToNewsletter ? 'Oui' : 'Non',
+      is_verified: user.is_verified ? 'Oui' : 'Non'
     }));
 
-    console.log('Final Mapped Users:', datas.value);
+    console.log('Mapped Users:', datas.value);
   } catch (error) {
     console.error('Error fetching users:', error);
   }

@@ -32,7 +32,7 @@
           <label for="category" class="text-lg font-bold">Catégories</label>
           <select id="category" class="py-2 px-4 rounded-sm border border-slate-200" v-model="selectedCategory" @change="updateURL">
             <option value="">Toutes les catégories</option>
-            <option v-for="category in categories" :key="category.id" :value="category.name">{{ category.name }}</option>
+            <option v-for="category in categories" :key="category._id" :value="category.name">{{ category.name }}</option>
           </select>
         </div>
         <div class="grid gap-2">
@@ -81,7 +81,7 @@
     <section :class="filtersVisible ? 'w-full transition-all' : 'w-full ml-0 transition-all'">
       <template v-if="filteredProducts.length > 0">
         <ul class="relative w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 grid-flow-row gap-8 flex-wrap p-4 transition-all">
-          <ProductCardComponent v-for="product in filteredProducts" :key="product.id" :product="product" />
+          <ProductCardComponent v-for="product in filteredProducts" :key="product._id" :product="product" />
         </ul>
       </template>
       <template v-else>
@@ -131,26 +131,17 @@ const validateAlcoholFilter = (value: string) => {
 
 const fetchCategories = async () => {
   try {
-    const params = new URLSearchParams({
-      frontend: 'true',
-      sorting: 'true',
-    });
-
-    const response = await fetch(`${apiUrl}/category?${params.toString()}`, {
-      method: 'GET',
-    });
-
+    const response = await fetch(`${apiUrl}/category`);
     if (!response.ok) {
       $toast.open({
         message: 'Erreur, veuillez recommencer',
         type: 'error',
         position: 'bottom-left',
       });
+      return;
     }
-
     const data = await response.json();
     categories.value = data;
-
     syncFiltersWithRoute();
   } catch (error) {
     $toast.open({
@@ -164,8 +155,6 @@ const fetchCategories = async () => {
 const fetchProducts = async () => {
   try {
     const params = new URLSearchParams({
-      frontend: 'true',
-      sorting: 'true',
       search: searchQuery.value,
       sort: sortOption.value,
       category: selectedCategory.value,
@@ -191,35 +180,27 @@ const fetchProducts = async () => {
       params.append('stock', stockFilter.value);
     }
 
-    const response = await fetch(`${apiUrl}/product?${params.toString()}`, {
-      method: 'GET',
-    });
-
+    const response = await fetch(`${apiUrl}/product?${params.toString()}`);
     if (!response.ok) {
-        $toast.open({
+      $toast.open({
         message: 'Erreur, veuillez recommencer',
         type: 'error',
         position: 'bottom-left',
       });
+      return;
     }
-
     const data = await response.json();
-    products.value = Array.isArray(data) ? data : [];
+    products.value = Array.isArray(data.products) ? data.products : [];
   } catch (error) {
     $toast.open({
       message: 'Erreur, veuillez recommencer',
       type: 'error',
       position: 'bottom-left',
     });
-    products.value = [];
   }
 };
 
 const filteredProducts = computed(() => {
-  if (!Array.isArray(products.value)) {
-    return [];
-  }
-
   return products.value.filter(product => {
     let matchesSearch = true;
     let matchesPrice = true;
@@ -245,19 +226,15 @@ const filteredProducts = computed(() => {
     }
 
     if (alcoholFilter.value.length) {
-      if (alcoholFilter.value.includes(true) && alcoholFilter.value.includes(false)) {
-        matchesAlcohol = true;
-      } else {
-        matchesAlcohol = alcoholFilter.value.includes(product.is_adult);
-      }
+      matchesAlcohol = alcoholFilter.value.includes(product.is_adult);
     }
 
     if (selectedCategory.value) {
-      matchesCategory = product.categories.some((category: { name: string; }) => category.name === selectedCategory.value);
+      matchesCategory = product.categories.some(cp => cp.name === selectedCategory.value);
     }
 
     if (stockFilter.value) {
-      matchesStock = stockFilter.value === 'available' ? product.stock > 0 : product.stock === 0;
+      matchesStock = stockFilter.value === 'available' ? product.stocks.length > 0 : product.stocks.length === 0;
     }
 
     return matchesSearch && matchesPrice && matchesAlcohol && matchesCategory && matchesStock;

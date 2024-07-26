@@ -25,7 +25,7 @@ import dayjs from 'dayjs';
 import Table from '../components/TableComponent.vue';
 
 interface Category {
-  id: number;
+  _id: string;
   name: string;
   url: string;
   description: string;
@@ -38,7 +38,7 @@ interface Category {
 const datas = ref<Category[]>([]);
 
 const columns = [
-  { key: 'id', label: 'ID' },
+  { key: '_id', label: 'ID' },
   { key: 'name', label: 'Nom' },
   { key: 'is_active', label: 'Status' },
   { key: 'created_at', label: 'Crée le' },
@@ -51,18 +51,11 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 const fetchCategories = async () => {
   try {
     const response = await axios.get<Category[]>(`${apiUrl}/category/`);
-    console.log('Fetched Categories:', response.data);
-
-    // Map data to format dates
     datas.value = response.data.map(category => ({
       ...category,
-      created_at: dayjs(category.created_at).format('DD/MM/YYYY HH:mm'), // Format the createdAt date
-      updated_at: dayjs(category.updated_at).format('DD/MM/YYYY HH:mm')  // Format the updatedAt date
+      created_at: dayjs(category.created_at).format('DD/MM/YYYY HH:mm'),
+      updated_at: dayjs(category.updated_at).format('DD/MM/YYYY HH:mm')
     }));
-
-    console.log('datasss', datas);
-
-    console.log('Mapped Categories:', datas.value);
   } catch (error) {
     console.error('Error fetching datas:', error);
   }

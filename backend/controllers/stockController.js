@@ -1,12 +1,13 @@
-const { Stock, Product, sequelize} = require('../models');
+const { Stock: StockPostgres, sequelize } = require('../models');
+const StockMongo = require('../mongo/models/Stock');
+const Product = require('../mongo/models/Product');
 const Joi = require('joi');
-const {Op} = require("sequelize");
+const mongoose = require('mongoose');
 
 // Stock schema validation
 const stockSchema = Joi.object({
   quantity: Joi.number().integer().min(0).required(),
-  product_id: Joi.string().uuid().required(),
-  stock: Joi.number().integer(),
+  product_id: Joi.string().required(),
   status: Joi.string().required(),
   difference: Joi.string().required(),
 });
@@ -22,20 +23,15 @@ const getAllStocks = async (req, res, next) => {
     const { product_id } = req.query;
 
     const queryOptions = {
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
-      order: [['created_at', 'ASC']], // Ajoutez cette ligne pour trier par created_at asc
+      product_id: product_id,
     };
 
-    if (product_id) {
-      queryOptions.where = { product_id };
-    }
-
-    const stocks = await Stock.findAll(queryOptions);
+    const stocks = await StockMongo.find(queryOptions).populate('product_id', 'id name');
 
     if (!stocks) {
       return res.status(404).json({ message: 'Stocks not found' });
     } else {
-      return res.json(stocks);
+      return res.status(200).json(stocks);
     }
   } catch (e) {
     console.error('Error fetching stocks:', e);
@@ -47,42 +43,33 @@ const getAllStocksForStoreKeeper = async (req, res, next) => {
   try {
     const { product_id } = req.query;
 
-    // Sous-requête pour obtenir le dernier created_at pour chaque product_id
-    const latestStocksSubQuery = await Stock.findAll({
-      attributes: [
-        [sequelize.fn('MAX', sequelize.col('created_at')), 'latest_created_at'],
-        'product_id',
-      ],
-      group: 'product_id',
-      raw: true,
-    });
+    const latestStocksSubQuery = await StockMongo.aggregate([
+      {
+        $group: {
+          _id: "$product_id",
+          latest_created_at: { $max: "$created_at" }
+        }
+      }
+    ]);
 
-    // Construire un tableau des conditions pour la requête principale
     const latestConditions = latestStocksSubQuery.map(stock => {
       return {
-        product_id: stock.product_id,
+        product_id: stock._id,
         created_at: stock.latest_created_at,
       };
     });
 
     const queryOptions = {
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
-      order: [['product_id', 'ASC'], ['created_at', 'DESC']],
-      where: {
-        [Op.or]: latestConditions,
-      },
+      $or: latestConditions,
+      product_id: product_id,
     };
 
-    if (product_id) {
-      queryOptions.where.product_id = product_id;
-    }
-
-    const stocks = await Stock.findAll(queryOptions);
+    const stocks = await StockMongo.find(queryOptions).populate('product_id', 'id name');
 
     if (!stocks || stocks.length === 0) {
       return res.status(404).json({ message: 'Stocks not found' });
     } else {
-      return res.json(stocks);
+      return res.status(200).json(stocks);
     }
   } catch (e) {
     console.error('Error fetching stocks:', e);
@@ -93,14 +80,12 @@ const getAllStocksForStoreKeeper = async (req, res, next) => {
 const getStockById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const stock = await Stock.findByPk(id, {
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }]
-    });
+    const stock = await StockMongo.findById(id).populate('product_id', 'id name');
 
     if (stock) {
-      res.json(stock);
+      res.status(200).json(stock);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Stock not found' });
     }
   } catch (e) {
     console.error('Error fetching stock by ID:', e);
@@ -109,74 +94,128 @@ const getStockById = async (req, res, next) => {
 };
 
 const createStock = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
     const filteredBody = filterStockFields(req.body);
     const { error } = stockSchema.validate(filteredBody);
     if (error) {
+      await transaction.rollback();
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const stock = await Stock.create(filteredBody);
-    res.status(201).json(stock);
+    const stockPostgres = await StockPostgres.create(filteredBody, { transaction });
+
+    const stockMongo = new StockMongo({
+      _id: stockPostgres.id,
+      ...filteredBody
+    });
+    await stockMongo.save({ session });
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.status(201).json(stockPostgres);
   } catch (e) {
     console.error('Error creating stock:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const updateStock = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
     const filteredBody = filterStockFields(req.body);
     const { error } = stockSchema.validate(filteredBody);
     if (error) {
+      await transaction.rollback();
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const stock = await Stock.findByPk(req.params.id);
+    const stockPostgres = await StockPostgres.findByPk(req.params.id);
 
-    if (stock) {
-      await stock.update(filteredBody);
-      res.json(stock);
-    } else {
-      res.sendStatus(404);
+    if (!stockPostgres) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Stock not found in PostgreSQL' });
     }
+
+    await stockPostgres.update(filteredBody, { transaction });
+
+    const stockMongo = await StockMongo.findById(req.params.id).session(session);
+    if (stockMongo) {
+      Object.assign(stockMongo, filteredBody);
+      await stockMongo.save({ session });
+    }
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.status(200).json(stockPostgres);
   } catch (e) {
     console.error('Error updating stock:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const deleteStock = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
-    const nbDeleted = await Stock.destroy({
-      where: {
-        id: req.params.id,
-      },
-    });
-    if (nbDeleted === 1) {
-      res.sendStatus(204);
-    } else {
-      res.sendStatus(404);
+    const stockPostgres = await StockPostgres.findByPk(req.params.id);
+
+    if (!stockPostgres) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Stock not found in PostgreSQL' });
     }
+
+    await stockPostgres.destroy({ transaction });
+
+    const stockMongo = await StockMongo.findById(req.params.id).session(session);
+    if (stockMongo) {
+      await stockMongo.remove({ session });
+    }
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.status(204).send();
   } catch (e) {
     console.error('Error deleting stock:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const getStockByIdForStoreKeeper = async (req, res, next) => {
   try {
     const productId = req.params.product_id;
-    const stock = await Stock.findAll({
-      where: { product_id: productId },
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
-      order: [['created_at', 'DESC']]
-    });
+    const stock = await StockMongo.find({ product_id: productId })
+      .populate('product_id', 'id name')
+      .sort({ created_at: 'desc' });
 
     if (stock.length > 0) {
-      res.json(stock);
+      res.status(200).json(stock);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Stock not found' });
     }
   } catch (e) {
     console.error('Error fetching stock by ID:', e);
@@ -226,17 +265,15 @@ const getStockByDay = async (req, res, next) => {
     });
 
     if (stock.length > 0) {
-      res.json(stock);
+      res.status(200).json(stock);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Stock not found' });
     }
   } catch (e) {
     console.error('Error fetching stock by day:', e);
     next(e);
   }
 };
-
-
 
 module.exports = {
   getAllStocks,

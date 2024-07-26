@@ -38,6 +38,10 @@
           <label for="is_verified" class="block text-sm font-medium text-gray-700">Vérifié</label>
           <input type="checkbox" id="is_verified" v-model="user.is_verified" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" />
         </div>
+        <div class="grid gap-1">
+          <label for="isSubscribedToNewsletter" class="block text-sm font-medium text-gray-700">Inscription Newsletter</label>
+          <input type="checkbox" id="isSubscribedToNewsletter" v-model="user.isSubscribedToNewsletter" class="p-2 block w-full border border-gray-300 rounded-md shadow-sm" />
+        </div>
         <button type="submit" class="px-4 py-2 bg-main text-white rounded-md hover:bg-secondary">{{ mode === 'new' ? 'Ajouter' : 'Mettre à jour' }}</button>
       </form>
 
@@ -53,6 +57,7 @@
 </template>
 
 
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -65,6 +70,7 @@ interface User {
   password: string;
   role: string;
   is_verified: boolean;
+  isSubscribedToNewsletter: boolean;
   username: string;
   firstName: string;
   lastName: string;
@@ -78,6 +84,7 @@ const user = ref<User>({
   password: '',
   role: '',
   is_verified: false,
+  isSubscribedToNewsletter: false,
   username: '',
   firstName: '',
   lastName: ''

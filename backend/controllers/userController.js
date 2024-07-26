@@ -1,8 +1,12 @@
-const { User, Newsletter, Alert, AlertType, Product, Category } = require('../models');
+const { User: UserPostgres, Newsletter: NewsletterPostgres } = require('../models');
+const NewsletterMongo = require('../mongo/models/Newsletter');
+const UserMongo = require('../mongo/models/User');
+const Alert = require('../mongo/models/Alert');
 const Joi = require('joi');
 const { Op } = require('sequelize');
+const mongoose = require('mongoose'); // Ajout de mongoose
 
-// User schema validation (backend)
+// User schema validation
 const userSchema = Joi.object({
   email: Joi.string().email().required(),
   dateOfBirth: Joi.date().required(),
@@ -26,61 +30,102 @@ const filterUserResponse = (user) => {
 const isAdmin = (user) => user.role === 'admin';
 
 const updateUser = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
     const filteredBody = filterUserFields(req.body);
     const { error } = userSchema.validate(filteredBody);
     if (error) {
+      await transaction.rollback();
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const user = await User.findByPk(req.params.id);
-    const requestingUser = await User.findByPk(req.userData.userId);
+    const user = await UserPostgres.findByPk(req.params.id);
+    const requestingUser = await UserPostgres.findByPk(req.userData.userId);
 
     if (user) {
       if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
+        await transaction.rollback();
+        await session.abortTransaction();
         return res.status(403).json({ message: "You cannot edit other admin accounts." });
       }
 
-      // Ne met à jour le mot de passe que s'il est fourni
       if (!filteredBody.password) {
         delete filteredBody.password;
       }
 
-      await user.update(filteredBody);
+      await user.update(filteredBody, { transaction });
 
-      // Handle newsletter subscription
       if (filteredBody.isSubscribedToNewsletter) {
-        await Newsletter.findOrCreate({ where: { user_id: user.id } });
+        await NewsletterPostgres.findOrCreate({ where: { user_id: user.id }, transaction });
       } else {
-        await Newsletter.destroy({ where: { user_id: user.id } });
+        await NewsletterPostgres.destroy({ where: { user_id: user.id }, transaction });
       }
 
+      // Mise à jour dans MongoDB
+      const userMongo = await UserMongo.findById(req.params.id).session(session);
+      if (userMongo) {
+        Object.assign(userMongo, filteredBody);
+        await userMongo.save({ session });
+
+        if (filteredBody.isSubscribedToNewsletter) {
+          let newsletter = await NewsletterMongo.findOne({ user_id: req.params.id }).session(session);
+          if (!newsletter) {
+            newsletter = new NewsletterMongo({ _id: new mongoose.Types.ObjectId(), user_id: req.params.id });
+          }
+          await newsletter.save({ session });
+        } else {
+          await NewsletterMongo.deleteOne({ user_id: req.params.id }).session(session);
+        }
+      }
+
+      await transaction.commit();
+      await session.commitTransaction();
       res.json(user);
     } else {
+      await transaction.rollback();
+      await session.abortTransaction();
       res.sendStatus(404);
     }
   } catch (e) {
     console.error('Error updating user:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const requestingUser = await User.findByPk(req.userData.userId);
+    const requestingUser = await UserPostgres.findByPk(req.userData.userId);
     let users;
 
     if (isAdmin(requestingUser)) {
-      users = await User.findAll({
-        where: {
-          [Op.or]: [
-            { role: { [Op.ne]: 'admin' } },
-            { id: requestingUser.id }
-          ]
-        }
-      });
+      users = await UserMongo.find({
+        $or: [
+          { role: { $ne: 'admin' } },
+          { _id: requestingUser.id }
+        ]
+      }).populate({
+        path: 'alerts',
+        populate: [
+          { path: 'product_id', select: 'name' },
+          { path: 'category_id', select: 'name' }
+        ]
+      }).populate('newsletters');
     } else {
-      users = await User.findAll();
+      users = await UserMongo.find().populate({
+        path: 'alerts',
+        populate: [
+          { path: 'product_id', select: 'name' },
+          { path: 'category_id', select: 'name' }
+        ]
+      }).populate('newsletters');
     }
 
     res.json(users);
@@ -93,33 +138,41 @@ const getAllUsers = async (req, res, next) => {
 const getUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const user = await User.findByPk(id, {
-      include: [
-        { model: Newsletter, as: 'newsletters', attributes: ['id'] },
-        {
-          model: Alert,
-          as: 'alerts',
-          include: [
-            { model: AlertType, as: 'alertType', attributes: ['type'] },
-            { model: Product, as: 'product', attributes: ['id', 'name'] },
-            { model: Category, as: 'category', attributes: ['id', 'name'] }
-          ]
-        }
-      ]
-    });
-    const requestingUser = await User.findByPk(req.userData.userId);
+    console.log(`Fetching user by ID: ${id}`);
+
+    const user = await UserMongo.findById(id)
+      .populate({
+        path: 'alerts',
+        populate: [
+          { path: 'alert_type_id', select: 'type' },
+          { path: 'product_id', select: 'name' },
+          { path: 'category_id', select: 'name' }
+        ]
+      });
+
+    const requestingUser = await UserPostgres.findByPk(req.userData.userId);
 
     if (user) {
+      console.log(`User found in MongoDB: ${user}`);
+
       if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
         return res.status(403).json({ message: "You cannot view other admin accounts." });
       }
 
-      const userResponse = filterUserResponse(user);
-      userResponse.isSubscribedToNewsletter = user.newsletters.length > 0;
-      userResponse.alerts = user.alerts;
+      const newsletterSubscription = await NewsletterMongo.findOne({ user_id: id });
+      const isSubscribedToNewsletter = !!newsletterSubscription;
+
+      const userResponse = {
+        ...filterUserResponse(user),
+        alerts: user.alerts,
+        isSubscribedToNewsletter
+      };
+
+      console.log('User response:', userResponse);
 
       res.json(userResponse);
     } else {
+      console.log('User not found in MongoDB');
       res.sendStatus(404);
     }
   } catch (e) {
@@ -129,54 +182,153 @@ const getUserById = async (req, res, next) => {
 };
 
 const createUser = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
     const filteredBody = filterUserFields(req.body);
     const { error } = userSchema.validate(filteredBody);
     if (error) {
+      await transaction.rollback();
+      await session.abortTransaction();
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const user = await User.create(filteredBody);
-    res.status(201).json(user);
+    const newUserPostgres = await UserPostgres.create(filteredBody, { transaction });
+
+    const newUserMongo = new UserMongo({
+      _id: newUserPostgres.id,
+      ...filteredBody,
+    });
+    await newUserMongo.save({ session });
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.status(201).json(newUserPostgres);
   } catch (e) {
     console.error('Error creating user:', e);
+    await transaction.rollback();
+    await session.abortTransaction();
     next(e);
+  } finally {
+    session.endSession();
   }
 };
 
 const deleteUser = async (req, res, next) => {
-  try {
-    const user = await User.findByPk(req.params.id);
-    const requestingUser = await User.findByPk(req.userData.userId);
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await pgClient.query('BEGIN');
 
-    if (user) {
-      if (isAdmin(requestingUser) && isAdmin(user) && user.id !== requestingUser.id) {
+  try {
+    const userPostgres = await UserPostgres.findByPk(req.params.id);
+    const requestingUser = await UserPostgres.findByPk(req.userData.userId);
+
+    if (userPostgres) {
+      if (isAdmin(requestingUser) && isAdmin(userPostgres) && userPostgres.id !== requestingUser.id) {
+        await session.abortTransaction();
+        await pgClient.query('ROLLBACK');
         return res.status(403).json({ message: "You cannot delete other admin accounts." });
       }
 
-      const nbDeleted = await User.destroy({
+      const nbDeleted = await UserPostgres.destroy({
         where: {
           id: req.params.id,
         },
+        transaction
       });
+
       if (nbDeleted === 1) {
+        await UserMongo.deleteOne({ _id: req.params.id }).session(session);
+        await session.commitTransaction();
+        await pgClient.query('COMMIT');
         res.sendStatus(204);
       } else {
+        await session.abortTransaction();
+        await pgClient.query('ROLLBACK');
         res.sendStatus(404);
       }
     } else {
+      await session.abortTransaction();
+      await pgClient.query('ROLLBACK');
       res.sendStatus(404);
     }
   } catch (e) {
     console.error('Error deleting user:', e);
+    await session.abortTransaction();
+    await pgClient.query('ROLLBACK');
     next(e);
+  } finally {
+    session.endSession();
   }
 };
+
+const updateUserProfile = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
+  const userId = req.params.id;
+  const { email, username, firstName, lastName, dateOfBirth, isSubscribedToNewsletter } = req.body;
+
+  try {
+    const userPostgres = await UserPostgres.findByPk(userId);
+    if (!userPostgres) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'User not found in PostgreSQL' });
+    }
+
+    await userPostgres.update({
+      email,
+      username,
+      firstName,
+      lastName,
+      dateOfBirth,
+      isSubscribedToNewsletter
+    }, { transaction });
+
+    const userMongo = await UserMongo.findById(userId).session(session);
+    if (userMongo) {
+      userMongo.email = email;
+      userMongo.username = username;
+      userMongo.firstName = firstName;
+      userMongo.lastName = lastName;
+      userMongo.dateOfBirth = dateOfBirth;
+      userMongo.isSubscribedToNewsletter = isSubscribedToNewsletter;
+      await userMongo.save({ session });
+
+      if (isSubscribedToNewsletter) {
+        let newsletter = await NewsletterMongo.findOne({ user_id: userId }).session(session);
+        if (!newsletter) {
+          newsletter = new NewsletterMongo({ _id: new mongoose.Types.ObjectId(), user_id: userId });
+        }
+        await newsletter.save({ session });
+      } else {
+        await NewsletterMongo.deleteOne({ user_id: userId }).session(session);
+      }
+    }
+
+    await transaction.commit();
+    await session.commitTransaction();
+    res.json({ message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    await transaction.rollback();
+    await session.abortTransaction();
+    res.status(500).json({ message: 'An error occurred while updating the profile', error: error.message });
+  } finally {
+    session.endSession();
+  }
+};
+
 
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  updateUserProfile,
 };

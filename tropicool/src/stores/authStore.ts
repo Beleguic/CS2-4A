@@ -8,10 +8,10 @@ export const useAuthStore = defineStore('auth', {
     isLoggedIn: !!localStorage.getItem('token'),
     userId: localStorage.getItem('userId') || null,
     userRole: localStorage.getItem('userRole') || null,
-    isVerified: localStorage.getItem('isVerified') || null,
+    isVerified: localStorage.getItem('isVerified') === 'true' || null,
   }),
   actions: {
-    async login(email: string, password: string) {
+    async login(email, password) {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
           method: 'POST',
@@ -23,21 +23,20 @@ export const useAuthStore = defineStore('auth', {
 
         if (!response.ok) {
           const errorData = await response.json();
-          errorData.message || 'Une erreur de réseau est survenue';
-
           if (errorData.forcePasswordChange) {
             $toast.open({
               message: 'Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser !',
               type: 'error',
               position: 'bottom-left',
             });
+          } else {
+            $toast.open({
+              message: errorData.message || 'Une erreur est survenue, veuillez recommencer !',
+              type: 'error',
+              position: 'bottom-left',
+            });
           }
-
-          $toast.open({
-            message: 'Erreur, veuillez recommencer !',
-            type: 'error',
-            position: 'bottom-left',
-          });        
+          return;
         }
 
         const data = await response.json();
@@ -46,11 +45,12 @@ export const useAuthStore = defineStore('auth', {
           localStorage.setItem('userId', data.userId);
           localStorage.setItem('userRole', data.role);
           localStorage.setItem('isVerified', data.isVerified);
+
           this.isLoggedIn = true;
           this.userId = data.userId;
           this.userRole = data.role;
           this.isVerified = data.isVerified;
-          
+
           $toast.open({
             message: 'Connexion réussie !',
             type: 'success',
@@ -71,10 +71,17 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('userId');
       localStorage.removeItem('userRole');
       localStorage.removeItem('isVerified');
+
       this.isLoggedIn = false;
       this.userId = null;
       this.userRole = null;
       this.isVerified = null;
+
+      $toast.open({
+        message: 'Déconnexion réussie !',
+        type: 'success',
+        position: 'bottom-left',
+      });
       router.push({ name: 'Login' });
     }
   }

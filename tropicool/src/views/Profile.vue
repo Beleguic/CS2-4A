@@ -35,6 +35,7 @@ import { useToast } from 'vue-toast-notification';
 const $toast = useToast();
 const authStore = useAuthStore();
 const userId = authStore.userId;
+const router = useRouter();
 
 const user = ref({
   email: '',
@@ -83,26 +84,15 @@ const fetchUserData = async () => {
       });
     }
     const data = await response.json();
+    console.log('User data:', data);
     user.value.email = data.email;
     user.value.username = data.username;
     user.value.firstName = data.firstName;
     user.value.lastName = data.lastName;
     user.value.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : '';
     user.value.isSubscribedToNewsletter = data.isSubscribedToNewsletter || false;
-    userAlerts.value = data.alerts.map(alert => ({
-      ...alert,
-      created_at: new Date(alert.created_at).toLocaleString('fr-FR'),
-      alertType: {
-        type: alert.alertType?.type || ''
-      },
-      product: {
-        name: alert.product?.name || ''
-      },
-      category: {
-        name: alert.category?.name || ''
-      }
-    }));
   } catch (error) {
+    console.error('Error fetching user data:', error);
     $toast.open({
       message: 'Erreur! Veuillez recommencer!',
       type: 'error',
@@ -111,10 +101,11 @@ const fetchUserData = async () => {
   }
 };
 
+
 const fetchUserOrders = async () => {
   try {
     console.log('Fetching user orders for userId:', userId);
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/order?userId=${userId}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/orders?userId=${userId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -125,6 +116,7 @@ const fetchUserOrders = async () => {
         type: 'error',
         position: 'bottom-left',
       }); 
+      return;
     }
     const data = await response.json();
     userOrders.value = data.map(order => ({
@@ -142,6 +134,7 @@ const fetchUserOrders = async () => {
 };
 
 const handleSubmit = async (formData) => {
+  console.log('Submitting form data:', formData);
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}`, {
       method: 'PATCH',
@@ -160,39 +153,9 @@ const handleSubmit = async (formData) => {
       position: 'bottom-left',
     });
   } catch (error) {
+    console.error('Error during profile update:', error);
     $toast.open({
       message: 'Erreur! Veuillez recommencer! !',
-      type: 'error',
-      position: 'bottom-left',
-    });
-  }
-};
-
-const handleDeleteAlert = async (id) => {
-  try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/alert/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    if (response.status === 204) {
-      userAlerts.value = userAlerts.value.filter(alert => alert.id !== id);
-      $toast.open({
-        message: 'Alerte supprimée avec succès',
-        type: 'error',
-        position: 'bottom-left',
-      });
-    } else {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      });
-    }
-  } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
       type: 'error',
       position: 'bottom-left',
     });

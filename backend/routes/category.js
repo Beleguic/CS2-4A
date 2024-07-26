@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const categoryController = require('../controllers/categoryController');
 
-router.get('/list', categoryController.getAllCategoriesForSelection);
+router.get('/for-selection', categoryController.getAllCategoriesForSelection);
 router.get('/', categoryController.getAllCategories);
 router.get('/:id', categoryController.getCategoryById);
 router.post('/new', categoryController.createCategory);

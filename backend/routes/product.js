@@ -36,8 +36,8 @@ router.get('/products-with-stock', productController.getAllProductsWithStock);
 router.get('/list', productController.getAllProductsForSelection);
 router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProductById);
-router.post('/new', upload.single('image'), productController.createProduct); // Ajout de l'upload pour la création de produit
-router.patch('/:id', upload.single('image'), productController.updateProduct); // Ajout de l'upload pour la mise à jour de produit
+router.post('/new', upload.single('image'), productController.createProduct);
+router.patch('/:id', upload.single('image'), productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);
 
 module.exports = router;

@@ -1,4 +1,5 @@
-const { User, PasswordHistory } = require('../models');
+const { User: UserPostgres, PasswordHistory, sequelize } = require('../models');
+const User = require('../mongo/models/User');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
@@ -17,75 +18,154 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const login = async (req, res) => {
-  const { email, password } = req.body;
-
+const register = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+  
   try {
-    const user = await User.findOne({ where: { email } });
+    const { email, password, lastName, firstName, username, dateOfBirth } = req.body;
 
-    if (!user) {
-      console.log('User not found');
-      return res.status(401).json({ message: 'Authentication failed', loginAttempts: 0 });
+    if (!email || !password || !lastName || !firstName || !username || !dateOfBirth) {
+      return res.status(400).json({ message: 'All fields are required.' });
     }
 
-    if (!user.is_verified) {
-      console.log('Account not verified');
-      return res.status(403).json({ message: "Votre compte n'est pas vérifié. Veuillez vérifier votre e-mail pour activer votre compte." });
-    }
+    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (user.lock_until && user.lock_until > new Date()) {
-      const daysSinceLastChange = (new Date() - user.password_last_changed) / (1000 * 60 * 60 * 24);
+    // Création de l'utilisateur dans PostgreSQL
+    const newUserPostgres = await UserPostgres.create({
+      email,
+      password: hashedPassword,
+      verification_token: verificationToken,
+      password_last_changed: new Date(),
+      lock_until: new Date('9999-12-31'),
+      lastName,
+      firstName,
+      username,
+      dateOfBirth
+    }, { transaction });
 
-      if (daysSinceLastChange > 60) {
-        user.lock_until = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        await sendPasswordResetEmail(user);
-        console.log('Password needs to be renewed. Email sent.');
-        return res.status(403).json({
-          message: 'Password needs to be renewed. An email has been sent.',
-          forcePasswordChange: true
-        });
-      }
-      console.log('Account temporarily locked. Try again later.');
-      return res.status(401).json({ message: 'Account temporarily locked. Try again later.', loginAttempts: user.login_attempts });
-    }
+    // Création de l'historique des mots de passe dans PostgreSQL
+    await PasswordHistory.create({
+      user_id: newUserPostgres.id,
+      hashed_password: hashedPassword
+    }, { transaction });
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Création de l'utilisateur dans MongoDB
+    const newUserMongo = new User({
+      _id: newUserPostgres.id,
+      email,
+      dateOfBirth,
+      password: hashedPassword,
+      username,
+      firstName,
+      lastName,
+      is_verified: false,
+      verification_token: verificationToken,
+    });
+    await newUserMongo.save({ session });
 
-    if (!isMatch) {
-      user.login_attempts = (user.login_attempts || 0) + 1;
+    // Commit des transactions
+    await transaction.commit();
+    await session.commitTransaction();
 
-      if (user.login_attempts >= 3) {
-        user.lock_until = new Date(Date.now() + 2 * 60 * 60 * 1000);
-        user.login_attempts = 0;
-        await user.save();
-        await sendAccountLockedEmail(user);
-        return res.status(401).json({
-          loginAttempts: user.login_attempts,
-          lockUntil: user.lock_until
-        });
-      }
+    // Envoi de l'email de vérification
+    const emailContent = `
+      <div>
+        <h1>Bienvenue sur Troupicool, ${email} !</h1>
+        <p>Nous sommes ravis de vous compter parmi nous.</p>
+        <p>Veuillez cliquer sur le lien ci-dessous pour vérifier votre compte :</p>
+        <a href="${process.env.FRONT_END_URL}/verify-account?token=${verificationToken}">Vérifier mon compte</a>
+        <p>Si vous n'avez pas créé de compte sur notre site, veuillez ignorer cet e-mail.</p>
+      </div>
+    `;
+    await sendEmail(email, 'Bienvenue sur Troupicool!', emailContent);
 
-      await user.save();
-      return res.status(401).json({ message: 'Authentication failed', loginAttempts: user.login_attempts });
-    }
+    res.status(201).json({
+      message: "Votre compte a été créé avec succès. Veuillez vérifier votre e-mail pour activer votre compte. Tant que vous n'aurez pas confirmé, votre compte restera bloqué.",
+      user: newUserPostgres
+    });
 
-    user.login_attempts = 0;
-    user.lock_until = null;
-    await user.save();
-
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role, isVerified: user.is_verified },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-
-    console.log('Login successful. Token generated.');
-    res.json({ message: 'Login successful', token, userId: user.id, role: user.role, isVerified: user.is_verified });
   } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({ message: 'An error occurred during login.' });
+    await transaction.rollback();
+    await session.abortTransaction();
+    console.error('Erreur lors de la création de l\'utilisateur:', error);
+    res.status(500).json({ message: 'Erreur lors de la création de l’utilisateur', error: error.message });
+  } finally {
+    session.endSession();
   }
 };
+  
+  const login = async (req, res) => {
+    const { email, password } = req.body;
+  
+    try {
+      const user = await User.findOne({ email });
+  
+      if (!user) {
+        console.log('User not found');
+        return res.status(401).json({ message: 'Authentication failed', loginAttempts: 0 });
+      }
+  
+      if (!user.is_verified) {
+        console.log('Account not verified');
+        return res.status(403).json({ message: "Votre compte n'est pas vérifié. Veuillez vérifier votre e-mail pour activer votre compte." });
+      }
+  
+      if (user.lock_until && user.lock_until > new Date()) {
+        const daysSinceLastChange = (new Date() - user.password_last_changed) / (1000 * 60 * 60 * 24);
+  
+        if (daysSinceLastChange > 60) {
+          user.lock_until = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          await sendPasswordResetEmail(user);
+          console.log('Password needs to be renewed. Email sent.');
+          return res.status(403).json({
+            message: 'Password needs to be renewed. An email has been sent.',
+            forcePasswordChange: true
+          });
+        }
+        console.log('Account temporarily locked. Try again later.');
+        return res.status(401).json({ message: 'Account temporarily locked. Try again later.', loginAttempts: user.login_attempts });
+      }
+  
+      const isMatch = await bcrypt.compare(password, user.password);
+  
+      if (!isMatch) {
+        user.login_attempts = (user.login_attempts || 0) + 1;
+  
+        if (user.login_attempts >= 3) {
+          user.lock_until = new Date(Date.now() + 2 * 60 * 60 * 1000);
+          user.login_attempts = 0;
+          await user.save();
+          await sendAccountLockedEmail(user);
+          return res.status(401).json({
+            loginAttempts: user.login_attempts,
+            lockUntil: user.lock_until
+          });
+        }
+  
+        await user.save();
+        return res.status(401).json({ message: 'Authentication failed', loginAttempts: user.login_attempts });
+      }
+  
+      user.login_attempts = 0;
+      user.lock_until = null;
+      await user.save();
+  
+      const token = jwt.sign(
+        { userId: user.id, email: user.email, role: user.role, isVerified: user.is_verified },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+  
+      console.log('Login successful. Token generated.');
+      res.json({ message: 'Login successful', token, userId: user.id, role: user.role, isVerified: user.is_verified });
+    } catch (error) {
+      console.error('Error during login:', error);
+      res.status(500).json({ message: 'An error occurred during login.' });
+    }
+  };
   
 const sendAccountLockedEmail = async (user) => {
     const lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
@@ -112,7 +192,7 @@ const sendPasswordResetEmail = async (user) => {
 const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-        const user = await User.findOne({ where: { email } });
+        const user = await User.findOne({ email });
 
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
@@ -146,10 +226,8 @@ const resetPassword = async (req, res) => {
         const { token, password } = req.body;
 
         const user = await User.findOne({
-            where: {
-                reset_password_token: token,
-                reset_password_expires: { [Op.gt]: Date.now() }
-            }
+            reset_password_token: token,
+            reset_password_expires: { $gt: Date.now() }
         });
 
         if (!user) {
@@ -186,85 +264,54 @@ const resetPassword = async (req, res) => {
         res.status(statusCode).json({ message: 'An error occurred during password reset.' });
     }
 };
-const register = async (req, res) => {
-  const { email, password, lastName, firstName, username, dateOfBirth } = req.body;
-  try {
-    if (!email || !password || !lastName || !firstName || !username || !dateOfBirth) {
-      return res.status(400).json({ message: 'All fields are required.' });
-    }
-
-    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-    const newUser = await User.create({
-      email,
-      password,
-      verification_token: verificationToken,
-      password_last_changed: new Date(),
-      lock_until: new Date('9999-12-31'),
-      lastName,
-      firstName,
-      username,
-      dateOfBirth
-    });
-
-    await PasswordHistory.create({
-      user_id: newUser.id,
-      hashed_password: newUser.password
-    });
-
-    const emailContent = `
-      <div>
-        <h1>Bienvenue sur Troupicool, ${email} !</h1>
-        <p>Nous sommes ravis de vous compter parmi nous.</p>
-        <p>Veuillez cliquer sur le lien ci-dessous pour vérifier votre compte :</p>
-        <a href="${process.env.FRONT_END_URL}/verify-account?token=${verificationToken}">Vérifier mon compte</a>
-        <p>Si vous n'avez pas créé de compte sur notre site, veuillez ignorer cet e-mail.</p>
-      </div>
-    `;
-
-    try {
-      await sendEmail(email, 'Bienvenue sur Troupicool!', emailContent);
-      res.status(201).json({
-        message: "Votre compte a été créé avec succès. Veuillez vérifier votre e-mail pour activer votre compte. Tant que vous n'aurez pas confirmé, votre compte restera bloqué.",
-        user: newUser
-      });
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'e-mail:', error);
-      res.status(500).json({
-        message: "Utilisateur créé, mais l'envoi de l'email a échoué.",
-        emailError: error.message,
-        userId: newUser.id,
-        token: verificationToken
-      });
-    }
-  } catch (error) {
-    console.error('Erreur lors de la création de l\'utilisateur:', error);
-    res.status(500).json({ message: 'Erreur lors de la création de l’utilisateur', error: error.message });
-  }
-};
 
 const verifyAccount = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const transaction = await sequelize.transaction();
+
   try {
-      const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
-      const user = await User.findOne({ where: { verification_token: req.params.token } });
+    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+    const userPostgres = await UserPostgres.findOne({ where: { verification_token: req.params.token } }, { transaction });
 
-      if (!user) {
-          return res.status(404).json({ message: 'User not found or invalid token.' });
-      }
+    if (!userPostgres) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'User not found or invalid token.' });
+    }
 
-      user.is_verified = true;
-      user.verification_token = null;
-      user.lock_until = null;
+    const userMongo = await User.findById(userPostgres.id).session(session);
+    if (!userMongo) {
+      await transaction.rollback();
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'User not found in MongoDB.' });
+    }
 
-      await user.save();
+    userPostgres.is_verified = true;
+    userPostgres.verification_token = null;
+    userPostgres.lock_until = null;
+    await userPostgres.save({ transaction });
 
-      res.status(200).json({ message: 'Account verified successfully!' });
+    userMongo.is_verified = true;
+    userMongo.verification_token = null;
+    userMongo.lock_until = null;
+    await userMongo.save({ session });
+
+    await transaction.commit();
+    await session.commitTransaction();
+
+    res.status(200).json({ message: 'Account verified successfully!' });
+
   } catch (error) {
-      if (error instanceof jwt.JsonWebTokenError) {
-          return res.status(401).json({ message: 'Invalid verification token.' });
-      }
-      console.error('Error during account verification:', error);
-      res.status(500).json({ message: 'An error occurred during account verification.' });
+    await transaction.rollback();
+    await session.abortTransaction();
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: 'Invalid verification token.' });
+    }
+    console.error('Error during account verification:', error);
+    res.status(500).json({ message: 'An error occurred during account verification.' });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -282,7 +329,7 @@ const checkRole = async (req, res) => {
     try {
         const token = req.headers['authorization'].split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findByPk(decoded.userId);
+        const user = await User.findById(decoded.userId);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
