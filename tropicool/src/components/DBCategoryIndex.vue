@@ -7,7 +7,8 @@
           class="bg-main text-white hover:bg-secondary px-4 py-2 rounded-md">Ajouter</router-link>
       </div>
       <template v-if="datas.length > 0">
-        <Table :columns="columns" :datas="datas" editLink="DBCategoryEdit" deleteLink="DBCategoryDelete" />
+        <TableDB :columns="columns" :datas="datas" editLink="DBCategoryEdit" deleteLink="DBCategoryDelete" newLink=""
+          viewLink="" graphLink="" />
       </template>
       <template v-else>
         <p class="text-center text-gray-500">Pas de catégorie trouvée</p>
@@ -22,8 +23,10 @@ import { useRoute } from 'vue-router';
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import Table from '../components/TableComponent.vue';
+import TableDB from '../components/TableComponent.vue';
+import { useToast } from 'vue-toast-notification';
 
+const $toast = useToast();
 interface Category {
   id: number;
   name: string;
@@ -51,20 +54,19 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 const fetchCategories = async () => {
   try {
     const response = await axios.get<Category[]>(`${apiUrl}/category/`);
-    console.log('Fetched Categories:', response.data);
 
-    // Map data to format dates
     datas.value = response.data.map(category => ({
       ...category,
-      created_at: dayjs(category.created_at).format('DD/MM/YYYY HH:mm'), // Format the createdAt date
-      updated_at: dayjs(category.updated_at).format('DD/MM/YYYY HH:mm')  // Format the updatedAt date
+      created_at: dayjs(category.created_at).format('DD/MM/YYYY HH:mm'),
+      updated_at: dayjs(category.updated_at).format('DD/MM/YYYY HH:mm')
     }));
 
-    console.log('datasss', datas);
-
-    console.log('Mapped Categories:', datas.value);
   } catch (error) {
-    console.error('Error fetching datas:', error);
+    $toast.open({
+      message: 'Erreur! Veuillez recommencer!',
+      type: 'error',
+      position: 'bottom-left',
+    });
   }
 };
 

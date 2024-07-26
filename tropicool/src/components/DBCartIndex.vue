@@ -45,7 +45,7 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 
 const fetchCarts = async () => {
   try {
-    const response = await axios.get<Cart[]>(`${apiUrl}/cart/`);
+    const response = await axios.get<Cart[]>(`${apiUrl}/carts/`);
     datas.value = response.data.map(cart => {
       return {
         ...cart,

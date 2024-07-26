@@ -32,10 +32,9 @@
 </template>
 
 <script setup lang="ts">
-  import CartTable from '../components/CartTable.vue';
+  import CartTable from  '../components/CartTable.vue';
   import CartResume from '../components/CartResume.vue';
   import { ref, onMounted, computed } from 'vue';
-  import axios from 'axios';
   import { useAuthStore } from '../stores/authStore';
   import { useToast } from 'vue-toast-notification';
 
@@ -72,85 +71,104 @@
   const cartId = ref<string | null>(null);
 
   const apiUrl = import.meta.env.VITE_API_URL as string;
-  const userId = localStorage.getItem('userId');
-
+  const token = (localStorage.getItem('token') as string) ?? '';
+  const userId = (localStorage.getItem('userId') as string) ?? '';
   const promoCode = ref<string>('');
   const promoMessage = ref<string>('');
   const reduction = ref<number>(0);
 
   const fetchCart = async () => {
     if (isLoggedIn.value) {
-      const response = await axios.get<Cart[]>(`${apiUrl}/cart`, {
-        params: { user_id: userId }
+      const response = await fetch(`${apiUrl}/carts?user_id=${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
-      if (response.data && Array.isArray(response.data)) {
-        if (response.data.length > 0) {
-          cartItems.value = response.data[0].cartProductsData;
-          cartId.value = response.data[0].id;
+
+      if (response.status === 200) {
+        const data: Cart[] = await response.json();
+        if (data.length > 0) {
+          cartItems.value = data[0].cartProductsData;
+          cartId.value = data[0].id;
         }
       }
     }
   };
 
   const calculateDifference = (oldQuantity: number, newQuantity: number) => {
-    const difference = newQuantity - oldQuantity;
-    return difference > 0 ? `+${difference}` : `${difference}`;
+    return (newQuantity - oldQuantity).toString();
   };
 
   const removeFromCart = async (productId: string, quantity: number) => {
     if (isLoggedIn.value) {
       try {
-        await axios.delete(`${apiUrl}/cart`, {
-          data: { user_id: userId, product_id: productId }
+        await fetch(`${apiUrl}/carts`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ user_id: userId, product_id: productId }),
         });
 
         cartItems.value = cartItems.value.filter(item => item.product_id !== productId);
 
         if (cartItems.value.length === 0 && cartId.value) {
-          await axios.delete(`${apiUrl}/cart/${cartId.value}`);
+          await fetch(`${apiUrl}/carts/${cartId.value}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
           cartItems.value = [];
           cartId.value = null;
         }
-        /*
-        const stockResponse = await axios.get<Stock[]>(`${apiUrl}/stock`, {
-          params: { product_id: productId }
+
+        const stockResponse = await fetch(`${apiUrl}/stock?product_id=${productId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         });
-        const stockData = stockResponse.data;
 
-        if (stockData.length > 0) {
-          const lastStockEntry = stockData[stockData.length - 1];
-          const updatedQuantity = lastStockEntry.quantity + quantity;
-          const difference = calculateDifference(lastStockEntry.quantity, updatedQuantity);
+        if (stockResponse.ok) {
+          const stockData: Stock[] = await stockResponse.json();
+          if (stockData.length > 0) {
+            const lastStockEntry = stockData[stockData.length - 1];
+            const updatedQuantity = lastStockEntry.quantity + quantity;
+            const difference = calculateDifference(lastStockEntry.quantity, updatedQuantity);
 
-          await axios.post(`${apiUrl}/stock/new`, {
-            product_id: productId,
-            quantity: updatedQuantity,
-            status: 'add',
-            difference: difference
-          });
-        } else {
-          const difference = calculateDifference(0, quantity);
+            await fetch(`${apiUrl}/stock/new`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                product_id: productId,
+                quantity: updatedQuantity,
+                status: 'add',
+                difference: difference,
+              }),
+            });
 
-          await axios.post(`${apiUrl}/stock/new`, {
-            product_id: productId,
-            quantity: quantity,
-            status: 'add',
-            difference: difference
-          });
-        }*/
-
-        $toast.open({
-          message: 'Panier mis-à-jour !',
-          type: 'success',
-          position: 'bottom-left',
-        }); 
-
+            $toast.open({
+              message: 'Panier mise-à-jour !',
+              type: 'success',
+              position: 'bottom-left',
+            });
+          }
+        }
       } catch (error) {
         $toast.open({
           message: 'Erreur! Veuillez recommencer!',
           type: 'error',
           position: 'bottom-left',
-        }); 
+        });
       }
     }
   };
@@ -158,8 +176,6 @@
   onMounted(() => {
     fetchCart();
   });
-
-
 
   const total = computed(() => {
     return cartItems.value.reduce((acc, item) => acc + item.price * item.quantity, 0);

@@ -100,7 +100,7 @@ onMounted(async () => {
 
   if (mode.value === 'edit' || mode.value === 'delete') {
     try {
-      const response = await fetch(`${apiUrl}/cart/${route.params.id}`);
+      const response = await fetch(`${apiUrl}/carts/${route.params.id}`);
       if (!response.ok) {
         throw new Error('Error fetching cart');
       }
@@ -222,7 +222,7 @@ const submitForm = async () => {
   console.log("Cart value:", cart.value); // Ajouter ce log
   try {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
-    const url = mode.value === 'new' ? `${apiUrl}/cart/new` : `${apiUrl}/cart/${route.params.id}`;
+    const url = mode.value === 'new' ? `${apiUrl}/carts/new` : `${apiUrl}/carts/${route.params.id}`;
     
     const { id, cartProductsData, ...payload } = cart.value;
     const productsPayload = cartProductsData.map(product => ({
@@ -259,7 +259,7 @@ const submitForm = async () => {
 
 const deleteCart = async () => {
   try {
-    const response = await fetch(`${apiUrl}/cart/${route.params.id}`, {
+    const response = await fetch(`${apiUrl}/carts/${route.params.id}`, {
       method: 'DELETE',
     });
     if (response.ok) {

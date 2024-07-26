@@ -1,28 +1,23 @@
 const jwt = require('jsonwebtoken');
+const { User } = require('../models');
 
-module.exports = (req, res, next) => {
+module.exports = async (req, res, next) => {
   try {
-    console.log('Authenticating request...');
-    console.log('Request Headers:', req.headers);  // Log all headers for debugging
-
     const authHeader = req.headers.authorization;
-    console.log('Authorization header:', authHeader);
 
     if (!authHeader) {
-      console.log('Authorization header missing');
-      return res.status(401).json({ message: 'Authorization header missing' });
+      console.log("authHeader", authHeader)
+      return res.sendStatus(404);
     }
 
     const token = authHeader.split(' ')[1];
-    console.log('JWT Token:', token);
 
     if (!token) {
-      console.log('JWT Token missing');
-      return res.status(401).json({ message: 'JWT Token missing' });
+      console.log("token", token)
+      return res.sendStatus(404);
     }
 
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Token decoded:', decodedToken);
 
     req.userData = { 
       email: decodedToken.email, 
@@ -31,16 +26,27 @@ module.exports = (req, res, next) => {
       isVerified: decodedToken.isVerified 
     };
 
-    if (!req.userData.isVerified) {
-      console.log('User account not verified');
-      return res.status(401).json({ message: "Votre compte n'est pas vérifié." });
+    const user = await User.findByPk(req.userData.userId);
+    if (!user) {
+      console.log("user", user)
+      return res.sendStatus(404);
+    }
+
+    if ((!req.userData.isVerified) || (user.is_verified !== req.userData.isVerified)) {
+      console.log("user.is_verifieduser", user.is_verified);
+      console.log("req.userData.isVerified", req.userData.isVerified);
+      return res.sendStatus(404);
+    }
+    
+    if ((!req.userData.role) || (user.role !== req.userData.role)) {
+      console.log("user.role", user.role);
+      console.log("req.userData.role", req.userData.role);
+      return res.sendStatus(404);
     }
 
     next();
   } catch (error) {
-    console.error('Authentication failed:', error.message);
-    return res.status(401).json({
-      message: 'Votre session n\'est pas valide, veuillez vous reconnecter.'
-    });
+    console.error("error", error);
+    return res.sendStatus(404);
   }
 };

@@ -107,7 +107,6 @@ onMounted(async () => {
       const userData = await response.json();
       userData.dateOfBirth = dayjs(userData.dateOfBirth).format('YYYY-MM-DD');
       
-      // Mise à jour de l'état utilisateur avec toutes les données nécessaires
       user.value = { ...user.value, ...userData }; 
       console.log('use', userData);
     } catch (error) {
@@ -127,7 +126,6 @@ const submitForm = async () => {
     const method = mode.value === 'new' ? 'POST' : 'PATCH';
     const url = mode.value === 'new' ? `${apiUrl}/users/new` : `${apiUrl}/users/${route.params.id}`;
 
-    // Crée un payload sans les champs sensibles et automatiquement gérés
     const { id, created_at, updated_at, verification_token, reset_password_token, reset_password_expires, login_attempts, lock_until, password_last_changed, ...payload } = user.value;
 
     const response = await fetch(url, {

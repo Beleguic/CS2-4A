@@ -231,7 +231,7 @@ const handleSubmit = async (formData) => {
 
     try {
         console.log('------------------------', userId.value);
-        const responseCart = await axios.get(`${apiUrl}/cart/user/${userId.value}`, {
+        const responseCart = await axios.get(`${apiUrl}/carts/user/${userId.value}`, {
             headers: {
                 'Content-Type': 'application/json',
             },

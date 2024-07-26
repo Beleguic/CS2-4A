@@ -75,8 +75,8 @@ const getImageUrl = (path) => {
 
 .product-image {
   width: 100%;
-  height: 200px; /* Ajustez cette valeur selon vos besoins */
-  object-fit: contain; /* Cette propriété permet de réduire l'image sans la couper */
+  height: 200px;
+  object-fit: contain;
   border-radius: 10px;
 }
 

@@ -3,21 +3,20 @@ const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 const productController = require('../controllers/productController');
+const checkAuth = require('../middlewares/checkAuth');
 
-// Configuration du stockage des fichiers
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../uploads')); // Répertoire où les fichiers seront stockés
+        cb(null, path.join(__dirname, '../uploads'));
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); // Nom unique pour chaque fichier
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
-// Initialisation de multer avec la configuration de stockage
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 1024 * 1024 * 5 }, // Limite de taille de fichier à 5MB
+    limits: { fileSize: 1024 * 1024 * 5 },
     fileFilter: (req, file, cb) => {
         const filetypes = /jpeg|jpg|png|webp/;
         const mimetype = filetypes.test(file.mimetype);
@@ -31,13 +30,12 @@ const upload = multer({
     }
 });
 
-// Routes
 router.get('/products-with-stock', productController.getAllProductsWithStock);
 router.get('/list', productController.getAllProductsForSelection);
 router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProductById);
-router.post('/new', upload.single('image'), productController.createProduct); // Ajout de l'upload pour la création de produit
-router.patch('/:id', upload.single('image'), productController.updateProduct); // Ajout de l'upload pour la mise à jour de produit
-router.delete('/:id', productController.deleteProduct);
+router.post('/new', checkAuth, upload.single('image'), productController.createProduct);
+router.patch('/:id', checkAuth, upload.single('image'), productController.updateProduct);
+router.delete('/:id', checkAuth, productController.deleteProduct);
 
 module.exports = router;
