@@ -14,10 +14,13 @@
   <FooterComponent v-if="!isDashboardRoute" />
 
   <ScrollToTopButton />
+  
+  <!-- Banner de consentement cookies RGPD -->
+  <CookieConsent ref="cookieConsentRef" />
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import useCartCheck from './composables/useCartCheck';
 
@@ -26,6 +29,7 @@ import FooterComponent from './components/FooterComponent.vue';
 import DashboardSidebar from './components/DashboardSidebar.vue';
 import DashboardNavbar from './components/DashboardNavbar.vue';
 import ScrollToTopButton from './components/ScrollToTopButton.vue';
+import CookieConsent from './components/CookieConsent.vue';
 import { useToast } from 'vue-toast-notification';
 
 const route = useRoute();
@@ -33,11 +37,14 @@ const $toast = useToast();
 
 const isDashboardRoute = computed(() => route.path.startsWith('/dashboard'));
 
+// Référence au composant de consentement cookies
+const cookieConsentRef = ref();
+
 useCartCheck();
 
 onMounted(() => {
   $toast.open({
-    message: 'Bievenue sur Troupicool !',
+    message: 'Bienvenue sur Tropicool !',
     type: 'info',
     position: 'bottom-left',
   });

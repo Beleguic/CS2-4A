@@ -1,0 +1,46 @@
+{
+  "name": "tropicool",
+  "version": "1.0.0",
+  "description": "E-commerce sécurisé Tropicool avec Vue.js, Node.js, MongoDB et PostgreSQL",
+  "main": "index.js",
+  "scripts": {
+    "test-env": "node test-env.js",
+    "check-env": "node test-env.js",
+    "generate-secrets": "node -e \"console.log('JWT_SECRET:', require('crypto').randomBytes(32).toString('hex')); console.log('SESSION_SECRET:', require('crypto').randomBytes(32).toString('hex'));\"",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "restart": "docker-compose restart",
+    "logs": "docker-compose logs -f",
+    "build": "docker-compose build",
+    "clean": "docker-compose down -v",
+    "dev": "docker-compose up",
+    "setup": "cp env.example .env && echo 'Fichier .env créé. Veuillez le configurer.'"
+  },
+  "keywords": [
+    "e-commerce",
+    "vue.js",
+    "node.js",
+    "mongodb",
+    "postgresql",
+    "stripe",
+    "security",
+    "docker"
+  ],
+  "author": "Tropicool Team",
+  "license": "MIT",
+  "devDependencies": {
+    "dotenv": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/tropicool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/tropicool/issues"
+  },
+  "homepage": "https://github.com/your-username/tropicool#readme"
+} 

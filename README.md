@@ -1,147 +1,253 @@
-# CS2-4A
+# 🥥 Tropicool - E-commerce Sécurisé
 
-# Membres
+## 📋 Description
 
-1. [BELEGUIC Thibault - @Beleguic](https://github.com/Beleguic)
-2. [HAILLOUY Matiss - @Matiss2702](https://github.com/Matiss2702)
-3. [PHANG Willy - @PHANGWilly](https://github.com/PHANGWilly)
-4. [YVARS Clément - @clement-Yvars](https://github.com/clement-Yvars)
+Tropicool est une plateforme e-commerce complète et sécurisée développée avec Vue.js, Node.js, MongoDB et PostgreSQL. Le projet inclut une authentification sécurisée, une gestion des stocks, des paiements Stripe, et un système de livraison intégré.
 
-<hr>
+## 🏗️ Architecture
 
-# Installation et Lancement
+### **Services**
+- **Frontend** : Vue.js 3 + TypeScript + Vite (Port 8000)
+- **Backend API** : Node.js + Express + MongoDB + PostgreSQL (Port 3000)
+- **Service Poste** : API de livraison (Port 3001)
+- **Base de données** : MongoDB + PostgreSQL
+- **Adminer** : Interface d'administration des bases de données (Port 8080)
 
-**Prérequis :**
+### **Technologies**
+- **Frontend** : Vue 3, TypeScript, Tailwind CSS, Pinia, Vue Router
+- **Backend** : Node.js, Express, JWT, bcrypt, Sequelize, Mongoose
+- **Base de données** : MongoDB, PostgreSQL
+- **Paiements** : Stripe
+- **Email** : Nodemailer
+- **Sécurité** : Helmet, Rate Limiting, CORS, Validation Joi
 
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/)
+## 🚀 Installation Rapide
 
-**Lancement simple :**
+### **1. Prérequis**
+- Docker et Docker Compose
+- Node.js 20+ (pour le développement local)
 
-### Option 1: Commande Docker (recommandé)
+### **2. Configuration**
 ```bash
-# Un seul commande pour tout lancer !
-docker compose up
+# Cloner le projet
+git clone <repository-url>
+cd vue
+
+# Copier le fichier d'environnement
+cp env.example .env
+
+# Éditer le fichier .env avec vos valeurs
+nano .env
 ```
 
-### Option 2: En arrière-plan
-```bash
-docker compose up -d
+### **3. Variables d'Environnement Critiques**
+```env
+# Générer des clés sécurisées
+JWT_SECRET=your-super-secret-jwt-key-change-in-production-minimum-32-characters
+SESSION_SECRET=your-super-secret-session-key-change-in-production-minimum-32-characters
+
+# Configuration email
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+
+# Clés Stripe
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
 ```
 
-### Option 3: Scripts de lancement rapide
-- **Windows** : Double-cliquez sur `start.bat`
-- **Linux/Mac** : `./start.sh` (rendre exécutable avec `chmod +x start.sh`)
-
-**Arrêt :**
+### **4. Démarrage**
 ```bash
-docker compose down
+# Démarrer tous les services
+docker-compose up -d
+
+# Vérifier les logs
+docker-compose logs -f
 ```
 
-## Services Disponibles
+### **5. Accès**
+- **Frontend** : http://localhost:8000
+- **Backend API** : http://localhost:3000
+- **Service Poste** : http://localhost:3001
+- **Adminer** : http://localhost:8080
 
-| Service | URL | Port | Description |
-|---------|-----|------|-------------|
-| **Frontend Vue.js** | http://localhost:8000 | 8000 | Application principale Tropicool |
-| **Backend API** | http://localhost:3000 | 3000 | API REST Node.js |
-| **Service Poste** | http://localhost:3001 | 3001 | API La Poste |
-| **Adminer** | http://localhost:8080 | 8080 | Interface de gestion des bases de données |
+## 🔒 Sécurité
 
-## Commandes Utiles
+### **Mesures Implémentées**
+- ✅ **Authentification JWT** avec validation stricte
+- ✅ **Hachage bcrypt** des mots de passe
+- ✅ **Rate Limiting** contre les attaques DDoS
+- ✅ **CORS sécurisé** avec origines autorisées
+- ✅ **Validation Joi** de toutes les entrées
+- ✅ **Headers de sécurité** avec Helmet
+- ✅ **Sessions sécurisées** avec HttpOnly cookies
+- ✅ **Vérification des rôles** et propriétaires
+- ✅ **Logs de sécurité** sans données sensibles
 
+### **Routes Sécurisées**
+- 🔒 **64 routes protégées** avec authentification
+- 🔒 **Vérification des rôles** (admin, store-keeper, compta, user)
+- 🔒 **Isolation des données** utilisateur
+- 🔒 **Protection contre les fuites de données**
+
+## 📚 Documentation
+
+### **Guides de Sécurité**
+- [🔒 Améliorations de Sécurité](SECURITY_IMPROVEMENTS.md)
+- [🔒 Corrections des Fuites de Données](DATA_LEAK_FIXES.md)
+- [🔒 API Poste Sécurisée](POSTE_API_SECURITY.md)
+- [🔧 Variables d'Environnement](ENVIRONMENT_VARIABLES.md)
+- [💳 Configuration Stripe](STRIPE_SETUP.md)
+
+### **Structure du Projet**
+```
+vue/
+├── .env.example              # Variables d'environnement (UNIQUE)
+├── docker-compose.yml        # Configuration Docker
+├── backend/                  # API Backend
+├── poste/                    # Service Poste
+├── tropicool/               # Frontend Vue.js
+└── docs/                    # Documentation
+```
+
+## 🛠️ Développement
+
+### **Commandes Utiles**
 ```bash
-# Voir les logs en temps réel
-docker compose logs -f
+# Générer des clés sécurisées
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
-# Voir les logs d'un service spécifique
-docker compose logs -f vue
-docker compose logs -f node
+# Vérifier les services
+docker-compose ps
+
+# Logs en temps réel
+docker-compose logs -f [service]
 
 # Redémarrer un service
-docker compose restart vue
+docker-compose restart [service]
 
-# Reconstruire les images
-docker compose build
-
-# Nettoyer complètement (supprime les volumes)
-docker compose down -v
+# Arrêter tous les services
+docker-compose down
 ```
 
-## 🔒 Sécurité et Configuration
+### **Tests de Sécurité**
+```bash
+# Test d'accès non autorisé
+curl -X GET http://localhost:3000/api/user/
 
-### Configuration Stripe
-Pour utiliser les paiements Stripe avec webhooks :
+# Test avec token invalide
+curl -X GET http://localhost:3000/api/user/ \
+  -H "Authorization: Bearer invalid-token"
 
-1. **Suivez le guide** : [STRIPE_SETUP.md](./STRIPE_SETUP.md)
-2. **Configurez les variables d'environnement** dans `backend/.env`
-3. **Testez les webhooks** avec Stripe CLI ou ngrok
+# Test de propriétaire
+curl -X GET http://localhost:3000/api/cart/user/123 \
+  -H "Authorization: Bearer user-456-token"
+```
 
-### Améliorations de Sécurité
-Le projet inclut des mesures de sécurité avancées :
+## 🚀 Production
 
-- **Rate Limiting** : Protection contre les attaques DDoS
-- **Validation stricte** : Toutes les données d'entrée sont validées avec Joi
-- **Authentification sécurisée** : JWT avec expiration et verrouillage automatique
-- **CORS configuré** : Origines autorisées uniquement
-- **Logs sécurisés** : Pas d'exposition de données sensibles
-- **API Poste sécurisée** : Voir [POSTE_API_SECURITY.md](./POSTE_API_SECURITY.md)
+### **Configuration Production**
+1. **Modifier le fichier `.env`** :
+   ```env
+   NODE_ENV=production
+   ALLOWED_ORIGINS=https://yourdomain.com
+   FRONTEND_URL=https://yourdomain.com
+   VITE_API_URL=https://api.yourdomain.com
+   SMTP_SECURE=true
+   ```
 
-**Documentation complète** : [SECURITY_IMPROVEMENTS.md](./SECURITY_IMPROVEMENTS.md)
+2. **Générer des clés de production** :
+   ```bash
+   # JWT Secret (64 caractères minimum)
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   
+   # Session Secret (64 caractères minimum)
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
 
-## Dépannage
+3. **Configurer HTTPS** et **limiter les origines CORS**
 
-Si vous rencontrez des problèmes :
+### **Variables Critiques Production**
+- 🔑 **JWT_SECRET** : Clé de production sécurisée
+- 🔑 **SESSION_SECRET** : Clé de session sécurisée
+- 🔑 **STRIPE_SECRET_KEY** : Clé Stripe de production
+- 🔑 **SMTP_PASSWORD** : Mot de passe email sécurisé
+- 🌐 **ALLOWED_ORIGINS** : Origines HTTPS uniquement
 
-1. **Ports déjà utilisés** : Vérifiez qu'aucun service n'utilise les ports 3000, 3001, 8000, 8080, 27018, 5432
-2. **Permissions Docker** : Assurez-vous d'avoir les droits pour exécuter Docker
-3. **Images corrompues** : `docker compose build --no-cache`
-4. **Volumes Docker** : `docker compose down -v` (⚠️ supprime les données)
-5. **Webhooks Stripe** : Vérifiez la configuration dans [STRIPE_SETUP.md](./STRIPE_SETUP.md)
+## 📊 Fonctionnalités
 
-**Fonctionaliter:**
-   1. [BELEGUIC Thibault - @Beleguic](https://github.com/Beleguic)
-- Paiement
-- API La poste
-- Composant Formulaire
-- Livraison
-- Gestion des stocks (Avec Willy)
+### **Authentification**
+- ✅ Inscription avec confirmation email
+- ✅ Connexion sécurisée JWT
+- ✅ Réinitialisation de mot de passe
+- ✅ Vérification de compte
+- ✅ Gestion des rôles (admin, store-keeper, compta, user)
 
+### **E-commerce**
+- ✅ Catalogue de produits
+- ✅ Panier avec réservation (15min)
+- ✅ Paiements Stripe sécurisés
+- ✅ Gestion des commandes
+- ✅ Historique des achats
 
-2. [HAILLOUY Matiss - @Matiss2702](https://github.com/Matiss2702)
--  all crud 
-- connexion inscription
-- gestion mail 
-- structure back 
-- structure front
-- mise en prod
-- profile newsletter
-- forgot password reset password
-- securité front & back
-- gestion des taches du group
-- migration db 
-- test unitaire et ci cd
-- reviewer de pr
+### **Administration**
+- ✅ Dashboard avec datavisualisation
+- ✅ Gestion des stocks
+- ✅ Gestion des utilisateurs
+- ✅ Gestion des promotions
+- ✅ Système d'alertes
 
+### **Livraison**
+- ✅ API La Poste intégrée
+- ✅ Points relais
+- ✅ Suivi des livraisons
+- ✅ Géolocalisation
 
-3. [PHANG Willy - @PHANGWilly](https://github.com/PHANGWilly)
-- recherche tri produit (avec Clément)
-- tableaux dans dashboard
-- category
-- store-keeper (avec Thibault)
-- ajouter au panier
-- stocks (avec Thibault)
+## 🆘 Dépannage
 
+### **Problèmes Courants**
+1. **Variables d'environnement manquantes** → Vérifier le fichier `.env`
+2. **Connexion base de données** → Vérifier les services Docker
+3. **Erreurs CORS** → Vérifier `ALLOWED_ORIGINS`
+4. **Erreurs JWT** → Vérifier `JWT_SECRET`
 
-4. [YVARS Clément - @clement-Yvars](https://github.com/clement-Yvars)
-- entiereter Front troupicool.fr
-- Landing page
-- Crud produit
-- RGPD
-- Filtre recherche avec Willy
-- Importation image
-- Toast alerte
-- Gestion interdiction alcool mineur
-- Suppression compte/anonyme 90jours et suppression
+### **Logs et Debugging**
+```bash
+# Logs complets
+docker-compose logs
+
+# Logs d'un service spécifique
+docker-compose logs backend
+
+# Logs en temps réel
+docker-compose logs -f
+
+# Vérifier l'état des services
+docker-compose ps
+```
+
+## 🤝 Contribution
+
+1. **Fork** le projet
+2. **Créer** une branche feature
+3. **Commit** vos changements
+4. **Push** vers la branche
+5. **Ouvrir** une Pull Request
+
+## 📄 Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+
+## 🔗 Liens Utiles
+
+- [Documentation Vue.js](https://vuejs.org/)
+- [Documentation Express](https://expressjs.com/)
+- [Documentation Stripe](https://stripe.com/docs)
+- [Documentation Docker](https://docs.docker.com/)
+
+---
+
+**⚠️ IMPORTANT** : Changez TOUTES les clés secrètes en production et ne committez JAMAIS le fichier `.env` réel !
    
 
 

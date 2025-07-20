@@ -43,12 +43,15 @@ import FrontProduct from '../components/FrontProduct.vue';
 import ProductDetail from '../views/ProductDetail.vue';
 import ConditionGeneralDutilisation from '../views/ConditionGeneralDutilisation.vue';
 import VenteAlcool from '../views/VenteAlcool.vue';
+import CookiePreferences from '../views/CookiePreferences.vue';
 import Cart from '../views/Cart.vue';
 import Search from '../views/Search.vue';
 import DBStockView from "../views/DBStockView.vue";
 import DBStockGraph from "../views/DBStockGraph.vue";
 import AddAlert from '../views/AddAlert.vue';
 import NotFound from '../views/NotFound.vue';  // Import the NotFound component
+import ForcePasswordChange from '../views/ForcePasswordChange.vue';
+import DeleteAccount from '../views/DeleteAccount.vue';
 
 import Payment from '../components/Payment.vue';
 import Confirmation from '../views/Confirmation.vue';
@@ -101,6 +104,12 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: isAuthenticated,
   },
   {
+    path: '/delete-account',
+    name: 'DeleteAccount',
+    component: DeleteAccount,
+    beforeEnter: isAuthenticated,
+  },
+  {
     path: '/product',
     name: 'Product',
     component: Product,
@@ -127,6 +136,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/conditions-generales-dutilisation',
     name: 'ConditionGeneralDutilisation',
     component: ConditionGeneralDutilisation,
+  },
+  {
+    path: '/cookie-preferences',
+    name: 'CookiePreferences',
+    component: CookiePreferences,
   },
   {
     path: '/venteAlcool',
@@ -562,6 +576,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Confirmation',
     component: Confirmation,
     props: true,
+  },
+  {
+    path: '/force-password-change',
+    name: 'ForcePasswordChange',
+    component: ForcePasswordChange,
+    beforeEnter: isAuthenticated,
   }
 
 ];

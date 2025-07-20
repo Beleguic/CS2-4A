@@ -1,10 +1,11 @@
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 const express = require("express");
 const path = require('path');
 const session = require('express-session');
 const cookieParser = require("cookie-parser");
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const denormalizationService = require('./services/denormalizationService');
 const UserRouter = require("./routes/user");
 const AuthRouter = require("./routes/auth");
 const AlertRouter = require('./routes/alert');
@@ -21,6 +22,10 @@ const PasswordHistoryRouter = require('./routes/passwordHistory');
 const ProductPromotionRouter = require('./routes/productPromotion');
 const PromotionRouter = require('./routes/promotionCode');
 const StripeRooter = require('./routes/stripe');
+const CookieConsentRouter = require('./routes/cookieConsent');
+const ExportRouter = require('./routes/export');
+const PrivacyRouter = require('./routes/privacy');
+const AuditRouter = require('./routes/audit');
 const cors = require("cors");
 const nodemailer = require('nodemailer');
 const app = express();
@@ -196,6 +201,10 @@ app.use('/api/password_history', PasswordHistoryRouter);
 app.use('/api/product_promotion', ProductPromotionRouter);
 app.use('/api/promotion_code', PromotionRouter);
 app.use('/api/stripe', StripeRooter);
+app.use('/api/cookieConsent', CookieConsentRouter);
+app.use('/api/exports', ExportRouter);
+app.use('/api/privacy', PrivacyRouter);
+app.use('/api/audit', AuditRouter);
 
 // Middleware de gestion d'erreurs 404
 app.use('*', (req, res) => {
@@ -232,8 +241,16 @@ process.on('SIGINT', () => {
 
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Tropicool API Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`CORS Origins: ${process.env.ALLOWED_ORIGINS || 'http://localhost:8000'}`);
+app.listen(PORT, async () => {
+  console.log(`Tropicool API Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`CORS Origins: ${process.env.ALLOWED_ORIGINS || 'http://localhost:8000'}`);
+  
+  // Initialiser le service de dénormalisation
+  try {
+    await denormalizationService.initialize();
+    console.log('✅ Service de dénormalisation initialisé avec succès');
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'initialisation du service de dénormalisation:', error);
+  }
 });

@@ -1,38 +1,46 @@
-const { Alert, Product, Category, User, AlertType } = require('../models');
+const { Alert, AlertType, Product, Category, User } = require('../models');
+const readService = require('../services/readService');
+const denormalizationService = require('../services/denormalizationService');
 const Joi = require('joi');
 
 // Alert schema validation
 const alertSchema = Joi.object({
-  alert_type_id: Joi.string().uuid().required(),
-  product_id: Joi.string().uuid().optional().allow(null),
-  category_id: Joi.string().uuid().optional().allow(null),
   user_id: Joi.string().uuid().required(),
+  alert_type_id: Joi.string().uuid().required(),
+  product_id: Joi.string().uuid().optional(),
+  category_id: Joi.string().uuid().optional(),
+  is_active: Joi.boolean().optional()
 });
 
 const getAllAlerts = async (req, res, next) => {
   try {
-    const { user_id } = req.query;
-    const where = {};
+    // Utiliser MongoDB pour les lectures
+    const filters = {
+      limit: parseInt(req.query.limit) || 50,
+      offset: parseInt(req.query.offset) || 0,
+      user_id: req.query.user_id,
+      is_active: req.query.is_active !== undefined ? req.query.is_active === 'true' : undefined
+    };
 
-    if (user_id) {
-      where.user_id = user_id;
-    }
+    const alerts = await readService.getAllAlerts(filters);
     
-    console.log('Fetching alerts with conditions:', where);
+    // Formater la réponse
+    const formattedAlerts = alerts.map(alert => ({
+      id: alert._id,
+      user_id: alert.user_id,
+      alert_type_id: alert.alert_type_id,
+      product_id: alert.product_id,
+      category_id: alert.category_id,
+      is_active: alert.is_active,
+      created_at: alert.created_at,
+      updated_at: alert.updated_at,
+      alertType: alert.alertType,
+      product: alert.product,
+      category: alert.category,
+      user: alert.user
+    }));
 
-    const alerts = await Alert.findAll({
-      where,
-      include: [
-        { model: Product, as: 'product', attributes: ['id', 'name'] },
-        { model: Category, as: 'category', attributes: ['id', 'name'] },
-        { model: User, as: 'user', attributes: ['id', 'username'] },
-        { model: AlertType, as: 'alertType', attributes: ['type'] },
-      ],
-    });
-
-    console.log('Fetched alerts:', alerts);
-
-    res.json(alerts);
+    res.json(formattedAlerts);
   } catch (e) {
     console.error('Error fetching alerts:', e);
     next(e);
@@ -42,17 +50,28 @@ const getAllAlerts = async (req, res, next) => {
 const getAlertById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const alert = await Alert.findByPk(id, {
-      include: [
-        { model: Product, as: 'product', attributes: ['id', 'name'] },
-        { model: Category, as: 'category', attributes: ['id', 'name'] },
-        { model: User, as: 'user', attributes: ['id', 'username'] },
-        { model: AlertType, as: 'alertType', attributes: ['type'] },
-      ],
-    });
+    
+    // Utiliser MongoDB pour la lecture
+    const alert = await readService.getAlertById(id);
 
     if (alert) {
-      res.json(alert);
+      // Formater la réponse
+      const formattedAlert = {
+        id: alert._id,
+        user_id: alert.user_id,
+        alert_type_id: alert.alert_type_id,
+        product_id: alert.product_id,
+        category_id: alert.category_id,
+        is_active: alert.is_active,
+        created_at: alert.created_at,
+        updated_at: alert.updated_at,
+        alertType: alert.alertType,
+        product: alert.product,
+        category: alert.category,
+        user: alert.user
+      };
+      
+      res.json(formattedAlert);
     } else {
       res.sendStatus(404);
     }
@@ -68,7 +87,13 @@ const createAlert = async (req, res, next) => {
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
+
+    // Utiliser PostgreSQL pour l'écriture
     const alert = await Alert.create(req.body);
+    
+    // Synchroniser vers MongoDB
+    await denormalizationService.syncUser(alert.user_id);
+    
     res.status(201).json(alert);
   } catch (e) {
     console.error('Error creating alert:', e);
@@ -87,6 +112,10 @@ const updateAlert = async (req, res, next) => {
 
     if (alert) {
       await alert.update(req.body);
+      
+      // Synchroniser vers MongoDB
+      await denormalizationService.syncUser(alert.user_id);
+      
       res.json(alert);
     } else {
       res.sendStatus(404);
@@ -99,12 +128,26 @@ const updateAlert = async (req, res, next) => {
 
 const deleteAlert = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    console.log('Deleting alert with ID:', id); // Log the ID being deleted
-    const alert = await Alert.findByPk(id);
+    const alert = await Alert.findByPk(req.params.id);
+    
+    if (!alert) {
+      return res.sendStatus(404);
+    }
 
-    if (alert) {
-      await alert.destroy();
+    const nbDeleted = await Alert.destroy({
+      where: {
+        id: req.params.id,
+      },
+    });
+    
+    if (nbDeleted === 1) {
+      // Supprimer de MongoDB aussi
+      const mongoDb = require('../mongo');
+      await mongoDb.Alert.findByIdAndDelete(req.params.id);
+      
+      // Synchroniser l'utilisateur
+      await denormalizationService.syncUser(alert.user_id);
+      
       res.sendStatus(204);
     } else {
       res.sendStatus(404);

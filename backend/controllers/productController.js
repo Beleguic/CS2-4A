@@ -1,5 +1,7 @@
 const { join } = require('path');
 const { Product, Stock, Category } = require('../models');
+const readService = require('../services/readService');
+const denormalizationService = require('../services/denormalizationService');
 const Joi = require('joi');
 
 const productSchema = Joi.object({
@@ -54,72 +56,40 @@ const getAllProductsForSelection = async (req, res, next) => {
 };
 
 const getAllProducts = async (req, res, next) => {
-  const isFrontend = req.query.frontend === 'true';
-  const isSorting = req.query.sorting === 'true';
-  const sortField = req.query.sortField || 'name';
-  const sortOrder = req.query.sortOrder === 'desc' ? 'DESC' : 'ASC';
   try {
-    if (isFrontend && isSorting) {
-      const products = await Product.findAll({
-        where: {
-          is_active: true
-        },
-        include: [
-          {
-            model: Category,
-            as: 'categories',
-            through: {
-              attributes: []
-            },
-            attributes: ['id', 'name']
-          },
-          {
-            model: Stock,
-            as: 'stocks',
-            attributes: ['quantity']
-          }
-        ],
-        order: [[sortField, sortOrder]]
-      });
+    // Utiliser MongoDB pour les lectures
+    const filters = {
+      limit: parseInt(req.query.limit) || 50,
+      offset: parseInt(req.query.offset) || 0,
+      category_id: req.query.category_id,
+      is_adult: req.query.is_adult !== undefined ? req.query.is_adult === 'true' : undefined,
+      has_promotion: req.query.has_promotion === 'true',
+      search: req.query.search,
+      low_stock: req.query.low_stock === 'true'
+    };
 
-      const productsWithStock = products.map(product => {
-        const totalStock = product.stocks.reduce((total, stock) => total + stock.quantity, 0);
-        return {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          image: product.image,
-          is_active: product.is_active,
-          is_adult: product.is_adult,
-          created_at: product.created_at,
-          updated_at: product.updated_at,
-          reference: product.reference,
-          tva: product.tva,
-          categories: product.categories,
-          stock: totalStock
-        };
-      });
+    const products = await readService.getAllProducts(filters);
+    
+    // Formater la réponse pour correspondre à l'API existante
+    const formattedProducts = products.map(product => ({
+      id: product._id,
+      name: product.name,
+      price: product.price,
+      description: product.description,
+      image: product.image,
+      is_active: product.is_active,
+      is_adult: product.is_adult,
+      created_at: product.created_at,
+      updated_at: product.updated_at,
+      reference: product.reference,
+      tva: product.tva,
+      categories: product.categories,
+      stock: product.stock?.quantity || 0,
+      final_price: product.final_price,
+      has_active_promotion: product.has_active_promotion
+    }));
 
-      res.json(productsWithStock);
-    } else {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-      const offset = (page - 1) * limit;
-
-      const { count, rows } = await Product.findAndCountAll({
-        offset: offset,
-        limit: limit,
-        order: [[sortField, sortOrder]]
-      });
-
-      res.json({
-        totalItems: count,
-        totalPages: Math.ceil(count / limit),
-        currentPage: page,
-        products: rows
-      });
-    }
+    res.json(formattedProducts);
   } catch (e) {
     console.error('Error fetching products:', e);
     next(e);
@@ -129,17 +99,32 @@ const getAllProducts = async (req, res, next) => {
 const getProductById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const isFrontend = req.query.frontend === 'true';
-    const whereCondition = isFrontend
-      ? { is_active: true, name: id }
-      : { id: id };
-
-    const product = await Product.findOne({
-      where: whereCondition,
-    });
+    
+    // Utiliser MongoDB pour la lecture
+    const product = await readService.getProductById(id);
 
     if (product) {
-      res.json(product);
+      // Formater la réponse pour correspondre à l'API existante
+      const formattedProduct = {
+        id: product._id,
+        name: product.name,
+        price: product.price,
+        description: product.description,
+        image: product.image,
+        is_active: product.is_active,
+        is_adult: product.is_adult,
+        created_at: product.created_at,
+        updated_at: product.updated_at,
+        reference: product.reference,
+        tva: product.tva,
+        categories: product.categories,
+        stock: product.stock,
+        promotions: product.promotions,
+        final_price: product.final_price,
+        has_active_promotion: product.has_active_promotion
+      };
+      
+      res.json(formattedProduct);
     } else {
       res.sendStatus(404);
     }
@@ -162,7 +147,12 @@ const createProduct = async (req, res, next) => {
       image,
     };
 
+    // Utiliser PostgreSQL pour l'écriture
     const product = await Product.create(newProductData);
+    
+    // Synchroniser vers MongoDB
+    await denormalizationService.syncProduct(product.id);
+    
     res.status(201).json(product);
   } catch (e) {
     console.error('Error creating product:', e);
@@ -183,6 +173,10 @@ const updateProduct = async (req, res, next) => {
     if (product) {
       const image = req.file ? req.file.path : product.image; // Conserve l'ancienne image si une nouvelle n'est pas fournie
       await product.update({ ...payload, image });
+      
+      // Synchroniser vers MongoDB
+      await denormalizationService.syncProduct(product.id);
+      
       res.json(product);
     } else {
       res.sendStatus(404);
@@ -201,6 +195,10 @@ const deleteProduct = async (req, res, next) => {
       },
     });
     if (nbDeleted === 1) {
+      // Supprimer de MongoDB aussi
+      const mongoDb = require('../mongo');
+      await mongoDb.Product.findByIdAndDelete(req.params.id);
+      
       res.sendStatus(204);
     } else {
       res.sendStatus(404);

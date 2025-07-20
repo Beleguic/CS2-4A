@@ -1,89 +1,44 @@
-const { Stock, Product, sequelize} = require('../models');
+const { Stock, Product } = require('../models');
+const readService = require('../services/readService');
+const denormalizationService = require('../services/denormalizationService');
 const Joi = require('joi');
-const {Op} = require("sequelize");
 
 // Stock schema validation
 const stockSchema = Joi.object({
-  quantity: Joi.number().integer().min(0).required(),
   product_id: Joi.string().uuid().required(),
-  stock: Joi.number().integer(),
-  status: Joi.string().required(),
-  difference: Joi.string().required(),
+  quantity: Joi.number().integer().min(0).required(),
+  alert_threshold: Joi.number().integer().min(0).required(),
+  location: Joi.string().optional(),
+  last_updated: Joi.date().optional()
 });
-
-// Filtrer les champs non autorisés
-const filterStockFields = (stock) => {
-  const { product, created_at, ...filteredStock } = stock;
-  return filteredStock;
-};
 
 const getAllStocks = async (req, res, next) => {
   try {
-    const { product_id } = req.query;
-
-    const queryOptions = {
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
-      order: [['created_at', 'ASC']], // Ajoutez cette ligne pour trier par created_at asc
+    // Utiliser MongoDB pour les lectures
+    const filters = {
+      limit: parseInt(req.query.limit) || 50,
+      offset: parseInt(req.query.offset) || 0,
+      product_id: req.query.product_id,
+      low_stock: req.query.low_stock === 'true'
     };
 
-    if (product_id) {
-      queryOptions.where = { product_id };
-    }
+    const stocks = await readService.getAllStocks(filters);
+    
+    // Formater la réponse
+    const formattedStocks = stocks.map(stock => ({
+      id: stock._id,
+      product_id: stock.product_id,
+      quantity: stock.quantity,
+      alert_threshold: stock.alert_threshold,
+      location: stock.location,
+      last_updated: stock.last_updated,
+      created_at: stock.created_at,
+      updated_at: stock.updated_at,
+      product: stock.product,
+      is_low_stock: stock.is_low_stock
+    }));
 
-    const stocks = await Stock.findAll(queryOptions);
-
-    if (!stocks) {
-      return res.status(404).json({ message: 'Stocks not found' });
-    } else {
-      return res.json(stocks);
-    }
-  } catch (e) {
-    console.error('Error fetching stocks:', e);
-    next(e);
-  }
-};
-
-const getAllStocksForStoreKeeper = async (req, res, next) => {
-  try {
-    const { product_id } = req.query;
-
-    // Sous-requête pour obtenir le dernier created_at pour chaque product_id
-    const latestStocksSubQuery = await Stock.findAll({
-      attributes: [
-        [sequelize.fn('MAX', sequelize.col('created_at')), 'latest_created_at'],
-        'product_id',
-      ],
-      group: 'product_id',
-      raw: true,
-    });
-
-    // Construire un tableau des conditions pour la requête principale
-    const latestConditions = latestStocksSubQuery.map(stock => {
-      return {
-        product_id: stock.product_id,
-        created_at: stock.latest_created_at,
-      };
-    });
-
-    const queryOptions = {
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
-      order: [['product_id', 'ASC'], ['created_at', 'DESC']],
-      where: {
-        [Op.or]: latestConditions,
-      },
-    };
-
-    if (product_id) {
-      queryOptions.where.product_id = product_id;
-    }
-
-    const stocks = await Stock.findAll(queryOptions);
-
-    if (!stocks || stocks.length === 0) {
-      return res.status(404).json({ message: 'Stocks not found' });
-    } else {
-      return res.json(stocks);
-    }
+    res.json(formattedStocks);
   } catch (e) {
     console.error('Error fetching stocks:', e);
     next(e);
@@ -93,12 +48,26 @@ const getAllStocksForStoreKeeper = async (req, res, next) => {
 const getStockById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const stock = await Stock.findByPk(id, {
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }]
-    });
+    
+    // Utiliser MongoDB pour la lecture
+    const stock = await readService.getStockById(id);
 
     if (stock) {
-      res.json(stock);
+      // Formater la réponse
+      const formattedStock = {
+        id: stock._id,
+        product_id: stock.product_id,
+        quantity: stock.quantity,
+        alert_threshold: stock.alert_threshold,
+        location: stock.location,
+        last_updated: stock.last_updated,
+        created_at: stock.created_at,
+        updated_at: stock.updated_at,
+        product: stock.product,
+        is_low_stock: stock.is_low_stock
+      };
+      
+      res.json(formattedStock);
     } else {
       res.sendStatus(404);
     }
@@ -110,13 +79,17 @@ const getStockById = async (req, res, next) => {
 
 const createStock = async (req, res, next) => {
   try {
-    const filteredBody = filterStockFields(req.body);
-    const { error } = stockSchema.validate(filteredBody);
+    const { error } = stockSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const stock = await Stock.create(filteredBody);
+    // Utiliser PostgreSQL pour l'écriture
+    const stock = await Stock.create(req.body);
+    
+    // Synchroniser vers MongoDB
+    await denormalizationService.syncProduct(stock.product_id);
+    
     res.status(201).json(stock);
   } catch (e) {
     console.error('Error creating stock:', e);
@@ -126,8 +99,7 @@ const createStock = async (req, res, next) => {
 
 const updateStock = async (req, res, next) => {
   try {
-    const filteredBody = filterStockFields(req.body);
-    const { error } = stockSchema.validate(filteredBody);
+    const { error } = stockSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
@@ -135,7 +107,11 @@ const updateStock = async (req, res, next) => {
     const stock = await Stock.findByPk(req.params.id);
 
     if (stock) {
-      await stock.update(filteredBody);
+      await stock.update(req.body);
+      
+      // Synchroniser vers MongoDB
+      await denormalizationService.syncProduct(stock.product_id);
+      
       res.json(stock);
     } else {
       res.sendStatus(404);
@@ -148,12 +124,26 @@ const updateStock = async (req, res, next) => {
 
 const deleteStock = async (req, res, next) => {
   try {
+    const stock = await Stock.findByPk(req.params.id);
+    
+    if (!stock) {
+      return res.sendStatus(404);
+    }
+
     const nbDeleted = await Stock.destroy({
       where: {
         id: req.params.id,
       },
     });
+    
     if (nbDeleted === 1) {
+      // Supprimer de MongoDB aussi
+      const mongoDb = require('../mongo');
+      await mongoDb.Stock.findByIdAndDelete(req.params.id);
+      
+      // Synchroniser le produit
+      await denormalizationService.syncProduct(stock.product_id);
+      
       res.sendStatus(204);
     } else {
       res.sendStatus(404);
@@ -164,22 +154,65 @@ const deleteStock = async (req, res, next) => {
   }
 };
 
+// Méthodes spécialisées pour le store keeper
+const getAllStocksForStoreKeeper = async (req, res, next) => {
+  try {
+    // Utiliser MongoDB pour les lectures
+    const filters = {
+      limit: parseInt(req.query.limit) || 100,
+      offset: parseInt(req.query.offset) || 0,
+      low_stock: true
+    };
+
+    const stocks = await readService.getAllStocks(filters);
+    
+    // Formater la réponse pour le store keeper
+    const formattedStocks = stocks.map(stock => ({
+      id: stock._id,
+      product_id: stock.product_id,
+      quantity: stock.quantity,
+      alert_threshold: stock.alert_threshold,
+      location: stock.location,
+      last_updated: stock.last_updated,
+      product: stock.product,
+      is_low_stock: stock.is_low_stock,
+      needs_restock: stock.quantity <= stock.alert_threshold
+    }));
+
+    res.json(formattedStocks);
+  } catch (e) {
+    console.error('Error fetching stocks for store keeper:', e);
+    next(e);
+  }
+};
+
 const getStockByIdForStoreKeeper = async (req, res, next) => {
   try {
     const productId = req.params.product_id;
-    const stock = await Stock.findAll({
-      where: { product_id: productId },
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name'] }],
-      order: [['created_at', 'DESC']]
-    });
+    
+    // Utiliser MongoDB pour la lecture
+    const stock = await readService.getStockByProductId(productId);
 
-    if (stock.length > 0) {
-      res.json(stock);
+    if (stock) {
+      // Formater la réponse pour le store keeper
+      const formattedStock = {
+        id: stock._id,
+        product_id: stock.product_id,
+        quantity: stock.quantity,
+        alert_threshold: stock.alert_threshold,
+        location: stock.location,
+        last_updated: stock.last_updated,
+        product: stock.product,
+        is_low_stock: stock.is_low_stock,
+        needs_restock: stock.quantity <= stock.alert_threshold
+      };
+      
+      res.json(formattedStock);
     } else {
       res.sendStatus(404);
     }
   } catch (e) {
-    console.error('Error fetching stock by ID:', e);
+    console.error('Error fetching stock for store keeper:', e);
     next(e);
   }
 };
@@ -187,56 +220,16 @@ const getStockByIdForStoreKeeper = async (req, res, next) => {
 const getStockByDay = async (req, res, next) => {
   try {
     const productId = req.params.product_id;
-
-    const query = `
-      SELECT 
-        DATE(s.created_at) AS date, 
-        s.quantity, 
-        p.name AS product_name
-      FROM 
-        stocks s
-      INNER JOIN 
-        (
-          SELECT 
-            DATE(created_at) AS date,
-            MAX(created_at) AS max_created_at
-          FROM 
-            stocks
-          WHERE 
-            product_id = :productId
-          GROUP BY 
-            DATE(created_at)
-        ) subquery 
-      ON 
-        DATE(s.created_at) = subquery.date
-        AND s.created_at = subquery.max_created_at
-      INNER JOIN
-        products p
-      ON
-        s.product_id = p.id
-      WHERE 
-        s.product_id = :productId
-      ORDER BY 
-        s.created_at ASC;
-    `;
-
-    const stock = await sequelize.query(query, {
-      replacements: { productId },
-      type: sequelize.QueryTypes.SELECT,
-    });
-
-    if (stock.length > 0) {
-      res.json(stock);
-    } else {
-      res.sendStatus(404);
-    }
+    
+    // Utiliser MongoDB pour les agrégations
+    const stockHistory = await readService.getStockHistoryByProduct(productId);
+    
+    res.json(stockHistory);
   } catch (e) {
-    console.error('Error fetching stock by day:', e);
+    console.error('Error fetching stock history:', e);
     next(e);
   }
 };
-
-
 
 module.exports = {
   getAllStocks,
@@ -246,5 +239,5 @@ module.exports = {
   deleteStock,
   getAllStocksForStoreKeeper,
   getStockByIdForStoreKeeper,
-  getStockByDay,
+  getStockByDay
 };

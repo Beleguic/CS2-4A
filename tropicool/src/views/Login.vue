@@ -43,24 +43,45 @@ const login = async (formData: { email: string, password: string }) => {
     await auth.login(formData.email, formData.password);
     router.push('/');
   } catch (error: unknown) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    });    
+    const errorMessage = (error as Error).message;
     
-    if ((error as Error).message.includes("expiré")) {
+    // Messages d'erreur explicites selon le type d'erreur
+    if (errorMessage.includes("expiré")) {
       $toast.open({
         message: 'Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser.',
         type: 'error',
         position: 'bottom-left',
-      });  
-    } else {
+      });
+    } else if (errorMessage.includes("verifié")) {
       $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
+        message: 'Votre compte n\'est pas encore vérifié. Veuillez vérifier votre e-mail et cliquer sur le lien de confirmation.',
         type: 'error',
         position: 'bottom-left',
-      }); 
+      });
+    } else if (errorMessage.includes("verrouillé") || errorMessage.includes("bloqué")) {
+      $toast.open({
+        message: 'Votre compte est temporairement verrouillé suite à trop de tentatives de connexion. Veuillez réessayer plus tard.',
+        type: 'error',
+        position: 'bottom-left',
+      });
+    } else if (errorMessage.includes("invalide") || errorMessage.includes("incorrect")) {
+      $toast.open({
+        message: 'Email ou mot de passe incorrect. Veuillez vérifier vos informations.',
+        type: 'error',
+        position: 'bottom-left',
+      });
+    } else if (errorMessage.includes("réseau") || errorMessage.includes("connexion")) {
+      $toast.open({
+        message: 'Erreur de connexion au serveur. Veuillez vérifier votre connexion internet et réessayer.',
+        type: 'error',
+        position: 'bottom-left',
+      });
+    } else {
+      $toast.open({
+        message: 'Une erreur inattendue s\'est produite. Veuillez réessayer.',
+        type: 'error',
+        position: 'bottom-left',
+      });
     }
   }
 };

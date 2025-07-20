@@ -1,12 +1,17 @@
-const { User, PasswordHistory } = require('../models');
-const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { User } = require('../models');
+const { PasswordHistory } = require('../models');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+require('dotenv').config({ path: '../.env' });
 const Joi = require('joi');
 const { Op } = require('sequelize');
 const { sendEmail } = require('../services/mailService');
-require('dotenv').config();
+const LoginAttemptService = require('../services/loginAttemptService');
+const PasswordRotationService = require('../services/passwordRotationService');
+const PasswordExpirationService = require('../services/passwordExpirationService');
+const PasswordValidationService = require('../services/passwordValidationService');
 
 // Schémas de validation
 const loginSchema = Joi.object({
@@ -14,17 +19,8 @@ const loginSchema = Joi.object({
     password: Joi.string().required().min(1)
 });
 
-const registerSchema = Joi.object({
-    email: Joi.string().email().required().max(255),
-    password: Joi.string()
-        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/)
-        .message('Le mot de passe doit contenir au moins 12 caractères, une minuscule, une majuscule, un chiffre et un caractère spécial')
-        .required(),
-    lastName: Joi.string().required().min(1).max(100).pattern(/^[a-zA-ZÀ-ÿ\s'-]+$/),
-    firstName: Joi.string().required().min(1).max(100).pattern(/^[a-zA-ZÀ-ÿ\s'-]+$/),
-    username: Joi.string().required().min(3).max(50).pattern(/^[a-zA-Z0-9_-]+$/),
-    dateOfBirth: Joi.date().max('now').required()
-});
+// Utiliser le service de validation CNIL pour l'inscription
+const registerSchema = PasswordValidationService.getRegistrationSchema();
 
 const forgotPasswordSchema = Joi.object({
     email: Joi.string().email().required().max(255)
@@ -32,10 +28,12 @@ const forgotPasswordSchema = Joi.object({
 
 const resetPasswordSchema = Joi.object({
     token: Joi.string().required().length(40),
-    password: Joi.string()
-        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/)
-        .message('Le mot de passe doit contenir au moins 12 caractères, une minuscule, une majuscule, un chiffre et un caractère spécial')
+    password: PasswordValidationService.getPasswordSchema()
         .required()
+        .messages({
+            'string.empty': 'Le mot de passe est requis',
+            'any.required': 'Le mot de passe est requis'
+        })
 });
 
 // Configuration du transporteur email sécurisé
@@ -125,24 +123,22 @@ const login = async (req, res) => {
     }
 
     // Vérification du verrouillage temporaire
-    if (user.lock_until && user.lock_until > new Date()) {
-      const remainingTime = Math.ceil((user.lock_until - new Date()) / (1000 * 60));
+    if (user.isAccountLocked()) {
+      const remainingTime = user.getLockRemainingTime();
       console.log('Tentative de connexion avec un compte verrouillé:', sanitizedEmail);
       return res.status(401).json({ 
           message: `Compte temporairement verrouillé. Réessayez dans ${remainingTime} minutes.`, 
-          loginAttempts: user.login_attempts 
+          loginAttempts: user.login_attempts,
+          lockUntil: user.lock_until
       });
     }
 
     // Vérification de l'expiration du mot de passe
-    const daysSinceLastChange = (new Date() - user.password_last_changed) / (1000 * 60 * 60 * 24);
-    if (daysSinceLastChange > 60) {
-      user.lock_until = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      await user.save();
-      await sendPasswordResetEmail(user);
-      console.log('Mot de passe expiré, email de réinitialisation envoyé:', sanitizedEmail);
+    if (user.isPasswordExpired()) {
+      await PasswordExpirationService.forcePasswordChange(user.id);
+      console.log('Mot de passe expiré, changement forcé requis:', sanitizedEmail);
       return res.status(403).json({
-          message: 'Votre mot de passe a expiré. Un email de réinitialisation a été envoyé.',
+          message: 'Votre mot de passe a expiré. Vous devez le changer pour continuer.',
           forcePasswordChange: true
       });
     }
@@ -151,33 +147,29 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      user.login_attempts = (user.login_attempts || 0) + 1;
-
-      if (user.login_attempts >= 3) {
-        user.lock_until = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 heures
-        user.login_attempts = 0;
-        await user.save();
-        await sendAccountLockedEmail(user);
-        console.log('Compte verrouillé suite à 3 tentatives échouées:', sanitizedEmail);
+      // Gérer la tentative échouée avec le nouveau service
+      const attemptResult = await LoginAttemptService.handleFailedLoginAttempt(sanitizedEmail);
+      
+      console.log('Tentative de connexion échouée:', sanitizedEmail, 'Tentatives:', user.login_attempts);
+      
+      if (attemptResult.shouldLock) {
         return res.status(401).json({
-            message: 'Compte temporairement verrouillé suite à plusieurs tentatives échouées. Un email a été envoyé.',
+            message: `Compte temporairement verrouillé suite à plusieurs tentatives échouées. Un email a été envoyé.`,
             loginAttempts: user.login_attempts,
-            lockUntil: user.lock_until
+            lockUntil: user.lock_until,
+            lockDuration: attemptResult.lockDuration
         });
       }
-
-      await user.save();
-      console.log('Tentative de connexion échouée:', sanitizedEmail, 'Tentatives:', user.login_attempts);
+      
       return res.status(401).json({ 
           message: 'Email ou mot de passe incorrect', 
-          loginAttempts: user.login_attempts 
+          loginAttempts: attemptResult.remainingAttempts,
+          remainingAttempts: attemptResult.remainingAttempts
       });
     }
 
-    // Connexion réussie
-    user.login_attempts = 0;
-    user.lock_until = null;
-    await user.save();
+    // Connexion réussie - réinitialiser les tentatives
+    await LoginAttemptService.handleSuccessfulLogin(sanitizedEmail);
 
     const token = jwt.sign(
       { 
@@ -202,7 +194,18 @@ const login = async (req, res) => {
         userId: user.id, 
         role: user.role, 
         isVerified: user.is_verified,
-        expiresIn: 3600 // 1 heure en secondes
+        expiresIn: 3600, // 1 heure en secondes
+        passwordStatus: {
+            isExpired: user.isPasswordExpired(),
+            isExpiringSoon: user.isPasswordExpiringSoon(),
+            daysUntilExpiration: user.getDaysUntilPasswordExpiration(),
+            forcePasswordChange: user.force_password_change
+        },
+        accountStatus: {
+            isLocked: user.isAccountLocked(),
+            lockRemainingTime: user.getLockRemainingTime(),
+            loginAttempts: user.login_attempts
+        }
     });
   } catch (error) {
     console.error('Erreur lors de la connexion:', error);
@@ -577,6 +580,390 @@ const checkRole = async (req, res) => {
     }
 };
 
+// Vérifier le statut du mot de passe d'un utilisateur
+const getPasswordStatus = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ 
+                message: 'Utilisateur non trouvé.' 
+            });
+        }
+
+        const passwordStatus = {
+            isExpired: user.isPasswordExpired(),
+            isExpiringSoon: user.isPasswordExpiringSoon(),
+            daysUntilExpiration: user.getDaysUntilPasswordExpiration(),
+            expirationDate: user.getPasswordExpirationDate(),
+            forcePasswordChange: user.force_password_change,
+            lastChanged: user.password_last_changed
+        };
+
+        res.json(passwordStatus);
+    } catch (error) {
+        console.error('Erreur lors de la vérification du statut du mot de passe:', error);
+        res.status(500).json({ 
+            message: 'Une erreur est survenue lors de la vérification du statut du mot de passe.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Changement forcé de mot de passe
+const forcePasswordChange = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.user.id;
+
+        // Validation des données
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ 
+                error: 'Le mot de passe actuel et le nouveau mot de passe sont requis.' 
+            });
+        }
+
+        // Validation du nouveau mot de passe
+        const passwordValidation = Joi.string()
+            .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/)
+            .message('Le mot de passe doit contenir au moins 12 caractères, une minuscule, une majuscule, un chiffre et un caractère spécial')
+            .validate(newPassword);
+
+        if (passwordValidation.error) {
+            return res.status(400).json({ 
+                error: passwordValidation.error.message 
+            });
+        }
+
+        // Récupérer l'utilisateur
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ 
+                error: 'Utilisateur non trouvé.' 
+            });
+        }
+
+        // Vérifier le mot de passe actuel
+        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isCurrentPasswordValid) {
+            return res.status(400).json({ 
+                error: 'Le mot de passe actuel est incorrect.' 
+            });
+        }
+
+        // Vérifier que le nouveau mot de passe est différent de l'actuel
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) {
+            return res.status(400).json({ 
+                error: 'Le nouveau mot de passe doit être différent de l\'actuel.' 
+            });
+        }
+
+                // Vérifier l'historique des mots de passe avec le service de rotation
+        const validation = await PasswordRotationService.validateNewPassword(userId, newPassword, true);
+        if (!validation.isValid) {
+          return res.status(400).json({ 
+            error: validation.errors.join('. '),
+            warnings: validation.warnings,
+            strength: validation.strength
+          });
+        }
+
+        // Mettre à jour le mot de passe avec rotation
+        const rotationResult = await PasswordRotationService.rotatePassword(userId, newPassword, false);
+
+        console.log('Mot de passe changé avec succès pour l\'utilisateur:', user.email);
+        
+        res.json({ 
+            message: 'Mot de passe changé avec succès !',
+            strength: rotationResult.strength,
+            strengthDetails: rotationResult.strengthDetails
+        });
+    } catch (error) {
+        console.error('Erreur lors du changement forcé de mot de passe:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors du changement de mot de passe.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Obtenir les tentatives de connexion récentes (admin)
+const getLoginAttempts = async (req, res) => {
+    try {
+        // Vérifier que l'utilisateur est admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                error: 'Accès refusé. Rôle administrateur requis.' 
+            });
+        }
+
+        const limit = parseInt(req.query.limit) || 50;
+        const attempts = await LoginAttemptService.getRecentLoginAttempts(limit);
+
+        res.json(attempts);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des tentatives de connexion:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors de la récupération des tentatives de connexion.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Déverrouiller un compte (admin)
+const unlockAccount = async (req, res) => {
+    try {
+        // Vérifier que l'utilisateur est admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                error: 'Accès refusé. Rôle administrateur requis.' 
+            });
+        }
+
+        const { email } = req.params;
+        
+        if (!email) {
+            return res.status(400).json({ 
+                error: 'Email requis pour déverrouiller le compte.' 
+            });
+        }
+
+        await LoginAttemptService.unlockAccount(email);
+
+        res.json({ 
+            message: `Compte ${email} déverrouillé avec succès.` 
+        });
+    } catch (error) {
+        console.error('Erreur lors du déverrouillage du compte:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors du déverrouillage du compte.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Obtenir les statistiques des tentatives de connexion (admin)
+const getLoginStats = async (req, res) => {
+    try {
+        // Vérifier que l'utilisateur est admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                error: 'Accès refusé. Rôle administrateur requis.' 
+            });
+        }
+
+        const stats = await LoginAttemptService.getLoginAttemptStats();
+
+        // Calculer des statistiques supplémentaires
+        const totalLocked = stats.filter(user => user.isLocked).length;
+        const totalAttempts = stats.reduce((sum, user) => sum + user.loginAttempts, 0);
+        const averageAttempts = stats.length > 0 ? (totalAttempts / stats.length).toFixed(2) : 0;
+
+        const summary = {
+            totalUsers: stats.length,
+            totalLocked,
+            totalAttempts,
+            averageAttempts: parseFloat(averageAttempts),
+            users: stats
+        };
+
+        res.json(summary);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des statistiques:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors de la récupération des statistiques.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Obtenir l'historique des mots de passe d'un utilisateur
+const getPasswordHistory = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const limit = parseInt(req.query.limit) || 10;
+        
+        const history = await PasswordRotationService.getPasswordHistory(userId, limit);
+        
+        res.json(history);
+    } catch (error) {
+        console.error('Erreur lors de la récupération de l\'historique des mots de passe:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors de la récupération de l\'historique.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Obtenir les statistiques de rotation des mots de passe (admin)
+const getPasswordRotationStats = async (req, res) => {
+    try {
+        // Vérifier que l'utilisateur est admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                error: 'Accès refusé. Rôle administrateur requis.' 
+            });
+        }
+
+        const stats = await PasswordRotationService.getPasswordRotationStats();
+        
+        res.json(stats);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des statistiques de rotation:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors de la récupération des statistiques.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Valider un mot de passe avant changement
+const validatePassword = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { password, checkHistory = true } = req.body;
+
+        if (!password) {
+            return res.status(400).json({ 
+                error: 'Mot de passe requis pour la validation.' 
+            });
+        }
+
+        const validation = await PasswordRotationService.validateNewPassword(userId, password, checkHistory);
+        
+        res.json(validation);
+    } catch (error) {
+        console.error('Erreur lors de la validation du mot de passe:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors de la validation du mot de passe.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Obtenir les statistiques d'expiration des mots de passe (admin)
+const getPasswordExpirationStats = async (req, res) => {
+    try {
+        // Vérifier que l'utilisateur est admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                error: 'Accès refusé. Rôle administrateur requis.' 
+            });
+        }
+
+        const stats = await PasswordExpirationService.getExpirationStats();
+        
+        res.json(stats);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des statistiques d\'expiration:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors de la récupération des statistiques.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Obtenir la liste des utilisateurs avec des mots de passe expirés (admin)
+const getExpiredUsers = async (req, res) => {
+    try {
+        // Vérifier que l'utilisateur est admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                error: 'Accès refusé. Rôle administrateur requis.' 
+            });
+        }
+
+        const limit = parseInt(req.query.limit) || 50;
+        const offset = parseInt(req.query.offset) || 0;
+        
+        const users = await PasswordExpirationService.getExpiredUsers(limit, offset);
+        
+        res.json(users);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des utilisateurs expirés:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors de la récupération des utilisateurs.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Réinitialiser l'expiration d'un mot de passe (admin)
+const resetPasswordExpiration = async (req, res) => {
+    try {
+        // Vérifier que l'utilisateur est admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                error: 'Accès refusé. Rôle administrateur requis.' 
+            });
+        }
+
+        const { userId } = req.params;
+        
+        if (!userId) {
+            return res.status(400).json({ 
+                error: 'ID utilisateur requis.' 
+            });
+        }
+
+        await PasswordExpirationService.resetPasswordExpiration(userId);
+
+        res.json({ 
+            message: 'Expiration du mot de passe réinitialisée avec succès.' 
+        });
+    } catch (error) {
+        console.error('Erreur lors de la réinitialisation de l\'expiration:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors de la réinitialisation.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Vérifier et traiter l'expiration des mots de passe (admin)
+const checkPasswordExpirations = async (req, res) => {
+    try {
+        // Vérifier que l'utilisateur est admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                error: 'Accès refusé. Rôle administrateur requis.' 
+            });
+        }
+
+        const result = await PasswordExpirationService.checkPasswordExpirations();
+        
+        res.json({
+            message: 'Vérification de l\'expiration terminée',
+            ...result
+        });
+    } catch (error) {
+        console.error('Erreur lors de la vérification de l\'expiration:', error);
+        res.status(500).json({ 
+            error: 'Une erreur est survenue lors de la vérification.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Obtenir les exigences CNIL pour les mots de passe
+const getCNILRequirements = async (req, res) => {
+    try {
+        const requirements = PasswordValidationService.getCNILRequirements();
+        
+        res.json({
+            success: true,
+            requirements: requirements
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des exigences CNIL:', error);
+        res.status(500).json({ 
+            error: 'Erreur lors de la récupération des exigences CNIL'
+        });
+    }
+};
+
 module.exports = {
     login,
     register,
@@ -585,6 +972,19 @@ module.exports = {
     verifyAccount,
     logout,
     checkRole,
+    getPasswordStatus,
+    forcePasswordChange,
+    getLoginAttempts,
+    unlockAccount,
+    getLoginStats,
+    getPasswordHistory,
+    getPasswordRotationStats,
+    validatePassword,
+    getPasswordExpirationStats,
+    getExpiredUsers,
+    resetPasswordExpiration,
+    checkPasswordExpirations,
+    getCNILRequirements,
     validateLogin,
     validateRegister,
     validateForgotPassword,

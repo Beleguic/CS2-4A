@@ -1,4 +1,6 @@
 const { Cart, User, Product, Stock } = require('../models');
+const readService = require('../services/readService');
+const denormalizationService = require('../services/denormalizationService');
 const Joi = require('joi');
 
 // Cart schema validation
@@ -16,44 +18,36 @@ const cartSchema = Joi.object({
       tva: Joi.number().required(),
     })
   ).required(),
-  expired_at: Joi.date().optional(),
-  updated_at: Joi.date().optional()
+    expired_at: Joi.date().optional(),
+    updated_at: Joi.date().optional()
 });
 
 const getAllCarts = async (req, res, next) => {
   try {
     const { user_id } = req.query;
 
-    const queryOptions = {
-      include: [
-        { model: User, as: 'user', attributes: ['id'] }
-      ]
+    // Utiliser MongoDB pour les lectures
+    const filters = {
+      limit: parseInt(req.query.limit) || 50,
+      offset: parseInt(req.query.offset) || 0
     };
 
-    let carts;
     if (user_id) {
-      queryOptions.where = { user_id: user_id };
-      carts = await Cart.findAll(queryOptions);
-    } else {
-      carts = await Cart.findAll(queryOptions);
+      filters.user_id = user_id;
     }
 
-    const cartData = carts.map(cart => {
-      return {
-        ...cart.toJSON(),
-        cartProductsData: cart.cartProductsData.map(product => ({
-          product_id: product.product_id,
-          name: product.name,
-          quantity: product.quantity,
-          price: product.price,
-          image: product.image,
-          reference: product.reference,
-          is_adult: product.is_adult,
-          tva: product.tva
-        })),
-        user: cart.user
-      };
-    });
+    const carts = await readService.getAllCarts(filters);
+
+    // Formater la réponse
+    const cartData = carts.map(cart => ({
+      id: cart._id,
+      user_id: cart.user_id,
+      cartProductsData: cart.items || [],
+      total_amount: cart.total_amount,
+      created_at: cart.created_at,
+      updated_at: cart.updated_at,
+      user: cart.user
+    }));
 
     res.json(cartData);
   } catch (e) {
@@ -65,14 +59,23 @@ const getAllCarts = async (req, res, next) => {
 const getCartById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const cart = await Cart.findByPk(id, {
-      include: [
-        { model: User, as: 'user', attributes: ['id'] }
-      ]
-    });
+    
+    // Utiliser MongoDB pour la lecture
+    const cart = await readService.getCartById(id);
 
     if (cart) {
-      res.json(cart);
+      // Formater la réponse
+      const formattedCart = {
+        id: cart._id,
+        user_id: cart.user_id,
+        cartProductsData: cart.items || [],
+        total_amount: cart.total_amount,
+        created_at: cart.created_at,
+        updated_at: cart.updated_at,
+        user: cart.user
+      };
+      
+      res.json(formattedCart);
     } else {
       res.sendStatus(404);
     }
@@ -90,12 +93,17 @@ const createCart = async (req, res, next) => {
   }
 
   try {
+    // Utiliser PostgreSQL pour l'écriture
     const newCart = await Cart.create({
       user_id: value.user_id,
       cartProductsData: value.cartProductsData,
       expired_at: new Date(Date.now() + 15 * 60 * 1000)
     });
-    res.status(201);
+    
+    // Synchroniser vers MongoDB
+    await denormalizationService.syncCarts();
+    
+    res.status(201).json(newCart);
   } catch (err) {
     next(err);
   }
@@ -124,6 +132,9 @@ const updateCart = async (req, res, next) => {
       return res.status(404).json({ error: 'Cart not found' });
     }
 
+    // Synchroniser vers MongoDB
+    await denormalizationService.syncCarts();
+
     res.status(200).json(updatedCart);
   } catch (err) {
     next(err);
@@ -138,6 +149,10 @@ const deleteCart = async (req, res, next) => {
       },
     });
     if (nbDeleted === 1) {
+      // Supprimer de MongoDB aussi
+      const mongoDb = require('../mongo');
+      await mongoDb.Cart.findByIdAndDelete(req.params.id);
+      
       res.sendStatus(204);
     } else {
       res.sendStatus(404);
@@ -152,24 +167,32 @@ const removeProductFromCart = async (req, res, next) => {
   const { user_id, product_id } = req.body;
 
   try {
-    const cart = await Cart.findOne({ where: { user_id } });
+    // Utiliser MongoDB pour la lecture
+    const cart = await readService.getCartByUser(user_id);
 
     if (!cart) {
-      return res.status(404)
+      return res.status(404).json({ error: 'Cart not found' });
     }
 
-    const updatedProducts = cart.cartProductsData.filter(
+    const updatedProducts = cart.items.filter(
       (product) => product.product_id !== product_id
     );
 
-    if (updatedProducts.length === cart.cartProductsData.length) {
-      return res.status(404)
+    if (updatedProducts.length === cart.items.length) {
+      return res.status(404).json({ error: 'Product not found in cart' });
     }
 
-    cart.cartProductsData = updatedProducts;
-    await cart.save();
+    // Mettre à jour dans PostgreSQL
+    const pgCart = await Cart.findOne({ where: { user_id } });
+    if (pgCart) {
+      pgCart.cartProductsData = updatedProducts;
+      await pgCart.save();
+      
+      // Synchroniser vers MongoDB
+      await denormalizationService.syncCarts();
+    }
 
-    res.status(200).json(cart);
+    res.status(200).json({ items: updatedProducts });
   } catch (e) {
     console.error('Error removing product from cart:', e);
     next(e);
@@ -184,11 +207,12 @@ const getTotalProductCount = async (req, res, next) => {
   }
 
   try {
-    const carts = await Cart.findAll();
+    // Utiliser MongoDB pour la lecture
+    const carts = await readService.getAllCarts({ limit: 1000 });
 
     let totalCount = 0;
     carts.forEach(cart => {
-      const product = cart.cartProductsData.find(p => p.product_id === product_id);
+      const product = cart.items.find(p => p.product_id === product_id);
       if (product) {
         totalCount += product.quantity;
       }
@@ -204,15 +228,23 @@ const getTotalProductCount = async (req, res, next) => {
 const getCartByUserId = async (req, res, next) => {
   try {
     const userId = req.params.id;
-    const cart = await Cart.findOne({
-      where: { user_id: userId },
-      include: [
-        { model: User, as: 'user', attributes: ['id'] }
-      ]
-    });
+    
+    // Utiliser MongoDB pour la lecture
+    const cart = await readService.getCartByUser(userId);
 
     if (cart) {
-      res.json(cart);
+      // Formater la réponse
+      const formattedCart = {
+        id: cart._id,
+        user_id: cart.user_id,
+        cartProductsData: cart.items || [],
+        total_amount: cart.total_amount,
+        created_at: cart.created_at,
+        updated_at: cart.updated_at,
+        user: cart.user
+      };
+      
+      res.json(formattedCart);
     } else {
       res.sendStatus(404);
     }
@@ -222,9 +254,6 @@ const getCartByUserId = async (req, res, next) => {
   }
 };
 
-
-
-
 module.exports = {
   getAllCarts,
   getCartById,
@@ -233,8 +262,5 @@ module.exports = {
   deleteCart,
   removeProductFromCart,
   getTotalProductCount,
-    getCartByUserId
+  getCartByUserId
 };
-////
-//g
-//

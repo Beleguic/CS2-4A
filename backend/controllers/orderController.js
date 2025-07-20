@@ -1,4 +1,6 @@
 const { Order, User, Product } = require('../models');
+const readService = require('../services/readService');
+const denormalizationService = require('../services/denormalizationService');
 const Joi = require('joi');
 
 // Order schema validation
@@ -25,10 +27,33 @@ const orderSchema = Joi.object({
 
 const getAllOrders = async (req, res, next) => {
   try {
-    const orders = await Order.findAll({
-      include: [{ model: User, attributes: ['id', 'username', 'email'] }]
-    });
-    res.json(orders);
+    // Utiliser MongoDB pour les lectures
+    const filters = {
+      limit: parseInt(req.query.limit) || 50,
+      offset: parseInt(req.query.offset) || 0,
+      user_id: req.query.user_id,
+      status: req.query.status,
+      date_from: req.query.date_from,
+      date_to: req.query.date_to
+    };
+
+    const orders = await readService.getAllOrders(filters);
+    
+    // Formater la réponse
+    const formattedOrders = orders.map(order => ({
+      id: order._id,
+      user_id: order.user_id,
+      total_amount: order.total_amount,
+      status: order.status,
+      shipping_address: order.shipping_address,
+      billing_address: order.billing_address,
+      payment_method: order.payment_method,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+      user: order.user
+    }));
+
+    res.json(formattedOrders);
   } catch (e) {
     console.error('Error fetching orders:', e);
     next(e);
@@ -38,12 +63,26 @@ const getAllOrders = async (req, res, next) => {
 const getOrderById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const order = await Order.findByPk(id, {
-      include: [{ model: User, attributes: ['id', 'username', 'email'] }]
-    });
+    
+    // Utiliser MongoDB pour la lecture
+    const order = await readService.getOrderById(id);
 
     if (order) {
-      res.json(order);
+      // Formater la réponse
+      const formattedOrder = {
+        id: order._id,
+        user_id: order.user_id,
+        total_amount: order.total_amount,
+        status: order.status,
+        shipping_address: order.shipping_address,
+        billing_address: order.billing_address,
+        payment_method: order.payment_method,
+        created_at: order.created_at,
+        updated_at: order.updated_at,
+        user: order.user
+      };
+      
+      res.json(formattedOrder);
     } else {
       res.sendStatus(404);
     }
@@ -60,7 +99,12 @@ const createOrder = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
+    // Utiliser PostgreSQL pour l'écriture
     const order = await Order.create(req.body);
+    
+    // Synchroniser vers MongoDB
+    await denormalizationService.syncOrders();
+    
     res.status(201).json(order);
   } catch (e) {
     console.error('Error creating order:', e);
@@ -81,6 +125,10 @@ const updateOrder = async (req, res, next) => {
 
     if (order) {
       await order.update(updateData);
+      
+      // Synchroniser vers MongoDB
+      await denormalizationService.syncOrders();
+      
       res.json(order);
     } else {
       res.sendStatus(404);
@@ -99,6 +147,10 @@ const deleteOrder = async (req, res, next) => {
       },
     });
     if (nbDeleted === 1) {
+      // Supprimer de MongoDB aussi
+      const mongoDb = require('../mongo');
+      await mongoDb.Order.findByIdAndDelete(req.params.id);
+      
       res.sendStatus(204);
     } else {
       res.sendStatus(404);

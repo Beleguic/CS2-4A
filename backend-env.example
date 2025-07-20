@@ -1,0 +1,59 @@
+# ========================================
+# BACKEND API - VARIABLES D'ENVIRONNEMENT
+# ========================================
+
+# ========================================
+# ENVIRONNEMENT GÉNÉRAL
+# ========================================
+NODE_ENV=development
+PORT=3000
+
+# ========================================
+# BASE DE DONNÉES
+# ========================================
+MONGO_URL=mongodb://root:password@localhost:27018/app?authSource=admin
+DATABASE_URL=postgres://root:password@localhost:5432/app
+
+# ========================================
+# SÉCURITÉ ET AUTHENTIFICATION
+# ========================================
+JWT_SECRET=your-super-secret-jwt-key-change-in-production-minimum-32-characters
+SESSION_SECRET=your-super-secret-session-key-change-in-production-minimum-32-characters
+
+# ========================================
+# CORS ET ORIGINES AUTORISÉES
+# ========================================
+ALLOWED_ORIGINS=http://localhost:8000,http://localhost:3000,http://localhost:5174
+
+# ========================================
+# EMAIL ET SMTP
+# ========================================
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+FRONTEND_URL=http://localhost:8000
+
+# ========================================
+# STRIPE (PAIEMENTS)
+# ========================================
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+STRIPE_SUCCESS_URL=http://localhost:8000/confirmation
+STRIPE_CANCEL_URL=http://localhost:8000/cart
+
+# ========================================
+# LOGGING ET MONITORING
+# ========================================
+SECURITY_LOGGING=true
+DEBUG_LOGGING=true
+
+# ========================================
+# CONFIGURATION OPTIONNELLE
+# ========================================
+MAX_FILE_SIZE=5242880
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+SESSION_TIMEOUT=86400000 

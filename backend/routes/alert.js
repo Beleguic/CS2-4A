@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const alertController = require('../controllers/alertController');
-const checkAuth = require('../middlewares/checkAuth');
+const { checkAuth } = require('../middlewares/checkAuth');
 
 router.get('/', checkAuth, alertController.getAllAlerts);
 router.get('/:id', checkAuth, alertController.getAlertById);

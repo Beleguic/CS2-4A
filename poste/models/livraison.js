@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
-const { Client } = require('pg');
+const { Pool } = require('pg');
 const crypto = require('crypto');
-require('dotenv').config();
+require('dotenv').config({ path: '../../.env' });
 
 module.exports = function (sequelize) {
   class Livraison extends Model {
@@ -9,7 +9,7 @@ module.exports = function (sequelize) {
         console.log('Generating delivery number');
         const prefix = 'FR';
         const year = new Date().getFullYear();
-        const client = new Client({
+        const client = new Pool({
             connectionString: process.env.DATABASE_URL_POSTE,
             ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
         });

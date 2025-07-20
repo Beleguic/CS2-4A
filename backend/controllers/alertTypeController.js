@@ -1,15 +1,36 @@
 const { AlertType } = require('../models');
+const readService = require('../services/readService');
+const denormalizationService = require('../services/denormalizationService');
 const Joi = require('joi');
 
 // AlertType schema validation
 const alertTypeSchema = Joi.object({
-  type: Joi.string().min(3).max(255).required(),
+  type: Joi.string().required(),
+  name: Joi.string().required(),
+  description: Joi.string().optional()
 });
 
 const getAllAlertTypes = async (req, res, next) => {
   try {
-    const alertTypes = await AlertType.findAll();
-    res.json(alertTypes);
+    // Utiliser MongoDB pour les lectures
+    const filters = {
+      limit: parseInt(req.query.limit) || 50,
+      offset: parseInt(req.query.offset) || 0
+    };
+
+    const alertTypes = await readService.getAllAlertTypes(filters);
+    
+    // Formater la réponse
+    const formattedAlertTypes = alertTypes.map(alertType => ({
+      id: alertType._id,
+      type: alertType.type,
+      name: alertType.name,
+      description: alertType.description,
+      created_at: alertType.created_at,
+      updated_at: alertType.updated_at
+    }));
+
+    res.json(formattedAlertTypes);
   } catch (e) {
     console.error('Error fetching alert types:', e);
     next(e);
@@ -19,10 +40,22 @@ const getAllAlertTypes = async (req, res, next) => {
 const getAlertTypeById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const alertType = await AlertType.findByPk(id);
+    
+    // Utiliser MongoDB pour la lecture
+    const alertType = await readService.getAlertTypeById(id);
 
     if (alertType) {
-      res.json(alertType);
+      // Formater la réponse
+      const formattedAlertType = {
+        id: alertType._id,
+        type: alertType.type,
+        name: alertType.name,
+        description: alertType.description,
+        created_at: alertType.created_at,
+        updated_at: alertType.updated_at
+      };
+      
+      res.json(formattedAlertType);
     } else {
       res.sendStatus(404);
     }
@@ -34,15 +67,17 @@ const getAlertTypeById = async (req, res, next) => {
 
 const createAlertType = async (req, res, next) => {
   try {
-    console.log('Received payload for new alert type:', req.body);
-
     const { error } = alertTypeSchema.validate(req.body);
     if (error) {
-      console.error('Validation error:', error.details);
       return res.status(400).json({ error: error.details[0].message });
     }
 
+    // Utiliser PostgreSQL pour l'écriture
     const alertType = await AlertType.create(req.body);
+    
+    // Synchroniser vers MongoDB
+    await denormalizationService.syncAlertTypes();
+    
     res.status(201).json(alertType);
   } catch (e) {
     console.error('Error creating alert type:', e);
@@ -61,6 +96,10 @@ const updateAlertType = async (req, res, next) => {
 
     if (alertType) {
       await alertType.update(req.body);
+      
+      // Synchroniser vers MongoDB
+      await denormalizationService.syncAlertTypes();
+      
       res.json(alertType);
     } else {
       res.sendStatus(404);
@@ -79,6 +118,10 @@ const deleteAlertType = async (req, res, next) => {
       },
     });
     if (nbDeleted === 1) {
+      // Supprimer de MongoDB aussi
+      const mongoDb = require('../mongo');
+      await mongoDb.AlertType.findByIdAndDelete(req.params.id);
+      
       res.sendStatus(204);
     } else {
       res.sendStatus(404);

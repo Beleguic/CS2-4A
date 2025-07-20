@@ -12,12 +12,15 @@
     "migrate": "node bin/migrate.js",
     "lint": "eslint .",
     "security-check": "npm audit",
-    "health-check": "curl -f http://localhost:3000/health || exit 1"
+    "health-check": "curl -f http://localhost:3000/health || exit 1",
+    "test-denormalization": "node scripts/testDenormalization.js",
+    "sync-data": "node -e \"require('./services/denormalizationService').syncAllData()\"",
+    "check-postgres": "node scripts/checkPostgresQueries.js",
+    "test-migration": "node scripts/testCompleteMigration.js"
   },
   "author": "Tropicool Team",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -36,7 +39,8 @@
     "sequelize": "^6.37.3",
     "stripe": "^16.2.0",
     "vue": "^3.4.23",
-    "vue-server-renderer": "^2.2.6"
+    "vue-server-renderer": "^2.2.6",
+    "archiver": "^6.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
