@@ -41,6 +41,27 @@ module.exports = function (sequelize) {
         type: DataTypes.JSON,
         allowNull: false,
     },
+    // Nouveaux champs pour Stripe
+    stripe_payment_intent_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    stripe_session_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    payment_status: {
+      type: DataTypes.ENUM('pending', 'succeeded', 'failed', 'canceled'),
+      defaultValue: 'pending',
+    },
+    payment_error: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    paid_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

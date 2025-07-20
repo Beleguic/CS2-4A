@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 const productController = require('../controllers/productController');
+const { checkAuth, checkRole } = require('../middlewares/checkAuth');
 
 // Configuration du stockage des fichiers
 const storage = multer.diskStorage({
@@ -31,13 +32,15 @@ const upload = multer({
     }
 });
 
-// Routes
+// Routes publiques (lecture seule)
 router.get('/products-with-stock', productController.getAllProductsWithStock);
 router.get('/list', productController.getAllProductsForSelection);
 router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProductById);
-router.post('/new', upload.single('image'), productController.createProduct); // Ajout de l'upload pour la création de produit
-router.patch('/:id', upload.single('image'), productController.updateProduct); // Ajout de l'upload pour la mise à jour de produit
-router.delete('/:id', productController.deleteProduct);
+
+// Routes protégées (CRUD complet) - Admin uniquement
+router.post('/new', checkAuth, checkRole(['admin']), upload.single('image'), productController.createProduct);
+router.patch('/:id', checkAuth, checkRole(['admin']), upload.single('image'), productController.updateProduct);
+router.delete('/:id', checkAuth, checkRole(['admin']), productController.deleteProduct);
 
 module.exports = router;

@@ -1,0 +1,239 @@
+# Règles Cursor pour le Projet E-commerce Tropicool
+
+## Contexte du Projet
+Projet e-commerce complet avec authentification sécurisée, recherche avancée, gestion d'alertes, panier avec réservation, intégration de paiement, gestion de livraison, stocks, historique de commandes et panel d'administration.
+
+## Architecture Technique
+
+### Backend (NodeJS + MongoDB)
+- **Node.js**: 20.0.0-alpine (Docker)
+- **Framework**: Express 4.18.2
+- **ORM**: Sequelize 6.37.3 + Mongoose 8.0.0
+- **Base de données**: MongoDB (latest) + PostgreSQL (latest)
+- **Authentification**: JWT 9.0.2
+- **API**: RESTFULL sur l'ensemble du projet
+- **Migration**: Système de migration SQL
+- **Process**: Dénormalisation SQL → Mongo (libre de choix)
+- **Validation**: Joi 17.13.3
+- **Email**: Nodemailer 6.9.13
+- **Paiement**: Stripe 16.2.0
+- **Sécurité**: bcrypt 5.1.1, bcryptjs 2.4.3
+
+### Frontend (VueJS + TypeScript)
+- **Node.js**: 20.0.0-alpine (Docker)
+- **Framework**: Vue 3.4.21
+- **Build tool**: Vite 5.2.0
+- **TypeScript**: 5.2.2
+- **Styling**: Tailwind CSS 3.4.3
+- **State management**: Pinia 2.1.7
+- **Router**: Vue Router 4.3.0
+- **Validation**: Zod 3.23.8
+- **HTTP Client**: Axios 1.6.8
+- **Charts**: Chart.js 4.4.3 + vue-chartjs 5.3.1
+- **Paiement**: @stripe/stripe-js 4.1.0
+- **Notifications**: vue-toast-notification 3.1.2
+
+### Déploiement
+- **Docker**: docker-compose.yaml obligatoire (version 3)
+- **Production**: Mise en production obligatoire (2 semaines minimum)
+- **Format de rendu**: Archive ZIP avec .git complet
+- **Services Docker**:
+  - MongoDB (latest) - Port 27018
+  - PostgreSQL (latest) - Port 5432
+  - Node.js 20.0.0-alpine - Port 3000 (Backend)
+  - Node.js 20.0.0-alpine - Port 8000 (Frontend)
+  - Adminer (latest) - Port 8080
+  - Service Poste API - Port 3001
+
+## Fonctionnalités Principales
+
+### Authentification Sécurisée
+- Inscription avec confirmation par mail
+- Connexion avec prévention si compte non confirmé
+- Réinitialisation du mot de passe
+- **Sécurité CNIL**:
+  - Mot de passe 12 caractères minimum (symboles, chiffres, minuscules, majuscules)
+  - Temporisation après 3 tentatives échouées + notification mail
+  - Renouvellement obligatoire 60 jours après création/dernier changement
+  - Mots de passe hachés
+
+### Recherche Produits
+- Recherche utilisateur (nom, description)
+- Recherche via URL (paramètres GET partageables)
+- **Recherche facettée**:
+  - Nom du produit
+  - Catégorie
+  - Marque
+  - Prix (min/max)
+  - Produits en promotion
+  - Produits en stock
+  - Facettes dans URL partageables
+
+### Gestion d'Alertes Mail
+- Nouveaux produits par catégorie
+- Restock de produits
+- Changements de prix
+- Newsletter
+- Désactivation par préférences utilisateur
+
+### Panier avec Réservation (15min)
+
+### Intégration Paiement
+- **APIs supportées**: Stripe, PayPal, etc.
+- Liens de paiement uniques
+- Remboursements avec facture d'avoir
+
+### Gestion Livraison
+- **API La Poste**
+- Points relais payants
+- Carte Google Maps avec géolocalisation
+- Rayon 10km avec GeoJSON MongoDB
+
+### Gestion Stocks
+- Alertes fin de stock
+- Configuration des alertes (valeur absolue)
+- Graphiques d'évolution des stocks (derniers mois)
+
+### Historique Commandes
+- Demande de facturation
+- Demande de retour
+- Recherche
+- Commander à nouveau
+
+### Panel d'Administration
+- CRUD sur toutes les ressources
+- Dashboard avec datavisualisation (pas juste KPI)
+- Widgets personnalisables
+- **"Suppression" de compte**:
+  - Anonymisation des données utilisateur
+  - Possibilité de recréer un compte avec mêmes infos
+  - Anciennes données non accessibles
+  - Conformité RGPD
+
+## Rôles Utilisateurs
+- **ROLE_USER**: Client classique
+- **ROLE_STORE_KEEPER**: Gestion des stocks
+- **ROLE_ADMIN**: Accès panel admin
+- **ROLE_COMPTA**: Dashboard comptabilité + extraction factures
+
+## Fonctionnalités Bonus
+- Téléchargement des données personnelles
+- Opérations de promotion (codes promo avec expiration)
+- Connexion en tant qu'utilisateur (accompagnement)
+- Options de livraison variées
+
+## Contraintes VueJS + TypeScript
+
+### Composant Bouton de Suppression
+- Invite de confirmation avant suppression
+- Modale de confirmation/annulation
+- Chargement pendant requête HTTP
+- Affichage résultat en cas d'échec
+- Fermeture automatique si succès
+- Gestion des actions de succès
+
+### Composable Formulaire
+- Données initiales du formulaire
+- Fonctions de transformation des données
+- Schéma de validation Zod
+- Fonction d'exécution à la soumission
+- États de sortie:
+  - Requête HTTP en cours
+  - Erreurs de validation (une par champ)
+  - Erreur serveur/HTTP
+  - Données du formulaire
+- Fonction d'annulation de requête
+
+### Composant Tableau
+- Tri alphabétique croissant/décroissant par colonne
+- Recherche par colonne avec filtrage
+- Pagination dynamique avec UX améliorée
+- Export CSV avec Web File System API
+- Options par ligne (visualiser, éditer, supprimer)
+- Sélection multiple multi-pages pour suppression/export
+
+## Contraintes Droit/RGPD
+- Modules popup/blocs pour textes obligatoires (cookies, etc.)
+- Base de données externalisable pour contrôle INPI
+- Conformité Privacy by Design et Privacy by Default
+
+## Standards de Code
+
+### Backend
+```javascript
+// Utiliser des middlewares pour l'authentification
+// Implémenter la validation avec Joi 17.13.3
+// Gérer les erreurs de manière centralisée
+// Utiliser des services pour la logique métier
+// Documenter les routes avec JSDoc
+// Utiliser bcrypt 5.1.1 pour le hachage des mots de passe
+// Implémenter JWT 9.0.2 pour l'authentification
+```
+
+### Frontend
+```typescript
+// Utiliser Composition API avec TypeScript 5.2.2
+// Implémenter des composables réutilisables
+// Gérer les états de chargement et d'erreur
+// Utiliser des types stricts pour les props et émissions
+// Implémenter la validation côté client avec Zod 3.23.8
+// Utiliser Pinia 2.1.7 pour la gestion d'état
+// Implémenter Vue Router 4.3.0 avec guards
+```
+
+### Base de Données
+```javascript
+// Utiliser des schémas Mongoose 8.0.0 avec validation
+// Implémenter des index pour les performances
+// Gérer les relations avec des références
+// Utiliser des transactions quand nécessaire
+// Utiliser Sequelize 6.37.3 pour PostgreSQL
+```
+
+## Tests et Qualité
+- Tests unitaires pour les composants critiques
+- Validation des données côté client et serveur
+- Gestion d'erreurs robuste
+- Logs appropriés pour le debugging
+- Documentation des APIs
+
+## Sécurité
+- Validation stricte des entrées utilisateur
+- Protection contre les injections
+- Gestion sécurisée des sessions JWT
+- Chiffrement des données sensibles
+- Respect des bonnes pratiques OWASP
+
+## Performance
+- Pagination pour les grandes listes
+- Optimisation des requêtes MongoDB
+- Lazy loading des composants
+- Mise en cache appropriée
+- Compression des assets
+
+## Déploiement
+- Configuration Docker complète
+- Variables d'environnement sécurisées
+- Monitoring et logs en production
+- Backup automatique de la base de données
+- SSL/TLS obligatoire en production
+
+## Documentation
+- README.md complet avec instructions d'installation
+- Documentation des APIs
+- Guide de déploiement
+- Architecture technique documentée
+- Procédures de maintenance
+
+## Règles de Commit
+- Commits auto-signés obligatoires
+- Messages de commit descriptifs
+- Participation équilibrée des membres
+- Historique Git complet requis
+
+## Soutenance
+- 20 minutes total (10 présentation + 10 questions)
+- Démonstration des parcours utilisateurs
+- Code source et maquette prêts
+- Tenue professionnelle obligatoire
+- Aucune démonstration de code demandée 

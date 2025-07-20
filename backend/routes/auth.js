@@ -2,12 +2,21 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-router.post('/login', authController.login);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-password', authController.resetPassword);
-router.post('/register', authController.register);
+// Middleware de validation
+const { 
+    validateLogin, 
+    validateRegister, 
+    validateForgotPassword, 
+    validateResetPassword 
+} = authController;
+
+// Routes avec validation et sécurité
+router.post('/login', validateLogin, authController.login);
+router.post('/register', validateRegister, authController.register);
+router.post('/forgot-password', validateForgotPassword, authController.forgotPassword);
+router.post('/reset-password', validateResetPassword, authController.resetPassword);
 router.get('/verify/:token', authController.verifyAccount);
 router.post('/logout', authController.logout);
-router.get('/check-role', authController.checkRole);
+router.get('/check-role/:userId', authController.checkRole);
 
 module.exports = router;

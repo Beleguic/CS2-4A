@@ -9,30 +9,96 @@
 
 <hr>
 
-# Installation
+# Installation et Lancement
 
 **Prérequis :**
 
-- [Git Bash](https://git-scm.com/downloads)
 - [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
 
-**Étapes d'installation:**
-<br>**in Git Bash**
+**Lancement simple :**
 
-1. `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash`
-2. 
-```sh
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+### Option 1: Commande Docker (recommandé)
+```bash
+# Un seul commande pour tout lancer !
+docker compose up
 ```
-3. `nvm install 20`
-4. supprimer `node_modules` et `package-lock.json` dans le dossier "tropicool" et dossier "backend"
-5. `docker compose run --rm vue npm install`
-6. `docker compose run --rm node npm install`
-7. `docker compose up`
-8. `docker compose exec node npm run migrate`
 
-   **Fonctionaliter:**
+### Option 2: En arrière-plan
+```bash
+docker compose up -d
+```
+
+### Option 3: Scripts de lancement rapide
+- **Windows** : Double-cliquez sur `start.bat`
+- **Linux/Mac** : `./start.sh` (rendre exécutable avec `chmod +x start.sh`)
+
+**Arrêt :**
+```bash
+docker compose down
+```
+
+## Services Disponibles
+
+| Service | URL | Port | Description |
+|---------|-----|------|-------------|
+| **Frontend Vue.js** | http://localhost:8000 | 8000 | Application principale Tropicool |
+| **Backend API** | http://localhost:3000 | 3000 | API REST Node.js |
+| **Service Poste** | http://localhost:3001 | 3001 | API La Poste |
+| **Adminer** | http://localhost:8080 | 8080 | Interface de gestion des bases de données |
+
+## Commandes Utiles
+
+```bash
+# Voir les logs en temps réel
+docker compose logs -f
+
+# Voir les logs d'un service spécifique
+docker compose logs -f vue
+docker compose logs -f node
+
+# Redémarrer un service
+docker compose restart vue
+
+# Reconstruire les images
+docker compose build
+
+# Nettoyer complètement (supprime les volumes)
+docker compose down -v
+```
+
+## 🔒 Sécurité et Configuration
+
+### Configuration Stripe
+Pour utiliser les paiements Stripe avec webhooks :
+
+1. **Suivez le guide** : [STRIPE_SETUP.md](./STRIPE_SETUP.md)
+2. **Configurez les variables d'environnement** dans `backend/.env`
+3. **Testez les webhooks** avec Stripe CLI ou ngrok
+
+### Améliorations de Sécurité
+Le projet inclut des mesures de sécurité avancées :
+
+- **Rate Limiting** : Protection contre les attaques DDoS
+- **Validation stricte** : Toutes les données d'entrée sont validées avec Joi
+- **Authentification sécurisée** : JWT avec expiration et verrouillage automatique
+- **CORS configuré** : Origines autorisées uniquement
+- **Logs sécurisés** : Pas d'exposition de données sensibles
+- **API Poste sécurisée** : Voir [POSTE_API_SECURITY.md](./POSTE_API_SECURITY.md)
+
+**Documentation complète** : [SECURITY_IMPROVEMENTS.md](./SECURITY_IMPROVEMENTS.md)
+
+## Dépannage
+
+Si vous rencontrez des problèmes :
+
+1. **Ports déjà utilisés** : Vérifiez qu'aucun service n'utilise les ports 3000, 3001, 8000, 8080, 27018, 5432
+2. **Permissions Docker** : Assurez-vous d'avoir les droits pour exécuter Docker
+3. **Images corrompues** : `docker compose build --no-cache`
+4. **Volumes Docker** : `docker compose down -v` (⚠️ supprime les données)
+5. **Webhooks Stripe** : Vérifiez la configuration dans [STRIPE_SETUP.md](./STRIPE_SETUP.md)
+
+**Fonctionaliter:**
    1. [BELEGUIC Thibault - @Beleguic](https://github.com/Beleguic)
 - Paiement
 - API La poste

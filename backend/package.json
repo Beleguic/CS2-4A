@@ -1,16 +1,20 @@
 {
-  "name": "backend",
+  "name": "tropicool-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "API backend sécurisée pour Tropicool",
+  "main": "server.js",
   "private": true,
   "scripts": {
     "d:s:u": "node migrate.js",
     "dev": "node --watch server.js",
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate": "node bin/migrate.js"
+    "migrate": "node bin/migrate.js",
+    "lint": "eslint .",
+    "security-check": "npm audit",
+    "health-check": "curl -f http://localhost:3000/health || exit 1"
   },
-  "author": "",
+  "author": "Tropicool Team",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -20,7 +24,9 @@
     "dayjs": "^1.11.11",
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
     "express-session": "^1.18.0",
+    "helmet": "^7.1.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.0",
@@ -33,6 +39,11 @@
     "vue-server-renderer": "^2.2.6"
   },
   "devDependencies": {
-    "@types/node": "^20.14.10"
+    "@types/node": "^20.14.10",
+    "eslint": "^8.57.0",
+    "nodemon": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
