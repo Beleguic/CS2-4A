@@ -9,12 +9,19 @@
           <span>{{ filtersVisible ? 'Masquer les filtres' : 'Afficher les filtres' }}</span>
           <component :is="iconFilterSetting"/>
         </button>
+        <button @click="shareCurrentFilters" class="text-black font-bold flex items-center gap-2 px-3 py-2 rounded-sm border border-slate-200 hover:bg-slate-50">
+          <span>Partager</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+          </svg>
+        </button>
         <select v-model="sortOption" @change="updateURL" class="py-2 px-4 rounded-sm border border-slate-200">
           <option value="">Trier par</option>
           <option value="name_asc">Nom croissant</option>
           <option value="name_desc">Nom décroissant</option>
           <option value="price_asc">Prix croissant</option>
           <option value="price_desc">Prix décroissant</option>
+          <option value="discount_desc">Plus de réduction</option>
         </select>
       </div>
     </div>
@@ -34,6 +41,20 @@
             <option value="">Toutes les catégories</option>
             <option v-for="category in categories" :key="category.id" :value="category.name">{{ category.name }}</option>
           </select>
+        </div>
+        <div v-if="brands.length > 0" class="grid gap-2">
+          <label for="brand" class="text-lg font-bold">Marques</label>
+          <select id="brand" class="py-2 px-4 rounded-sm border border-slate-200" v-model="selectedBrand" @change="updateURL">
+            <option value="">Toutes les marques</option>
+            <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
+          </select>
+        </div>
+        <div class="grid gap-2">
+          <label class="text-lg font-bold">Promotions</label>
+          <div class="flex items-center">
+            <input type="checkbox" id="promotion-only" v-model="promotionFilter" @change="updateURL">
+            <label for="promotion-only" class="ml-2">Produits en promotion uniquement</label>
+          </div>
         </div>
         <div class="grid gap-2">
           <label class="text-lg font-bold">Produits Alcoolisés</label>
@@ -103,13 +124,16 @@ import { useToast } from 'vue-toast-notification';
 const $toast = useToast();
 const products = ref<any[]>([]);
 const categories = ref<any[]>([]);
+const brands = ref<string[]>([]);
 const selectedCategory = ref<string>('');
+const selectedBrand = ref<string>('');
 const searchText = ref<string>('');
 const searchQuery = ref<string>('');
 const sortOption = ref<string>('');
 const priceRange = ref<string>('');
 const alcoholFilter = ref<boolean[]>([]);
 const stockFilter = ref<string | null>(null);
+const promotionFilter = ref<boolean>(false);
 const apiUrl = import.meta.env.VITE_API_URL;
 const searchInput = ref<HTMLInputElement | null>(null);
 const filtersVisible = ref(true);
@@ -127,6 +151,73 @@ const validatePriceRange = (minPrice: string, maxPrice?: string) => {
 
 const validateAlcoholFilter = (value: string) => {
   return value === 'true' || value === 'false' || value === undefined;
+};
+
+const validateBrandFilter = (value: string) => {
+  return typeof value === 'string' && value.trim().length > 0;
+};
+
+const validatePromotionFilter = (value: string) => {
+  return value === 'true' || value === 'false' || value === undefined;
+};
+
+const validateSortOption = (value: string) => {
+  const validSortOptions = ['name_asc', 'name_desc', 'price_asc', 'price_desc', 'discount_desc'];
+  return validSortOptions.includes(value) || value === undefined;
+};
+
+const cleanURLParams = (params: Record<string, any>) => {
+  const cleaned: Record<string, string> = {};
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      cleaned[key] = String(value).trim();
+    }
+  });
+  
+  return cleaned;
+};
+
+const generateShareableURL = () => {
+  const currentQuery = { ...route.query };
+  const cleanQuery = cleanURLParams(currentQuery);
+  
+  if (Object.keys(cleanQuery).length === 0) {
+    return window.location.origin + route.path;
+  }
+  
+  const queryString = new URLSearchParams(cleanQuery).toString();
+  return `${window.location.origin}${route.path}?${queryString}`;
+};
+
+const shareCurrentFilters = async () => {
+  try {
+    const shareableURL = generateShareableURL();
+    
+    if (navigator.share) {
+      // Utiliser l'API Web Share si disponible
+      await navigator.share({
+        title: 'Filtres Tropicool',
+        text: 'Découvrez ces produits filtrés sur Tropicool',
+        url: shareableURL
+      });
+    } else {
+      // Fallback : copier dans le presse-papiers
+      await navigator.clipboard.writeText(shareableURL);
+      $toast.open({
+        message: 'Lien copié dans le presse-papiers !',
+        type: 'success',
+        position: 'bottom-left',
+      });
+    }
+  } catch (error) {
+    console.error('Erreur lors du partage:', error);
+    $toast.open({
+      message: 'Erreur lors du partage',
+      type: 'error',
+      position: 'bottom-left',
+    });
+  }
 };
 
 const fetchCategories = async () => {
@@ -151,6 +242,9 @@ const fetchCategories = async () => {
     const data = await response.json();
     categories.value = data;
 
+    // Extraire les marques uniques des produits
+    extractBrands();
+    
     syncFiltersWithRoute();
   } catch (error) {
     $toast.open({
@@ -169,6 +263,8 @@ const fetchProducts = async () => {
       search: searchQuery.value,
       sort: sortOption.value,
       category: selectedCategory.value,
+      brand: selectedBrand.value,
+      has_promotion: promotionFilter.value.toString(),
     });
 
     if (alcoholFilter.value.includes(true)) {
@@ -205,6 +301,9 @@ const fetchProducts = async () => {
 
     const data = await response.json();
     products.value = Array.isArray(data) ? data : [];
+    
+    // Extraire les marques uniques des produits
+    extractBrands();
   } catch (error) {
     $toast.open({
       message: 'Erreur, veuillez recommencer',
@@ -225,6 +324,8 @@ const filteredProducts = computed(() => {
     let matchesPrice = true;
     let matchesAlcohol = true;
     let matchesCategory = true;
+    let matchesBrand = true;
+    let matchesPromotion = true;
     let matchesStock = true;
 
     if (searchQuery.value) {
@@ -256,11 +357,19 @@ const filteredProducts = computed(() => {
       matchesCategory = product.categories.some((category: { name: string; }) => category.name === selectedCategory.value);
     }
 
+    if (selectedBrand.value) {
+      matchesBrand = product.brand === selectedBrand.value;
+    }
+
+    if (promotionFilter.value) {
+      matchesPromotion = product.has_active_promotion === true;
+    }
+
     if (stockFilter.value) {
       matchesStock = stockFilter.value === 'available' ? product.stock > 0 : product.stock === 0;
     }
 
-    return matchesSearch && matchesPrice && matchesAlcohol && matchesCategory && matchesStock;
+    return matchesSearch && matchesPrice && matchesAlcohol && matchesCategory && matchesBrand && matchesPromotion && matchesStock;
   }).sort((a, b) => {
     if (sortOption.value === 'name_asc') {
       return a.name.localeCompare(b.name);
@@ -270,6 +379,15 @@ const filteredProducts = computed(() => {
       return a.price - b.price;
     } else if (sortOption.value === 'price_desc') {
       return b.price - a.price;
+    } else if (sortOption.value === 'discount_desc') {
+      // Trier par pourcentage de réduction décroissant
+      const getDiscountPercentage = (product) => {
+        if (product.has_active_promotion && product.final_price && product.price > 0) {
+          return ((product.price - product.final_price) / product.price) * 100;
+        }
+        return 0;
+      };
+      return getDiscountPercentage(b) - getDiscountPercentage(a);
     }
     return 0;
   });
@@ -298,22 +416,44 @@ const updateStockFilter = (value: string) => {
 };
 
 const updateURL = () => {
-  const query: Record<string, string | undefined> = {
-    search: searchQuery.value || undefined,
-    sort: sortOption.value || undefined,
-    category: selectedCategory.value || undefined,
-  };
+  const query: Record<string, string | undefined> = {};
 
+  // Paramètres de base
+  if (searchQuery.value && searchQuery.value.trim()) {
+    query.search = searchQuery.value.trim();
+  }
+
+  if (sortOption.value && validateSortOption(sortOption.value)) {
+    query.sort = sortOption.value;
+  }
+
+  if (selectedCategory.value && selectedCategory.value.trim()) {
+    query.category = selectedCategory.value.trim();
+  }
+
+  // Filtre marque
+  if (selectedBrand.value && validateBrandFilter(selectedBrand.value)) {
+    query.brand = selectedBrand.value.trim();
+  }
+
+  // Filtre promotion
+  if (promotionFilter.value) {
+    query.has_promotion = 'true';
+  }
+
+  // Filtre alcool
   if (alcoholFilter.value.includes(true)) {
     query['with-alcohol'] = 'true';
   } else if (alcoholFilter.value.includes(false)) {
     query['with-alcohol'] = 'false';
   }
 
-  if (stockFilter.value) {
-    query['stock'] = stockFilter.value;
+  // Filtre stock
+  if (stockFilter.value && ['available', 'unavailable'].includes(stockFilter.value)) {
+    query.stock = stockFilter.value;
   }
 
+  // Filtre prix
   if (priceRange.value) {
     if (priceRange.value === '0-10') {
       query['max-price'] = '10';
@@ -328,20 +468,75 @@ const updateURL = () => {
     }
   }
 
-  router.push({ query });
+  // Nettoyer les paramètres undefined
+  const cleanQuery = Object.fromEntries(
+    Object.entries(query).filter(([_, value]) => value !== undefined)
+  );
+
+  router.push({ query: cleanQuery });
+};
+
+const extractBrands = () => {
+  const uniqueBrands = new Set<string>();
+  
+  products.value.forEach(product => {
+    if (product.brand && product.brand.trim()) {
+      uniqueBrands.add(product.brand.trim());
+    }
+  });
+  
+  brands.value = Array.from(uniqueBrands).sort();
 };
 
 const syncFiltersWithRoute = () => {
-  searchText.value = route.query.search || '';
-  searchQuery.value = route.query.search || '';
-  sortOption.value = route.query.sort || '';
-  selectedCategory.value = route.query.category || '';
-  stockFilter.value = route.query.stock || null;
+  try {
+    // Recherche
+    const searchParam = route.query.search as string;
+    if (searchParam && searchParam.trim()) {
+      searchText.value = searchParam.trim();
+      searchQuery.value = searchParam.trim();
+    } else {
+      searchText.value = '';
+      searchQuery.value = '';
+    }
 
-  const minPrice = route.query['min-price'];
-  const maxPrice = route.query['max-price'];
+  // Tri
+  const sortParam = route.query.sort as string;
+  if (sortParam && validateSortOption(sortParam)) {
+    sortOption.value = sortParam;
+  } else {
+    sortOption.value = '';
+  }
 
-  if (validatePriceRange(minPrice as string, maxPrice as string)) {
+  // Catégorie
+  const categoryParam = route.query.category as string;
+  if (categoryParam && categoryParam.trim()) {
+    selectedCategory.value = categoryParam.trim();
+  } else {
+    selectedCategory.value = '';
+  }
+
+  // Marque
+  const brandParam = route.query.brand as string;
+  if (brandParam && validateBrandFilter(brandParam)) {
+    selectedBrand.value = brandParam.trim();
+  } else {
+    selectedBrand.value = '';
+  }
+
+  // Promotion
+  const promotionParam = route.query.has_promotion as string;
+  if (promotionParam && validatePromotionFilter(promotionParam)) {
+    promotionFilter.value = promotionParam === 'true';
+  } else {
+    promotionFilter.value = false;
+  }
+
+  // Prix
+  const minPrice = route.query['min-price'] as string;
+  const maxPrice = route.query['max-price'] as string;
+
+  if (validatePriceRange(minPrice, maxPrice)) {
     if (minPrice && maxPrice) {
       priceRange.value = `${minPrice}-${maxPrice}`;
     } else if (minPrice) {
@@ -353,10 +548,12 @@ const syncFiltersWithRoute = () => {
     priceRange.value = '';
   }
 
-  if (validateAlcoholFilter(route.query['with-alcohol'] as string)) {
-    if (route.query['with-alcohol'] === 'true') {
+  // Alcool
+  const alcoholParam = route.query['with-alcohol'] as string;
+  if (validateAlcoholFilter(alcoholParam)) {
+    if (alcoholParam === 'true') {
       alcoholFilter.value = [true];
-    } else if (route.query['with-alcohol'] === 'false') {
+    } else if (alcoholParam === 'false') {
       alcoholFilter.value = [false];
     } else {
       alcoholFilter.value = [];
@@ -365,11 +562,24 @@ const syncFiltersWithRoute = () => {
     alcoholFilter.value = [];
   }
 
-  if (route.query['stock'] === 'available') {
-    stockFilter.value = 'available';
-  } else if (route.query['stock'] === 'unavailable') {
-    stockFilter.value = 'unavailable';
+  // Stock
+  const stockParam = route.query.stock as string;
+  if (stockParam && ['available', 'unavailable'].includes(stockParam)) {
+    stockFilter.value = stockParam;
   } else {
+    stockFilter.value = null;
+  }
+  } catch (error) {
+    console.error('Erreur lors de la synchronisation des filtres avec l\'URL:', error);
+    // Réinitialiser tous les filtres en cas d'erreur
+    searchText.value = '';
+    searchQuery.value = '';
+    sortOption.value = '';
+    selectedCategory.value = '';
+    selectedBrand.value = '';
+    promotionFilter.value = false;
+    priceRange.value = '';
+    alcoholFilter.value = [];
     stockFilter.value = null;
   }
 };

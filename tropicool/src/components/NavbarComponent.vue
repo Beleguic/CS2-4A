@@ -56,6 +56,7 @@
   import iconProfile from '../assets/icons/profile.svg';
   import iconCart from '../assets/icons/cart.svg';
   import iconLogout from '../assets/icons/logout.svg';
+  import iconAlert from '../assets/icons/alert.svg';
 
   interface RouteIcon {
     path: string;
@@ -71,6 +72,10 @@
       path: 'Cart',
       icon: iconCart
     },
+    ...(auth.isLoggedIn ? [{
+      path: 'AlertPreferences',
+      icon: iconAlert
+    }] : []),
   ];
 
   interface Route {

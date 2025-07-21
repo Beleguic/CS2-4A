@@ -27,6 +27,14 @@ class ReadService {
       if (filters.is_adult !== undefined) {
         query.is_adult = filters.is_adult;
       }
+      
+      if (filters.brand) {
+        query.brand = filters.brand;
+      }
+      
+      if (filters.has_promotion !== undefined) {
+        query.has_active_promotion = filters.has_promotion;
+      }
 
       const options = {
         limit: filters.limit || 50,
@@ -67,6 +75,14 @@ class ReadService {
       
       if (filters.is_active !== undefined) {
         query.is_active = filters.is_active;
+      }
+      
+      if (filters.brand) {
+        query.brand = filters.brand;
+      }
+      
+      if (filters.has_promotion !== undefined) {
+        query.has_active_promotion = filters.has_promotion;
       }
 
       const options = {

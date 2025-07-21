@@ -12,6 +12,7 @@ module.exports = function (connection) {
     is_adult: { type: Boolean, default: false, index: true },
     reference: { type: String },
     tva: { type: Number },
+    brand: { type: String, index: true },
     created_at: { type: Date, default: Date.now, index: true },
     updated_at: { type: Date, default: Date.now },
     // Relations dénormalisées
@@ -46,6 +47,7 @@ module.exports = function (connection) {
   ProductSchema.index({ is_active: 1 });
   ProductSchema.index({ is_adult: 1 });
   ProductSchema.index({ price: 1 });
+  ProductSchema.index({ brand: 1 });
   ProductSchema.index({ created_at: -1 });
   ProductSchema.index({ 'categories.id': 1 });
   ProductSchema.index({ has_active_promotion: 1 });

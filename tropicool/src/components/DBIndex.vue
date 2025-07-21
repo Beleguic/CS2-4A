@@ -1,3 +1,7 @@
 <template>
-  <router-view></router-view>
+  <DashboardHome />
 </template>
+
+<script setup lang="ts">
+import DashboardHome from '../views/DashboardHome.vue'
+</script>

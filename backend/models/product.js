@@ -85,6 +85,11 @@ module.exports = function (sequelize) {
     tva: {
       type: DataTypes.DOUBLE,
       allowNull: false,
+    },
+    brand: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
     }
   }, {
     sequelize,

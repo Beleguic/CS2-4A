@@ -49,6 +49,7 @@ import Search from '../views/Search.vue';
 import DBStockView from "../views/DBStockView.vue";
 import DBStockGraph from "../views/DBStockGraph.vue";
 import AddAlert from '../views/AddAlert.vue';
+import AlertPreferences from '../views/AlertPreferences.vue';
 import NotFound from '../views/NotFound.vue';  // Import the NotFound component
 import ForcePasswordChange from '../views/ForcePasswordChange.vue';
 import DeleteAccount from '../views/DeleteAccount.vue';
@@ -559,6 +560,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/add-alert',
     name: 'AddAlert',
     component: AddAlert,
+  },
+  {
+    path: '/alert-preferences',
+    name: 'AlertPreferences',
+    component: AlertPreferences,
+    beforeEnter: isAuthenticated,
   },
   {
     path: '/:pathMatch(.*)*',  // Catch all route for 404

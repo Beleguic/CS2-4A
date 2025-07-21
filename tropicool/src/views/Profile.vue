@@ -67,6 +67,39 @@
       </div>
     </div>
     
+    <!-- Section Gestion des Alertes -->
+    <div class="alerts-section">
+      <h2>🔔 Mes Alertes et Notifications</h2>
+      <div class="alerts-info">
+        <p>
+          Gérez vos préférences de notifications pour rester informé des nouveautés, 
+          promotions et réapprovisionnements de vos produits préférés.
+        </p>
+      </div>
+      
+      <div class="alerts-summary" v-if="alertStore.hasActiveAlerts">
+        <div class="alert-stats">
+          <span class="stat-item">
+            <span class="stat-number">{{ alertStore.totalAlertCount }}</span>
+            <span class="stat-label">Alertes actives</span>
+          </span>
+        </div>
+      </div>
+      
+      <div class="alerts-actions">
+        <router-link 
+          :to="{ name: 'AlertPreferences' }" 
+          class="action-button alert-button"
+        >
+          🔧 Gérer mes Alertes
+        </router-link>
+        
+        <div v-if="!alertStore.hasActiveAlerts" class="no-alerts">
+          <p>Aucune alerte configurée. Configurez vos préférences pour recevoir des notifications personnalisées.</p>
+        </div>
+      </div>
+    </div>
+    
     <h2>Mes Commandes</h2>
     <div v-if="userOrders.length > 0" class="orders-list">
       <div v-for="order in userOrders" :key="order.id" class="order-item">
@@ -86,12 +119,14 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/authStore';
+import { useAlertStore } from '../stores/alertStore';
 import FormComponent from '../components/FormComponent.vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toast-notification';
 
 const $toast = useToast();
 const authStore = useAuthStore();
+const alertStore = useAlertStore();
 const userId = authStore.userId;
 
 const user = ref({
@@ -314,10 +349,11 @@ const redirectToForgotPassword = () => {
   router.push({ name: 'ForgotPassword' });
 };
 
-onMounted(() => {
+onMounted(async () => {
   if (authStore.isLoggedIn) {
     fetchUserData();
     fetchUserOrders();
+    await alertStore.initializeStore();
   } else {
     router.push({ name: 'Login' });
   }
@@ -522,6 +558,98 @@ onMounted(() => {
   padding: 0.25rem 0;
   color: #666;
   font-size: 0.9rem;
+}
+
+/* Styles pour la section des alertes */
+.alerts-section {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.alerts-info {
+  margin-bottom: 1.5rem;
+}
+
+.alerts-info p {
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.alerts-summary {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.alert-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #696BE2;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.alerts-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.alert-button {
+  background: #696BE2;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none;
+  text-align: center;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  display: inline-block;
+  width: fit-content;
+}
+
+.alert-button:hover {
+  background: #5a5cd1;
+  color: white;
+  text-decoration: none;
+}
+
+.no-alerts {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.no-alerts p {
+  color: #666;
+  margin: 0;
+  font-style: italic;
 }
 
 /* Responsive */

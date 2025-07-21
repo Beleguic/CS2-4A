@@ -1,12 +1,21 @@
 <template>
-  <li class="bg-white border border-main rounded-sm p-5 w-full transition-all">
+  <li class="bg-white border border-main rounded-sm p-5 w-full transition-all relative">
     <article class="flex flex-col justify-between gap-4 h-full">
       <section class="grid gap-2">
         <figure>
           <img :src="getImageUrl(product.image)" alt="Product Image" class="w-full h-full object-cover" />
         </figure>
         <h3 class="text-2xl text-main font-bold">{{ product.name }}</h3>
-        <p class="text-xl text-secondary font-medium">{{ product.price }} €</p>
+        <div class="price-container">
+          <p v-if="product.has_active_promotion && product.final_price" class="text-xl text-secondary font-medium">
+            <span class="original-price">{{ product.price }} €</span>
+            <span class="final-price">{{ product.final_price }} €</span>
+          </p>
+          <p v-else class="text-xl text-secondary font-medium">{{ product.price }} €</p>
+        </div>
+        <div v-if="product.has_active_promotion" class="promotion-badge">
+          <span>PROMO</span>
+        </div>
         <p v-if="product.is_adult" class="text-red-500 text-xs">Contient de l'alcool. À consommer avec modération.</p>
       </section>
       <footer class="button-container">
@@ -92,6 +101,37 @@ const getImageUrl = (path) => {
   font-weight: 500;
   color: #1D1F96;
   margin-bottom: 20px;
+}
+
+.price-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.final-price {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.promotion-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .alcohol-warning {

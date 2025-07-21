@@ -13,6 +13,7 @@ const productSchema = Joi.object({
   is_adult: Joi.boolean().optional(),
   reference: Joi.string().required(),
   tva: Joi.number().required(),
+  brand: Joi.string().optional(),
 });
 
 const getAllProductsWithStock = async (req, res, next) => {
@@ -65,7 +66,8 @@ const getAllProducts = async (req, res, next) => {
       is_adult: req.query.is_adult !== undefined ? req.query.is_adult === 'true' : undefined,
       has_promotion: req.query.has_promotion === 'true',
       search: req.query.search,
-      low_stock: req.query.low_stock === 'true'
+      low_stock: req.query.low_stock === 'true',
+      brand: req.query.brand
     };
 
     const products = await readService.getAllProducts(filters);
@@ -83,6 +85,7 @@ const getAllProducts = async (req, res, next) => {
       updated_at: product.updated_at,
       reference: product.reference,
       tva: product.tva,
+      brand: product.brand,
       categories: product.categories,
       stock: product.stock?.quantity || 0,
       final_price: product.final_price,
