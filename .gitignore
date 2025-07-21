@@ -20,3 +20,4 @@ uploads/*
 !.env.example
 .idea/*
 vite.config.ts.*
+.env
