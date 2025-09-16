@@ -14,12 +14,12 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import FormComponent from '../components/FormComponent.vue';
-import { useToast } from 'vue-toast-notification';
+import { useErrorHandler } from '../composables/useErrorHandler';
 
-const $toast = useToast();
+const { handleError, handleSuccess } = useErrorHandler();
 const email = ref('');
 
 const fields = [
@@ -30,7 +30,11 @@ const fields = [
   },
 ];
 
-const handleSubmit = async (formData) => {
+interface ForgotPasswordFormData {
+  email: string;
+}
+
+const handleSubmit = async (formData: ForgotPasswordFormData) => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/forgot-password`, {
       method: 'POST',
@@ -40,25 +44,14 @@ const handleSubmit = async (formData) => {
       body: JSON.stringify({ email: formData.email }),
     });
 
-    if (!response.ok) {
-      $toast.open({
-        message: 'Un lien de réinitialisation a été envoyé à votre adresse e-mail.',
-        type: 'success',
-        position: 'bottom-left',
-      }); 
+    if (response.ok) {
+      handleSuccess('Un lien de réinitialisation a été envoyé à votre adresse e-mail.');
+    } else {
+      const errorData = await response.json();
+      handleError(errorData.message || 'Erreur lors de l\'envoi de l\'email');
     }
-
-    $toast.open({
-      message: 'Un lien de réinitialisation a été envoyé à votre adresse e-mail.',
-      type: 'success',
-      position: 'bottom-left',
-    }); 
   } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
+    handleError(error, 'Erreur lors de l\'envoi de l\'email');
   }
 };
 </script>

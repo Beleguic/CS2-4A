@@ -14,9 +14,9 @@
 <script setup>
   import { ref, onMounted } from 'vue';
   import { useRoute } from 'vue-router';
-  import { useToast } from 'vue-toast-notification';
+  import { useToast } from '../composables/useToast';
 
-  const $toast = useToast();
+  const toast = useToast();
 
   const verified = ref(false);
   const route = useRoute();
@@ -32,18 +32,10 @@
             if (response.ok) {
                 verified.value = true;
             } else {
-              $toast.open({
-                message: 'Erreur! Veuillez recommencer!',
-                type: 'error',
-                position: 'bottom-left',
-              }); 
+              toast.apiError('Erreur lors de la vérification du compte'); 
             }
         } catch (error) {
-            $toast.open({
-              message: 'Erreur! Veuillez recommencer!',
-              type: 'error',
-              position: 'bottom-left',
-            });
+            toast.apiError(error, 'Erreur lors de la vérification du compte');
             verified.value = false;
         }
     } else {

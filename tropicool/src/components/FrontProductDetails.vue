@@ -19,9 +19,9 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AddToCart from '../views/AddToCart.vue'
-import { useToast } from 'vue-toast-notification';
+import { useToast } from '../composables/useToast';
 
-const $toast = useToast();
+const toast = useToast();
 
 interface Product {
   name: string;
@@ -39,11 +39,7 @@ onMounted(async () => {
     const productId = route.params.id as string;
     
     if (!productId) {
-      $toast.open({
-        message: 'ID de produit manquant',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      toast.warning('ID de produit manquant');
       router.push({ name: 'Product' });
       return;
     }
@@ -52,11 +48,7 @@ onMounted(async () => {
     console.log('response', response);
     
     if (!response.ok) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      toast.apiError('Erreur lors du chargement du produit');
       router.push({ name: 'Product' });
       return;
     }
@@ -70,11 +62,7 @@ onMounted(async () => {
   } catch (error) {
     console.error('Erreur lors du chargement du produit:', error);
     router.push({ name: 'Product' });
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
+    toast.apiError(error, 'Erreur lors du chargement du produit'); 
   }
 });
 </script>

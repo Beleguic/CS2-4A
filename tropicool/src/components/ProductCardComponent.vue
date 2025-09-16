@@ -21,9 +21,9 @@
 
 <script setup>
 import { defineProps } from 'vue';
-import { useToast } from 'vue-toast-notification';
+import { useToast } from '../composables/useToast';
 
-const $toast = useToast();
+const toast = useToast();
 
 const props = defineProps({
   product: {
@@ -37,11 +37,7 @@ const getImageUrl = (path) => {
   let relativePath = path;
 
   if (!path) {
-    $toast.open({
-      message: 'Erreur, veuillez recommencer',
-      type: 'error',
-      position: 'bottom-left',
-    });
+    toast.apiError('Erreur lors de la génération du lien');
     return '';
   }
 

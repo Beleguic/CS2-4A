@@ -1,9 +1,9 @@
 import { onBeforeMount } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { useToast } from 'vue-toast-notification';
+import { useToast } from '../composables/useToast';
 
-const $toast = useToast();
+const toast = useToast();
 
 interface CartProductData {
   product_id: string;
@@ -59,22 +59,14 @@ export default function useCartCheck() {
               difference: difference
             });
           } catch (stockError) {
-            $toast.open({
-              message: 'Erreur! Veuillez recommencer!',
-              type: 'error',
-              position: 'bottom-left',
-            });       
+            toast.apiError(stockError, 'Erreur lors de la vérification du stock');       
           }
         }
 
         await axios.delete(`${apiUrl}/cart/${id}`);
       }
     } catch (error) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors de la vérification du panier'); 
     }
   };
 

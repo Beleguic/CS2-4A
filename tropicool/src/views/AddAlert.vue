@@ -30,9 +30,9 @@
 <script setup>
   import { ref, onMounted } from 'vue';
   import axios from 'axios';
-  import { useToast } from 'vue-toast-notification';
+  import { useToast } from '../composables/useToast';
 
-  const $toast = useToast();
+  const toast = useToast();
   const formData = ref({
     alert_type_id: null,
     product_id: '',
@@ -48,11 +48,7 @@
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/alert_types`);
       alertTypes.value = response.data;
     } catch (error) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors du chargement des données'); 
     }
   };
   
@@ -61,11 +57,7 @@
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/product/list`);
       products.value = response.data;
     } catch (error) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors du chargement des données'); 
     }
   };
   
@@ -74,11 +66,7 @@
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/category/list`);
       categories.value = response.data;
     } catch (error) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors du chargement des données'); 
     }
   };
   
@@ -89,18 +77,10 @@
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      $toast.open({
-        message: 'Alerte ajoutée avec succès!',
-        type: 'success',
-        position: 'bottom-left',
-      }); 
+      toast.saved('Alerte'); 
     } catch (error) {
       console.error('Error adding alert:', error);
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors du chargement des données'); 
     }
   };
   

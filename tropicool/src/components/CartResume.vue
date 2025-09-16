@@ -49,9 +49,9 @@ import { computed, ref } from 'vue';
 import axios from 'axios';
 import { defineProps, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
-  import { useToast } from 'vue-toast-notification';
+  import { useToast } from '../composables/useToast';
 
-  const $toast = useToast();
+  const toast = useToast();
 
 interface PromotionCode {
   code: string;
@@ -106,11 +106,7 @@ const appliedPromoCode = ref(props.promoCode);
 
 const handleApplyPromoCode = async () => {
   if (!localPromoCode.value) {
-    $toast.open({
-        message: 'Code promo invalide!',
-        type: 'error',
-        position: 'bottom-left',
-      });
+    toast.validationError('Code promo invalide!');
     emit('update:reduction', 0);
     return;
   }
@@ -122,37 +118,21 @@ const handleApplyPromoCode = async () => {
     });
 
       if (response.data.length === 1 && typeof response.data[0].reduction === 'number') {
-        $toast.open({
-          message: 'Code promo appliqué avec succès!',
-          type: 'success',
-          position: 'bottom-left',
-        });
+        toast.success('Code promo appliqué avec succès!');
         emit('update:reduction', response.data[0].reduction);
         appliedPromoCode.value = localPromoCode.value;
       } else {
-        $toast.open({
-          message: 'Code promo invalide!',
-          type: 'error',
-          position: 'bottom-left',
-        });
+        toast.validationError('Code promo invalide!');
         emit('update:reduction', 0);
       }
     } catch (error) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors de l\'application du code promo'); 
       emit('update:reduction', 0);
     }
   };
 
   const handleRemovePromoCode = () => {
-    $toast.open({
-      message: 'Code promo supprimé!',
-      type: 'success',
-      position: 'bottom-left',
-    }); 
+    toast.success('Code promo supprimé!'); 
     emit('update:reduction', 0);
 
     appliedPromoCode.value = '';

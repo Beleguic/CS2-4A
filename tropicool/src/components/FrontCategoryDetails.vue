@@ -34,9 +34,9 @@ import { ref, onMounted, nextTick, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ProductCardComponent from '../components/ProductCardComponent.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
-import { useToast } from 'vue-toast-notification';
+import { useToast } from '../composables/useToast';
 
-const $toast = useToast();
+const toast = useToast();
 
 interface Product {
   id: string;
@@ -70,11 +70,7 @@ onMounted(async () => {
     const categoryId = route.params.id as string;
     
     if (!categoryId) {
-      $toast.open({
-        message: 'ID de catégorie manquant',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      toast.warning('ID de catégorie manquant');
       return;
     }
 
@@ -90,11 +86,7 @@ onMounted(async () => {
     console.log('response :', response);
 
     if (!response.ok) {
-      $toast.open({
-        message: 'Erreur, veuillez recommencer',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      toast.apiError('Erreur lors du chargement de la catégorie');
       return;
     }
 
@@ -108,11 +100,7 @@ onMounted(async () => {
     }
   } catch (error) {
     console.error('Erreur lors du chargement de la catégorie:', error);
-    $toast.open({
-      message: 'Erreur, veuillez recommencer',
-      type: 'error',
-      position: 'bottom-left',
-    });
+    toast.apiError(error, 'Erreur lors du chargement de la catégorie');
   } finally {
     loading.value = false;
   }

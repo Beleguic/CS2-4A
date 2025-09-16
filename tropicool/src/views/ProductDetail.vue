@@ -40,9 +40,9 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import AddToCart from './AddToCart.vue';
-import { useToast } from 'vue-toast-notification';
+import { useToast } from '../composables/useToast';
 
-const $toast = useToast();
+const toast = useToast();
 const authStore = useAuthStore();
 const userId = authStore.userId;
 
@@ -77,11 +77,7 @@ const fetchProduct = async () => {
     await fetchAlertTypes();
     await fetchUserAlerts();
   } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
+    toast.apiError(error, 'Erreur lors du chargement du produit'); 
   }
 };
 
@@ -95,11 +91,7 @@ const fetchAlertTypes = async () => {
     });
     alertTypes.value = await response.json();
   } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
+    toast.apiError(error, 'Erreur lors du chargement du produit'); 
   }
 };
 
@@ -118,11 +110,7 @@ const fetchUserAlerts = async () => {
     selectedAlerts.value = productAlerts.map(alert => alert.alert_type_id);
     initialAlerts.value = productAlerts.map(alert => ({ alert_type_id: alert.alert_type_id, id: alert.id }));
   } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
+    toast.apiError(error, 'Erreur lors du chargement du produit'); 
   }
 };
 
@@ -149,18 +137,10 @@ const saveAlertPreferences = async () => {
         body: JSON.stringify(alert)
       });
       if (!response.ok) {
-          $toast.open({
-          message: 'Erreur! Veuillez recommencer!',
-          type: 'error',
-          position: 'bottom-left',
-        }); 
+          toast.apiError(error, 'Erreur lors du chargement du produit'); 
       }
     } catch (error) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors du chargement du produit'); 
       return;
     }
   }
@@ -176,28 +156,16 @@ const saveAlertPreferences = async () => {
       if (!response.ok) {
         const errorData = await response.json();
         if(errorData.error){
-          $toast.open({
-            message: 'Erreur! Veuillez recommencer!',
-            type: 'error',
-            position: 'bottom-left',
-          }); 
+          toast.apiError(error, 'Erreur lors du chargement du produit'); 
         }
       }
     } catch (error) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors du chargement du produit'); 
       return;
     }
   }
 
-  $toast.open({
-    message: 'Alertes mises à jour avec succès',
-    type: 'success',
-    position: 'bottom-left',
-  }); 
+  toast.success('Alertes mises à jour avec succès'); 
 
   initialAlerts.value = selectedAlerts.value.map(alertTypeId => {
     const alert = initialAlerts.value.find(a => a.alert_type_id === alertTypeId);
@@ -218,29 +186,17 @@ const checkAge = async () => {
       const age = calculateAge(new Date(user.dateOfBirth));
       if (age < 18) {
         isAllowed.value = false;
-        $toast.open({
-          message: 'Vous devez être majeur pour voir ce produit!',
-          type: 'error',
-          position: 'bottom-left',
-        }); 
+        toast.warning('Vous devez être majeur pour voir ce produit!'); 
       } else {
         isAllowed.value = true;
       }
     } catch (error) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors du chargement du produit'); 
       isAllowed.value = false;
     }
   } else {
     isAllowed.value = false;
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
+    toast.apiError(error, 'Erreur lors du chargement du produit'); 
   }
 };
 

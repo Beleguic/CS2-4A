@@ -25,18 +25,19 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/authStore';
 import FormComponent from '../components/FormComponent.vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'vue-toast-notification';
+import { useErrorHandler } from '../composables/useErrorHandler';
+import type { User, Order } from '../types';
 
-const $toast = useToast();
+const { handleError, handleSuccess } = useErrorHandler();
 const authStore = useAuthStore();
 const userId = authStore.userId;
 
-const user = ref({
+const user = ref<Partial<User>>({
   email: '',
   username: '',
   firstName: '',
@@ -45,7 +46,8 @@ const user = ref({
   isSubscribedToNewsletter: false,
 });
 
-const userOrders = ref([]);
+const userOrders = ref<Order[]>([]);
+const userAlerts = ref<any[]>([]);
 
 const fields = ref([
   {
@@ -75,13 +77,13 @@ const fetchUserData = async () => {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     });
+    
     if (!response.ok) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      const errorData = await response.json();
+      handleError(errorData.message || 'Erreur lors du chargement du profil');
+      return;
     }
+    
     const data = await response.json();
     user.value.email = data.email;
     user.value.username = data.username;
@@ -89,59 +91,53 @@ const fetchUserData = async () => {
     user.value.lastName = data.lastName;
     user.value.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : '';
     user.value.isSubscribedToNewsletter = data.isSubscribedToNewsletter || false;
-    userAlerts.value = data.alerts.map(alert => ({
-      ...alert,
-      created_at: new Date(alert.created_at).toLocaleString('fr-FR'),
-      alertType: {
-        type: alert.alertType?.type || ''
-      },
-      product: {
-        name: alert.product?.name || ''
-      },
-      category: {
-        name: alert.category?.name || ''
-      }
-    }));
+    
+    if (data.alerts) {
+      userAlerts.value = data.alerts.map((alert: any) => ({
+        ...alert,
+        created_at: new Date(alert.created_at).toLocaleString('fr-FR'),
+        alertType: {
+          type: alert.alertType?.type || ''
+        },
+        product: {
+          name: alert.product?.name || ''
+        },
+        category: {
+          name: alert.category?.name || ''
+        }
+      }));
+    }
   } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
+    handleError(error, 'Erreur lors du chargement du profil');
   }
 };
 
 const fetchUserOrders = async () => {
   try {
-    console.log('Fetching user orders for userId:', userId);
     const response = await fetch(`${import.meta.env.VITE_API_URL}/order?userId=${userId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     });
+    
     if (!response.ok) {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      const errorData = await response.json();
+      handleError(errorData.message || 'Erreur lors du chargement des commandes');
+      return;
     }
+    
     const data = await response.json();
-    userOrders.value = data.map(order => ({
+    userOrders.value = data.map((order: any) => ({
       ...order,
       created_at: new Date(order.created_at).toLocaleString('fr-FR'),
       isPayed: order.isPayed ? 'Oui' : 'Non'
     }));
   } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    }); 
+    handleError(error, 'Erreur lors du chargement des commandes');
   }
 };
 
-const handleSubmit = async (formData) => {
+const handleSubmit = async (formData: Partial<User>) => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}`, {
       method: 'PATCH',
@@ -151,24 +147,20 @@ const handleSubmit = async (formData) => {
       },
       body: JSON.stringify(formData)
     });
+    
     if (!response.ok) {
-      throw new Error('Failed to update profile');
+      const errorData = await response.json();
+      handleError(errorData.message || 'Erreur lors de la mise à jour du profil');
+      return;
     }
-    $toast.open({
-      message: 'Votre profil a été modifié !',
-      type: 'success',
-      position: 'bottom-left',
-    });
+    
+    handleSuccess('Votre profil a été modifié !');
   } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer! !',
-      type: 'error',
-      position: 'bottom-left',
-    });
+    handleError(error, 'Erreur lors de la mise à jour du profil');
   }
 };
 
-const handleDeleteAlert = async (id) => {
+const handleDeleteAlert = async (id: string) => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/alert/${id}`, {
       method: 'DELETE',
@@ -176,26 +168,16 @@ const handleDeleteAlert = async (id) => {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     });
+    
     if (response.status === 204) {
       userAlerts.value = userAlerts.value.filter(alert => alert.id !== id);
-      $toast.open({
-        message: 'Alerte supprimée avec succès',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      handleSuccess('Alerte supprimée avec succès');
     } else {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      const errorData = await response.json();
+      handleError(errorData.message || 'Erreur lors de la suppression de l\'alerte');
     }
   } catch (error) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    });
+    handleError(error, 'Erreur lors de la suppression de l\'alerte');
   }
 };
 

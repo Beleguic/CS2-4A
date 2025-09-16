@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { useToast } from 'vue-toast-notification';
+import { useToast } from '../composables/useToast';
 
-const $toast = useToast();
+const toast = useToast();
 import { forEachChild } from 'typescript';
 
 interface Product {
