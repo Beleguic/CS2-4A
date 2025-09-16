@@ -70,14 +70,6 @@ module.exports = function (sequelize) {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
     reference: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -90,7 +82,9 @@ module.exports = function (sequelize) {
     sequelize,
     modelName: 'Product',
     tableName: 'products',
-    timestamps: false,
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   Product.afterUpdate(async (product, options) => {

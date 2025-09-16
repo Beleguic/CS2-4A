@@ -142,21 +142,13 @@ module.exports = (sequelize) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      allowNull: false,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      allowNull: false,
-    }
   }, {
     sequelize,
     modelName: 'User',
     tableName: 'users',
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
     hooks: {
       beforeCreate: async (user) => {
         user.password = await User.hashPassword(user.password);
@@ -165,11 +157,8 @@ module.exports = (sequelize) => {
         if (options.fields.includes('password')) {
           user.password = await User.hashPassword(user.password);
         }
-        user.updated_at = new Date();
       }
-    },
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    }
   });
 
   return User;

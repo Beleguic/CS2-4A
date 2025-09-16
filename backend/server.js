@@ -73,6 +73,84 @@ app.use('/product_promotion', ProductPromotionRouter);
 app.use('/promotion_code', PromotionRouter);
 app.use('/stripe', StripeRooter);
 
+// Middleware de gestion d'erreurs global
+app.use((err, req, res, next) => {
+    console.error('Erreur globale:', err);
+    
+    // Erreur de validation Joi
+    if (err.isJoi) {
+        return res.status(400).json({
+            error: 'Erreur de validation',
+            details: err.details.map(detail => detail.message)
+        });
+    }
+    
+    // Erreur de fichier Multer
+    if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({
+            error: 'Fichier trop volumineux',
+            message: 'La taille du fichier ne doit pas dépasser 5MB'
+        });
+    }
+    
+    // Erreur de type de fichier Multer
+    if (err.message && err.message.includes('format allowed')) {
+        return res.status(400).json({
+            error: 'Type de fichier non autorisé',
+            message: 'Seuls les fichiers .png, .jpg, .jpeg, .webp sont autorisés'
+        });
+    }
+    
+    // Erreur Sequelize
+    if (err.name === 'SequelizeValidationError') {
+        return res.status(400).json({
+            error: 'Erreur de validation de données',
+            details: err.errors.map(e => e.message)
+        });
+    }
+    
+    if (err.name === 'SequelizeUniqueConstraintError') {
+        return res.status(409).json({
+            error: 'Conflit de données',
+            message: 'Cette ressource existe déjà'
+        });
+    }
+    
+    // Erreur JWT
+    if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+            error: 'Token invalide',
+            message: 'Votre session a expiré, veuillez vous reconnecter'
+        });
+    }
+    
+    if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({
+            error: 'Token expiré',
+            message: 'Votre session a expiré, veuillez vous reconnecter'
+        });
+    }
+    
+    // Erreur par défaut
+    const statusCode = err.statusCode || 500;
+    const message = process.env.NODE_ENV === 'production' 
+        ? 'Une erreur interne est survenue' 
+        : err.message;
+    
+    res.status(statusCode).json({
+        error: 'Erreur interne du serveur',
+        message: message,
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+});
+
+// Middleware pour les routes non trouvées
+app.use('*', (req, res) => {
+    res.status(404).json({
+        error: 'Route non trouvée',
+        message: `La route ${req.method} ${req.originalUrl} n'existe pas`
+    });
+});
 
 app.listen(process.env.PORT, () => {
     console.log("Server running on port " + process.env.PORT);

@@ -48,16 +48,14 @@ module.exports = function (sequelize) {
     stripe_payment_intent_id: {
         type: DataTypes.STRING,
         allowNull: true,
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
     }
   }, {
     sequelize,
     modelName: 'Order',
     tableName: 'orders',
-    timestamps: false,
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
   Order.associate = function(models) {
