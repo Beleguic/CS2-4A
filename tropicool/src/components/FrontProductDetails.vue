@@ -36,7 +36,19 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 
 onMounted(async () => {
   try {
-    const response = await fetch(`${apiUrl}/product/${route.params.id}?frontend=true`);
+    const productId = route.params.id as string;
+    
+    if (!productId) {
+      $toast.open({
+        message: 'ID de produit manquant',
+        type: 'error',
+        position: 'bottom-left',
+      });
+      router.push({ name: 'Product' });
+      return;
+    }
+
+    const response = await fetch(`${apiUrl}/product/${productId}?frontend=true`);
     console.log('response', response);
     
     if (!response.ok) {
@@ -44,9 +56,10 @@ onMounted(async () => {
         message: 'Erreur! Veuillez recommencer!',
         type: 'error',
         position: 'bottom-left',
-      }); 
+      });
+      router.push({ name: 'Product' });
+      return;
     }
-
 
     const data = await response.json();
     if (data.is_active) {
@@ -55,6 +68,7 @@ onMounted(async () => {
       router.push({ name: 'Product' });
     }
   } catch (error) {
+    console.error('Erreur lors du chargement du produit:', error);
     router.push({ name: 'Product' });
     $toast.open({
       message: 'Erreur! Veuillez recommencer!',

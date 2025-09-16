@@ -10,7 +10,7 @@
         <p v-if="product.is_adult" class="text-red-500 text-xs">Contient de l'alcool. À consommer avec modération.</p>
       </section>
       <footer class="button-container">
-        <router-link :to="{ name: 'ProductPage', params: { id: product.name } }" class="add-to-cart-button">
+        <router-link :to="{ name: 'ProductPage', params: { id: product.id || product.name } }" class="add-to-cart-button">
           <img src="/Iconfrigo.png" alt="Cart Icon" class="cart-icon" />
           Voir le produit
         </router-link>  
