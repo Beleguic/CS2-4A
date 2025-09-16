@@ -26,21 +26,17 @@ import FooterComponent from './components/FooterComponent.vue';
 import DashboardSidebar from './components/DashboardSidebar.vue';
 import DashboardNavbar from './components/DashboardNavbar.vue';
 import ScrollToTopButton from './components/ScrollToTopButton.vue';
-import { useToast } from 'vue-toast-notification';
+import { useToast } from './composables/useToast';
 
 const route = useRoute();
-const $toast = useToast();
+const toast = useToast();
 
 const isDashboardRoute = computed(() => route.path.startsWith('/dashboard'));
 
 useCartCheck();
 
 onMounted(() => {
-  $toast.open({
-    message: 'Bievenue sur Troupicool !',
-    type: 'info',
-    position: 'bottom-left',
-  });
+  toast.info('Bienvenue sur Troupicool !');
 });
 </script>
 

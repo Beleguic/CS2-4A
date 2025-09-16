@@ -1,5 +1,6 @@
-import { reactive } from 'vue';
+import { reactive, computed } from 'vue';
 import { z, ZodIssue, ZodObject } from 'zod';
+import { useErrorHandler } from './useErrorHandler';
 
 interface Field {
   type: string;
@@ -21,19 +22,30 @@ interface Errors {
 }
 
 export function useFormValidation(fields: FieldGroup[]) {
+  const { handleError } = useErrorHandler();
   const formData: FormData = reactive({});
   const errors: Errors = reactive({});
+  const isSubmitting = reactive({ value: false });
 
+  // Initialiser les données du formulaire
   fields.forEach(fieldGroup => {
     fieldGroup.field.forEach(subFieldArray => {
       subFieldArray.forEach(subField => {
         if (subField.type === 'checkbox') {
           formData[subField.name] = false;
+        } else if (subField.type === 'number') {
+          formData[subField.name] = 0;
         } else {
           formData[subField.name] = '';
         }
       });
     });
+  });
+
+  // Computed pour vérifier si le formulaire est valide
+  const isValid = computed(() => {
+    return Object.keys(errors).length === 0 && 
+           Object.values(errors).every(error => error === '');
   });
 
   const schema: ZodObject<any> = z.object(
@@ -68,14 +80,15 @@ export function useFormValidation(fields: FieldGroup[]) {
   );
 
   const validateForm = () => {
+    resetErrors();
     const result = schema.safeParse(formData);
     if (!result.success) {
       result.error.errors.forEach((err: ZodIssue) => {
         errors[err.path[0] as string] = err.message;
       });
-      return errors;
+      return false;
     }
-    return {};
+    return true;
   };
 
   const resetErrors = () => {
@@ -84,10 +97,44 @@ export function useFormValidation(fields: FieldGroup[]) {
     });
   };
 
+  const resetForm = () => {
+    Object.keys(formData).forEach(key => {
+      const field = fields.flatMap(group => group.field.flat()).find(f => f.name === key);
+      if (field?.type === 'checkbox') {
+        formData[key] = false;
+      } else if (field?.type === 'number') {
+        formData[key] = 0;
+      } else {
+        formData[key] = '';
+      }
+    });
+    resetErrors();
+  };
+
+  const submitForm = async (submitFn: (data: FormData) => Promise<void>) => {
+    if (!validateForm()) {
+      handleError('Veuillez corriger les erreurs du formulaire');
+      return;
+    }
+
+    isSubmitting.value = true;
+    try {
+      await submitFn(formData);
+    } catch (error) {
+      handleError(error, 'Erreur lors de la soumission du formulaire');
+    } finally {
+      isSubmitting.value = false;
+    }
+  };
+
   return {
     formData,
     errors,
+    isValid,
+    isSubmitting: isSubmitting.value,
     validateForm,
     resetErrors,
+    resetForm,
+    submitForm,
   };
 }

@@ -98,9 +98,9 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ProductCardComponent from '../components/ProductCardComponent.vue';
 import iconFilterSetting from '../assets/icons/filter-setting.svg';
-import { useToast } from 'vue-toast-notification';
+import { useErrorHandler } from '../composables/useErrorHandler';
 
-const $toast = useToast();
+const { toast } = useErrorHandler();
 const products = ref<any[]>([]);
 const categories = ref<any[]>([]);
 const selectedCategory = ref<string>('');
@@ -141,11 +141,8 @@ const fetchCategories = async () => {
     });
 
     if (!response.ok) {
-      $toast.open({
-        message: 'Erreur, veuillez recommencer',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      toast.apiError('Erreur lors du chargement des catégories');
+      return;
     }
 
     const data = await response.json();
@@ -153,11 +150,7 @@ const fetchCategories = async () => {
 
     syncFiltersWithRoute();
   } catch (error) {
-    $toast.open({
-      message: 'Erreur, veuillez recommencer',
-      type: 'error',
-      position: 'bottom-left',
-    });
+    toast.apiError(error, 'Erreur lors du chargement des catégories');
   }
 };
 
@@ -196,21 +189,14 @@ const fetchProducts = async () => {
     });
 
     if (!response.ok) {
-        $toast.open({
-        message: 'Erreur, veuillez recommencer',
-        type: 'error',
-        position: 'bottom-left',
-      });
+      toast.apiError('Erreur lors du chargement des produits');
+      return;
     }
 
     const data = await response.json();
     products.value = Array.isArray(data) ? data : [];
   } catch (error) {
-    $toast.open({
-      message: 'Erreur, veuillez recommencer',
-      type: 'error',
-      position: 'bottom-left',
-    });
+    toast.apiError(error, 'Erreur lors du chargement des produits');
     products.value = [];
   }
 };

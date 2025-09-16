@@ -1,14 +1,4 @@
 <template>
-    <!--
-    <div class="relative w-full bg-custom">
-        <div class="flex flex-col items-center gap-4 min-h-screen">
-            <div class="w-8/12">
-                <h2 class="text-2xl font-bold mb-1 text-left text-main mb-4">Procéder au paiement</h2>
-                <button @click="handlePayment" class="bg-main hover:bg-secondary text-white py-2 px-4 uppercase text-lg">Procéder au paiement</button>
-
-            </div>
-        </div>
-    </div>-->
     <div class="relative w-full bg-custom">
         <div class="flex flex-col items-center gap-4 min-h-screen">
             <div class="w-full max-w-5xl bg-main p-8 rounded-3xl shadow-lg mb-16 grid gap-8">
@@ -23,7 +13,6 @@
             </div>
         </div>
     </div>
-
 </template>
 
 <script setup lang="ts">
@@ -35,7 +24,6 @@ import { useAuthStore } from "../stores/authStore.ts";
 import { useStripeCheckout } from "../composables/useStripeCheckout.ts";
 
 const authStore = useAuthStore();
-const isLoggedIn = ref(authStore.isLoggedIn);
 const { createCheckoutSession, redirectToCheckout, loading: stripeLoading, error: stripeError } = useStripeCheckout();
 
 const router = useRouter();

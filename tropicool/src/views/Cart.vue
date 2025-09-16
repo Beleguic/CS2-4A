@@ -37,9 +37,9 @@
   import { ref, onMounted, computed } from 'vue';
   import axios from 'axios';
   import { useAuthStore } from '../stores/authStore';
-  import { useToast } from 'vue-toast-notification';
+  import { useToast } from '../composables/useToast';
 
-  const $toast = useToast();
+  const toast = useToast();
 
   interface Stock {
     id: string;
@@ -139,18 +139,10 @@
           });
         }*/
 
-        $toast.open({
-          message: 'Panier mis-à-jour !',
-          type: 'success',
-          position: 'bottom-left',
-        }); 
+        toast.updated('Panier'); 
 
       } catch (error) {
-        $toast.open({
-          message: 'Erreur! Veuillez recommencer!',
-          type: 'error',
-          position: 'bottom-left',
-        }); 
+        toast.apiError(error, 'Erreur lors de la mise à jour du panier'); 
       }
     }
   };

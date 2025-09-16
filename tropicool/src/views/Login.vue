@@ -22,9 +22,9 @@
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import FormComponent from '../components/FormComponent.vue';
-import { useToast } from 'vue-toast-notification';
+import { useErrorHandler } from '../composables/useErrorHandler';
 
-const $toast = useToast();
+const { handleError, handleSuccess, toast } = useErrorHandler();
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -41,26 +41,13 @@ const fields = [
 const login = async (formData: { email: string, password: string }) => {
   try {
     await auth.login(formData.email, formData.password);
+    toast.success('Connexion réussie !');
     router.push('/');
   } catch (error: unknown) {
-    $toast.open({
-      message: 'Erreur! Veuillez recommencer!',
-      type: 'error',
-      position: 'bottom-left',
-    });    
-    
     if ((error as Error).message.includes("expiré")) {
-      $toast.open({
-        message: 'Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser.',
-        type: 'error',
-        position: 'bottom-left',
-      });  
+      toast.warning('Votre mot de passe est expiré. Veuillez vérifier votre e-mail pour le réinitialiser.');
     } else {
-      $toast.open({
-        message: 'Erreur! Veuillez recommencer!',
-        type: 'error',
-        position: 'bottom-left',
-      }); 
+      toast.apiError(error, 'Erreur lors de la connexion');
     }
   }
 };

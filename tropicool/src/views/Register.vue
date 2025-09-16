@@ -18,13 +18,13 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import FormComponent from '../components/FormComponent.vue';
-import { useToast } from 'vue-toast-notification';
+import { useToast } from '../composables/useToast';
 
-const $toast = useToast();
+const toast = useToast();
 const router = useRouter();
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -42,22 +42,25 @@ const fields = [
     },
 ];
 
-const register = async (formData) => {
+interface RegisterFormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  lastName: string;
+  firstName: string;
+  username: string;
+  birthday: string;
+  acceptTerms: boolean;
+}
+
+const register = async (formData: RegisterFormData) => {
   if (formData.password !== formData.confirmPassword) {
-    $toast.open({
-      message: 'Les mots de passe ne correspondent pas !',
-      type: 'error',
-      position: 'bottom-left',
-    });
+    toast.validationError('Les mots de passe ne correspondent pas !');
     return;
   }
 
   if (!formData.acceptTerms) {
-    $toast.open({
-      message: 'Vous devez accepter les conditions générales d\'utilisation.',
-      type: 'error',
-      position: 'bottom-left',
-    });
+    toast.validationError('Vous devez accepter les conditions générales d\'utilisation.');
     return;
   }
 
@@ -82,25 +85,14 @@ const register = async (formData) => {
     const responseData = await response.json();
 
     if (response.ok) {
-      $toast.open({
-        message: "Inscription réussie! Vérifiez votre email pour confirmer votre inscription",
-        type: 'success',
-        position: 'bottom-left',
-      });
+      toast.success('Inscription réussie! Vérifiez votre email pour confirmer votre inscription');
       router.push('/');
     } else {
-      $toast.open({
-        message: "Échec lors de l'inscription, veuillez recommencer",
-        type: 'error',
-        position: 'bottom-left',
-      });
+      const errorData = await response.json();
+      toast.apiError(errorData, "Échec lors de l'inscription, veuillez recommencer");
     }
   } catch (error) {
-    $toast.open({
-      message: "Erreur, veuillez recommencer",
-      type: 'error',
-      position: 'bottom-left',
-    });
+    toast.apiError(error, 'Erreur lors de l\'inscription');
   }
 };
 </script>

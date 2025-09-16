@@ -27,9 +27,9 @@
   import axios from 'axios';
   import Cards from '../components/CardsComponent.vue';
   import LoadingSpinner from '../components/LoadingSpinner.vue';
-  import { useToast } from 'vue-toast-notification';
+  import { useToast } from '../composables/useToast';
 
-  const $toast = useToast();
+  const toast = useToast();
 
   interface Category {
     id: number;
@@ -52,11 +52,7 @@
           categories.value = response.data;
       } catch (error) {
         console.error('Erreur lors du chargement des catégories:', error);
-        $toast.open({
-          message: 'Erreur! Veuillez recommencer!',
-          type: 'error',
-          position: 'bottom-left',
-        }); 
+        toast.apiError(error, 'Erreur lors du chargement des catégories'); 
       } finally {
         loading.value = false;
       }
