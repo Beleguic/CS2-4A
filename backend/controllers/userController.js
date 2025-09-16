@@ -57,7 +57,7 @@ const updateUser = async (req, res, next) => {
 
       res.json(user);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
   } catch (e) {
     console.error('Error updating user:', e);
@@ -120,7 +120,7 @@ const getUserById = async (req, res, next) => {
 
       res.json(userResponse);
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
   } catch (e) {
     console.error('Error fetching user by ID:', e);
@@ -160,12 +160,12 @@ const deleteUser = async (req, res, next) => {
         },
       });
       if (nbDeleted === 1) {
-        res.sendStatus(204);
+        res.status(204).json({ message: 'Utilisateur supprimé avec succès' });
       } else {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Utilisateur non trouvé' });
       }
     } else {
-      res.sendStatus(404);
+      res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
   } catch (e) {
     console.error('Error deleting user:', e);

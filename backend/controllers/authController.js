@@ -25,7 +25,7 @@ const login = async (req, res) => {
 
     if (!user) {
       console.log('User not found');
-      return res.status(401).json({ message: 'Authentication failed', loginAttempts: 0 });
+      return res.status(404).json({ message: 'Utilisateur non trouvé', loginAttempts: 0 });
     }
 
     if (!user.is_verified) {
