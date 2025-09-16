@@ -1,6 +1,7 @@
 <template>
   <div class="p-4">
-    <template v-if="category">
+    <LoadingSpinner v-if="loading" :loading="true" />
+    <template v-else-if="category">
       <div class="max-w-[80%] mx-auto mt-8 grid gap-16">
         <div id="category-description" class="grid grid-cols-2 gap-4 items-center">
           <div class="flex items-center justify-center">
@@ -32,6 +33,7 @@
 import { ref, onMounted, nextTick, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import ProductCardComponent from '../components/ProductCardComponent.vue';
+import LoadingSpinner from '../components/LoadingSpinner.vue';
 import { useToast } from 'vue-toast-notification';
 
 const $toast = useToast();
@@ -51,6 +53,7 @@ interface Category {
 
 const route = useRoute();
 const category = ref<Category | null>(null);
+const loading = ref(true);
 const apiUrl = import.meta.env.VITE_API_URL as string;
 const maxWidth = ref<number>(0);
 const productsList = ref<HTMLUListElement | null>(null);
@@ -64,9 +67,20 @@ const updateMaxWidth = () => {
 
 onMounted(async () => {
   try {
+    const categoryId = route.params.id as string;
+    
+    if (!categoryId) {
+      $toast.open({
+        message: 'ID de catégorie manquant',
+        type: 'error',
+        position: 'bottom-left',
+      });
+      return;
+    }
+
     const params = new URLSearchParams({
       frontend: 'true',
-      url: route.params.id as string,
+      url: categoryId,
     });
 
     const response = await fetch(`${apiUrl}/category?${params.toString()}`, {
@@ -81,6 +95,7 @@ onMounted(async () => {
         type: 'error',
         position: 'bottom-left',
       });
+      return;
     }
 
     const data = await response.json();
@@ -92,11 +107,14 @@ onMounted(async () => {
       category.value = null;
     }
   } catch (error) {
+    console.error('Erreur lors du chargement de la catégorie:', error);
     $toast.open({
       message: 'Erreur, veuillez recommencer',
       type: 'error',
       position: 'bottom-left',
     });
+  } finally {
+    loading.value = false;
   }
 });
 

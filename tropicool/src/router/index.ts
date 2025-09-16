@@ -52,6 +52,8 @@ import NotFound from '../views/NotFound.vue';  // Import the NotFound component
 
 import Payment from '../components/Payment.vue';
 import Confirmation from '../views/Confirmation.vue';
+import PaymentSuccess from '../views/PaymentSuccess.vue';
+import PaymentCancel from '../views/PaymentCancel.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -562,6 +564,16 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Confirmation',
     component: Confirmation,
     props: true,
+  },
+  {
+    path: '/payment-success',
+    name: 'PaymentSuccess',
+    component: PaymentSuccess,
+  },
+  {
+    path: '/payment-cancel',
+    name: 'PaymentCancel',
+    component: PaymentCancel,
   }
 
 ];

@@ -41,6 +41,14 @@ module.exports = function (sequelize) {
         type: DataTypes.JSON,
         allowNull: false,
     },
+    stripe_session_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    stripe_payment_intent_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
