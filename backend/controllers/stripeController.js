@@ -7,38 +7,34 @@ const stripeSchema = Joi.object({
     amount: Joi.number().integer().min(0).required(),
 });
 
+const endpointSecret = 'gfqfdqsjhfldqshjflqsdhjflk';
+
 const createPaymentIntent = async (req, res, next) => {
-    console.log("createPaymentIntent");
-    const { amount } = req.body;
+    const sig = req.headers['stripe-signature'];
 
-
-    // Validation des données d'entrée
-    const { error } = stripeSchema.validate({ amount });
-    if (error) {
-        return res.status(400).send({ error: error.details[0].message });
-    }
-
+    let event;
     try {
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: 'eur',
-        });
-
-        console.log("paymentIntent", paymentIntent);
-
-        res.send({
-            clientSecret: paymentIntent.client_secret,
-        });
-    } catch (error) {
-        // Gestion des erreurs Stripe
-        if (error.type === 'StripeCardError') {
-            // Les erreurs générées par les paiements avec la carte
-            return res.status(400).send({ error: error.message });
-        } else {
-            // Autres erreurs Stripe
-            return res.status(500).send({ error: 'Une erreur est survenue lors de la création du PaymentIntent' });
-        }
+        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    } catch (err) {
+        console.log(`⚠️  Webhook signature verification failed: ${err.message}`);
+        return res.sendStatus(400);
     }
+
+    // Gérer les différents types d'événements
+    switch (event.type) {
+        case 'payment_intent.succeeded':
+            const paymentIntent = event.data.object;
+            console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`);
+            break;
+        case 'payment_method.attached':
+            const paymentMethod = event.data.object;
+            console.log(`PaymentMethod ${paymentMethod.id} attached to customer`);
+            break;
+        default:
+            console.log(`Unhandled event type ${event.type}`);
+    }
+
+    res.status(200).end();
 };
 
 module.exports = {
