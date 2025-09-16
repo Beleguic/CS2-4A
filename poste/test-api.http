@@ -1,0 +1,48 @@
+### Test de l'API Poste
+
+### 1. Vérifier que le serveur fonctionne
+GET http://localhost:3001/
+
+### 2. Récupérer toutes les livraisons
+GET http://localhost:3001/api/livraisons
+
+### 3. Créer une nouvelle livraison
+POST http://localhost:3001/api/livraisons/new
+Content-Type: application/json
+
+{
+  "expediteur": {
+    "nom": "Tropicool Store",
+    "adresse": "123 Rue de la Paix, 75001 Paris",
+    "telephone": "01 23 45 67 89"
+  },
+  "destinataire": {
+    "nom": "Jean Dupont",
+    "adresse": "456 Avenue des Champs, 75008 Paris",
+    "telephone": "06 12 34 56 78"
+  }
+}
+
+### 4. Récupérer une livraison par ID (remplacer {id} par un ID réel)
+GET http://localhost:3001/api/livraisons/{id}
+
+### 5. Mettre à jour le statut d'une livraison (remplacer {id} par un ID réel)
+PATCH http://localhost:3001/api/livraisons/{id}
+Content-Type: application/json
+
+{
+  "status": "En cours de livraison"
+}
+
+### 6. Test avec des données invalides
+POST http://localhost:3001/api/livraisons/new
+Content-Type: application/json
+
+{
+  "expediteur": {
+    "nom": "Test Store"
+  }
+}
+
+### 7. Test de route inexistante
+GET http://localhost:3001/api/inexistante

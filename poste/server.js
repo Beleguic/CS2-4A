@@ -24,10 +24,25 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use(express.json());  // Assurez-vous que ce middleware est présent
 app.use(cors());
 
-// Utilisation du router pour les utilisateurs
-app.use("/", LivraisonRouter);
+// Utilisation du router pour les livraisons
+app.use("/api/livraisons", LivraisonRouter);
+
+// Middleware de gestion d'erreurs global
+app.use((err, req, res, next) => {
+    console.error('Erreur globale:', err);
+    res.status(500).json({ 
+        error: 'Erreur interne du serveur',
+        message: process.env.NODE_ENV === 'development' ? err.message : 'Une erreur est survenue'
+    });
+});
+
+// Middleware pour les routes non trouvées
+app.use('*', (req, res) => {
+    res.status(404).json({ error: 'Route non trouvée' });
+});
 
 // Démarrage du serveur
-app.listen(process.env.PORT, () => {
-    console.log("Server running on port " + process.env.PORT);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
