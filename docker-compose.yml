@@ -28,14 +28,14 @@ services:
     command: sh -c "npm install && npm run dev node --watch"
 
   vue:
-    image: node:20.0.0-alpine
-    user: node
-    working_dir: /home/node
-    command: npm run dev -- --port 5174 --host
+    build:
+      context: ./tropicool
+      dockerfile: Dockerfile
     ports:
       - "127.0.0.1:8000:5174"
     volumes:
       - ./tropicool:/home/node
+      - vue_node_modules:/home/node/node_modules
 
   postgres:
     image: postgres
@@ -78,3 +78,4 @@ volumes:
   mongo-data: {}
   postgres-data: {}
   postgres-poste-data: {}
+  vue_node_modules: {}

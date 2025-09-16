@@ -5,7 +5,6 @@ require('dotenv').config();
 module.exports = function (sequelize) {
   class Livraison extends Model {
     static async generateString() {
-        console.log('Generating string');
         const prefix = 'FR';
         const year = new Date().getFullYear();
         const client = new Client({connectionString: process.env.DATABASE_URL_POSTE});
@@ -22,19 +21,18 @@ module.exports = function (sequelize) {
             const letters = this.generateRandomLetters(3);
     
             // Créer la chaîne
-            const generatedString = `${prefix}-${year}-${number}-${letters}`;
+            const generatedString = `${prefix}-${year}-${number.toString().padStart(4, '0')}-${letters}`;
     
-            console.log(generatedString);
             return generatedString;
         } catch (error) {
-            console.error("-------------------------------------------------------------");
-            console.error(error);
-
+            console.error("Erreur lors de la génération de l'ID de livraison:", error);
+            // Fallback en cas d'erreur
+            const fallbackNumber = Math.floor(Math.random() * 9999) + 1;
+            const letters = this.generateRandomLetters(3);
+            return `${prefix}-${year}-${fallbackNumber.toString().padStart(4, '0')}-${letters}`;
         } finally {
             await client.end();
-            
         }
-
     }
     
     // Fonction pour générer des lettres aléatoires
