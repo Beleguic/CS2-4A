@@ -29,7 +29,9 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 4. supprimer `node_modules` et `package-lock.json` dans le dossier "tropicool" et dossier "backend"
 5. `docker compose run --rm vue npm install`
 6. `docker compose run --rm node npm install`
-7. `docker compose up`
+7. `docker compose  --env-file .env.development up --build`
+8. `docker compose exec node node start`
+9. `docker compose exec node npm run migrate`
 8. `docker compose exec node npm run migrate`
 
    **Fonctionaliter:**
